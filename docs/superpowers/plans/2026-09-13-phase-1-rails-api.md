@@ -5652,6 +5652,15 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - Consumes: the whole app.
 - Produces: one Fly app that sleeps at zero machines, the measured cold start, and the verified monthly cost for the gate report.
 
+> **Steps 1 to 4b shipped early, in parallel with Tasks 9 and 10, under Rulings 34 to 37.** They touch no file any other task touches, so front-loading them surfaced the deployment risk instead of leaving it to the last step of the phase. Steps 5 to 9 still need every task finished. What changed:
+>
+> - The base image is `docker.io/library/ruby`, not `registry.docker.com`. The Dockerfile Rails 8 generated for this app in Task 1 uses `docker.io`; the other host is the Rails 7 convention.
+> - **`.dockerignore` excludes `/config/master.key`, `/config/credentials/*.key` and `.env*`.** Without them, `COPY . .` plus `fly deploy` uploading the local directory as build context would have shipped the key that decrypts `credentials.yml.enc` inside a registry layer. `credentials.yml.enc` itself still ships, because the app needs it.
+> - **The Dockerfile creates `log` and `tmp` before chowning them.** `.dockerignore` excludes both, so nothing else creates them and the build fails. Found by an actual `docker build`, which is the only reason it was not found by `fly deploy` at the end of the phase.
+> - **The CI workflow and `dependabot.yml` live at the repository root**, not under `backend/.github`, which is one directory below where GitHub Actions looks. Nothing had ever run in CI, including the Brakeman and Rubocop jobs that came with the app. Every job now carries `working-directory: backend`.
+>
+> See `.superpowers/sdd/2026-09-13-phase-1-rails-api/progress.md` and `git log`.
+
 One app. No staging. Correctness comes from the suite, not from a second paid environment.
 
 - [ ] **Step 1: Tune Puma small**
