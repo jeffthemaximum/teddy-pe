@@ -1641,6 +1641,15 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - Consumes: `content/program_years/2026-27/program.yml` (Task 2), `Athlete` (Task 5).
 - Produces: `ContentSeeder.new(year_label:).seed!` returning a counts hash keyed by table name; `ProgramYear.current_for(athlete, on:)`; `ProgramYear#blocks/#areas/#patches/#ball_gates/#test_dates/#day_roles`; `ProgramYear#current_block(on:)`; `Area#area_cells`; `Block#current?(on:)`; `DayRole::FIXED`.
 
+> **What shipped differs from the code below, under Rulings 19 to 25.** Three reviews changed it and the branch is the truth. The differences:
+>
+> - `athletes` has a `slug`, NOT NULL and unique, and the seeder keys on it. Keying on `name` meant correcting a typo would insert a second athlete and orphan the first, taking its program years and its user link with it.
+> - Ball gates key on `from_ball` and `to_ball`, the progression they guard, with a unique index on the pair. Keying on `position` meant reordering the file silently wrote one gate's requirement onto another gate's row.
+> - **The unique indexes on `position` are dropped, for `ball_gates` and for `blocks`.** Once position became a mutable attribute rather than a finder, reordering content made the seeder write a position another row still held, and Postgres rejected the transient duplicate mid-transaction. Position is display order, so the rule that positions are distinct moved into the content spec, where a repeat is caught while it is being authored and cannot abort a seed.
+> - The idempotence example compares ordered id lists across all nine seeded tables. Equal counts could not tell rows kept from rows deleted and recreated.
+>
+> See `.superpowers/sdd/2026-09-13-phase-1-rails-api/progress.md` for the reasoning, and `git log` for the three commits.
+
 - [ ] **Step 1: Write the migration**
 
 Drop the Task 5 placeholder and build the real thing. `backend/db/migrate/<ts>_create_program_structure.rb`:
