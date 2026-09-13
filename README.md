@@ -11,6 +11,8 @@ Live page: https://claude.ai/code/artifact/a755f23c-b6e8-41dd-b5d4-16bb2a9730e6 
 | `docs/architecture.md` | The program. Areas, blocks, ranks, patches, test battery, ball gates, load rules, weekly and daily templates. Change this first. |
 | `docs/context.md` | Who this is for and how it runs. Read this before anything else if you are new. |
 | `docs/decisions.md` | Decision log: pushbacks, choices, open items. Append, never rewrite. |
+| `docs/status.md` | What is built, which branch is which, what is open, what comes next. Read second. |
+| `docs/history/` | Session records: what was asked, what was answered, in order. One file per working session. |
 | `docs/original-plan.md` | Jeff's original notes and resource links, and what changed from them. |
 | `docs/plans/<month>.md` | Markdown export of each generated month and its daily cards (built). |
 | `data/program.json` | The year: blocks, areas, cells, patches, gates, battery, day roles. |
@@ -20,6 +22,19 @@ Live page: https://claude.ai/code/artifact/a755f23c-b6e8-41dd-b5d4-16bb2a9730e6 
 | `build.py` | Builds `dist/artifact.html`, `site/index.html`, `docs/plans/<month>.md`. |
 | `site/index.html` | Standalone page for Vercel or any static host (built, committed). |
 | `dist/artifact.html` | Fragment for the claude.ai Artifact tool (built, committed). |
+
+## Resuming on any computer
+
+```
+git clone git@github.com:jeffthemaximum/teddy-pe.git
+cd teddy-pe
+python3 build.py          # regenerates dist/, site/, docs/plans/ from data/
+open site/index.html      # the page, offline
+```
+
+Then read `docs/context.md`, `docs/status.md`, `docs/architecture.md`, and the latest file in `docs/history/`. That is the complete state of the project; nothing needed to continue lives outside this repo. With an AI session: open the folder (Claude Code reads `CLAUDE.md` automatically; in Cowork, connect the folder) and it has the same context. The claude.ai Project and memory hold copies for convenience; this repo wins on any disagreement.
+
+Working convention: changes go on a branch (`feature/...`), Jeff reviews the diff, merges to `main`, then the page is rebuilt and republished.
 
 ## Build
 
