@@ -248,6 +248,25 @@ Quick card (Sun): Wake Up (5) → New Thing (10) → Ball Skills (15) → Patch 
 
 Rank card with nine patch slots per rank. Patches earned in Trials weeks (early earning allowed if he clearly has it). Rank-up ceremony every 8th Sunday after tennis. Challenge of the Week gets a Monday number and a Friday number on a visible chart. Head-to-head vs Dad uses explicit handicaps that shrink each block as Jeff's running returns. The Champion's Log is a notebook Teddy writes in himself, one line a day: what was best, or what he wants tomorrow. It is his; Dad reads it only when invited.
 
+## The coach's diary
+
+Jeff writes one entry per session on the This Week tab: how it went, Teddy's energy, a pain flag, a free line, and a rating for each drill that was on that day's card (not yet, getting there, owns it). Entries sync to Neon so they follow him between devices, and `tools/diary_pull.py` brings them into `data/diary.json` so the repo stays the memory of the project.
+
+The diary proposes; it never edits. Before generating a week or a month, pull the entries and read them, then bring Jeff proposals:
+
+- A drill rated **owns it** three sessions running is progressed to the next step or retired from the card.
+- A drill rated **not yet** three sessions running drops to an easier entry point rather than being repeated harder.
+- Any **pain flag** triggers the growth-load protocol in the tall-frame section above: halve jumping and sprinting for 8 to 12 weeks, double down on skill and mobility, and write it into the decision log.
+- Repeated low energy on a given day role is a signal the week is mis-shaped, not that Teddy needs pushing.
+
+What the diary may never change: the fixed day roles, the high-intent effort budget, the rule that volume is added as touches rather than sprints or jumps, and the tennis ball gates. Those are the load protections; they move only by an explicit decision from Jeff, logged in `docs/decisions.md`.
+
+## Drill glossary
+
+Every named drill has an entry in `data/drills.json`: what it is, how to do it, what to watch for, a cue in Teddy's language, and an optional video link. `build.py` matches the names and aliases against the prose in daily cards and makes each first mention tappable, so a term nobody has met before explains itself without leaving the card. The same ids are what the diary rates.
+
+When writing a new month, add entries for any drill the new block introduces. The build prints every card block where no drill matched, which is the list of gaps to fill.
+
 ## Regeneration instructions (for future sessions)
 
-To generate a month: take the block, list the week themes and sub-targets for that month, map to the fixed day roles, keep HIE budget, place Trials/deload and test weeks. To generate a week of daily cards: use the daily card template, place the week's New Thing in every full session, distribute the sub-targets across Wed/Thu/Fri with tennis heaviest Thursday, and write the Challenge of the Week into Monday/Tuesday and Friday.
+Pull the diary first (`tools/diary_pull.py`) and read anything recorded since the last plan. To generate a month: take the block, list the week themes and sub-targets for that month, map to the fixed day roles, keep HIE budget, place Trials/deload and test weeks. To generate a week of daily cards: use the daily card template, place the week's New Thing in every full session, distribute the sub-targets across Wed/Thu/Fri with tennis heaviest Thursday, and write the Challenge of the Week into Monday/Tuesday and Friday.

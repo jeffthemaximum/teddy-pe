@@ -70,8 +70,16 @@ def strip(s):
     return html.unescape(re.sub(r"<[^>]+>", "", s)).strip()
 
 
+MONTH_ABBR = {m: i + 1 for i, m in enumerate(
+    ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])}
+plan_year, plan_month = (int(x) for x in month.split("-"))
+
 bare = []
 for day in plan["cards"]["days"]:
+    # Cards carry "Sep 15"; the diary needs a real date to key an entry on.
+    abbr, dnum = day["date"].split()
+    mm = MONTH_ABBR[abbr]
+    day["iso"] = f"{plan_year + (1 if mm < plan_month else 0)}-{mm:02d}-{int(dnum):02d}"
     day_slugs = []
     for blk in day["blocks"]:
         found = []
@@ -94,6 +102,7 @@ data = {
     "PATCHES": program["patches"], "GATES": program["gates"], "BATTERY": program["battery"],
     "ROLES": program["roles"], "ORG": program["org"], "LEVEL": program["level"], "LEVELNAME": program["levelName"],
     "WEEKS": plan["weeks"], "CARDS": plan["cards"]["days"], "DRILLS": drills,
+    "MONTH": month, "WEEKNO": plan["cards"]["week"],
     "SHEETROWS": program["sheetRows"], "RANKRULE": program["rankRule"],
 }
 template = (ROOT / "src/page.html").read_text()
