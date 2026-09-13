@@ -60,6 +60,12 @@ gem "rails", "~> 8.0.0"
 gem "puma", "~> 6.4"
 gem "pg", "~> 1.5"
 
+# Rails 8.0 still passes quirks_mode to JSON.generate, which json 3.x removed,
+# so every `render json:` raises ArgumentError against an unpinned json. This
+# is a constraint on a gem that is already here transitively rather than a new
+# dependency. Drop the pin when Rails stops passing quirks_mode.
+gem "json", "~> 2.7"
+
 # JSON API
 gem "active_model_serializers", "~> 0.10"
 
@@ -1066,7 +1072,18 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: the skeleton from Task 1.
-- Produces: `JwtService.encode(user_id:, ttl:)` and `.decode(token)`; `Api::V1::ApiController` with `authorize_request`, `current_user`, `render_error(code, message, status)`, `render_unauthorized`, `render_forbidden`, `render_not_found`, `render_unprocessable`; `User#coach?`, `#athlete?`, `#viewer?`; `Athlete#age_on(date)`; `POST /api/v1/auth/login`; `GET /api/v1/me`; `PATCH /api/v1/me`.
+- Produces: `JwtService.encode(user:, ttl:)` and `.decode(token)`; `JwtService.fingerprint(password_digest)`; `Api::V1::ApiController` with `authorize_request`, `current_user`, `render_error(code, message, status)`, `render_unauthorized`, `render_forbidden`, `render_not_found`, `render_unprocessable`; `User#coach?`, `#athlete?`, `#viewer?`; `Athlete#age_on(date)`; `POST /api/v1/auth/login`; `GET /api/v1/me`; `PATCH /api/v1/me`.
+
+> **What shipped differs from the code below, under Rulings 13 to 18.** The code in this task is the design as first written. Five reviews changed it, and the branch is the truth. The differences, so nobody re-implements the older version:
+>
+> - `JwtService.encode` takes `user:`, not `user_id:`, and always derives a `pwd` claim, a 16-hex fingerprint of the password digest it was issued against. `authorize_request` rejects a token whose fingerprint no longer matches, so changing a password invalidates every token issued before it. A token carrying no `pwd` claim is still accepted, so nothing already issued breaks. The keyword is required, so no future caller can mint an unrevokable token by omission.
+> - `PATCH /me` requires `current_password` before changing a password, answers 422 `wrong_password` when it does not match (not 401, which would sign the user out for a typo), and hands back a fresh `jwt` when the change succeeds.
+> - `MeController` uses `athlete_for`, which returns the user's own athlete, or the sole athlete when exactly one exists, or nil. It never guesses when two exist.
+> - `config.exceptions_app = routes`, a catch-all route and `Api::V1::ErrorsController` carry the envelope to routing misses and malformed bodies, which `rescue_from` cannot reach.
+> - `rails users:create` only assigns a password when `PASSWORD` is given or the record is new, so running it to fix a name no longer rotates credentials.
+> - `gem "json", "~> 2.7"` is pinned, because json 3.x removed the `quirks_mode` keyword Rails 8 still passes on every `to_json`.
+>
+> See `.superpowers/sdd/2026-09-13-phase-1-rails-api/progress.md` for the reasoning on each, and `git log` for the four commits.
 
 - [ ] **Step 1: Write the migrations**
 
