@@ -1,6 +1,6 @@
 # Teddy's Training Year
 
-A year-long physical education and athletic development program for a 7 year old, Sep 2026 through Aug 2027. General athleticism with a tennis tilt, aimed at a 20 year old who competes at the top rather than an 8 year old who looks precocious.
+A year-long physical education and athletic development program for a 7 year old, Sep 2026 through Aug 2027. Built for a future champion, most likely in tennis, possibly basketball or soccer goalkeeping, and built the way champions are actually made: a wide athletic base, thousands of technical touches, protected intensity, and a mind trained alongside the body. Nine areas, six ranks, one cartwheel.
 
 Live page: https://claude.ai/code/artifact/a755f23c-b6e8-41dd-b5d4-16bb2a9730e6 (mirrored on Vercel from `site/`).
 
@@ -50,4 +50,4 @@ To mount it inside an existing Vercel site instead of as its own project, copy `
 
 ## Recording results
 
-Test battery: baseline Sep 15 to 17, retests Dec 7 to 11, Mar 1 to 5, Jun 14 to 18, Aug 9 to 13. Record results in `data/results.json` (create on first use) as `{ "2026-09": { "sprint20m": 4.9, ... } }` and they can be charted on the Year view.
+Test battery (10 tests plus height): baseline Sep 15 to 17, retests Dec 7 to 11, Mar 1 to 5, Jun 14 to 18, Aug 9 to 13. Record results in `data/results.json` (create on first use) as `{ "2026-09": { "sprint20m": 4.9, ... } }` and they can be charted on the Year view.
