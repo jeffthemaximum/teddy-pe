@@ -175,24 +175,38 @@ RSpec.describe "content integrity" do
 
     it "attempts the Challenge of the Week early and late" do
       each_week do |w, label|
-        carded = w["days"].select { |d| d["blocks"] }
-        next if carded.empty?
-        early = carded.select { |d| %w[mon tue].include?(d["dow"]) }
-        late  = carded.select { |d| d["dow"] == "fri" }
+        early = w["days"].select { |d| %w[mon tue].include?(d["dow"]) }
+        late  = w["days"].select { |d| d["dow"] == "fri" }
         expect(early.any? { |d| challenge?(d) }).to be(true), "#{label} has no early challenge attempt"
         expect(late.any? { |d| challenge?(d) }).to be(true), "#{label} has no Friday challenge attempt"
       end
     end
 
+    it "has full day cards for at least one week of every month" do
+      PLANS.each do |p|
+        carded = p["weeks"].count { |w| w["days"].any? { |d| d["blocks"] } }
+        expect(carded).to be >= 1, "#{p['month_plan']['month']} has no week with full day cards"
+      end
+    end
+
     it "counts ball skills in touches rather than minutes" do
+      # This one genuinely needs full cards. A week whose cards are not written
+      # yet carries its volume in those cards when they arrive, so there is
+      # nothing here to count. The tally below stops every week taking that
+      # exit at once and leaving the rule checking nothing at all.
+      checked = 0
+
       each_week do |w, label|
         carded = w["days"].select { |d| d["blocks"] }
         next if carded.empty?
+        checked += 1
         counted = carded.flat_map { |d| d["blocks"] }
           .select { |b| b["name"] =~ /basketball|soccer|tennis/i }
           .count { |b| b["body"] =~ /\d+\s*(dribbles|touches|passes|reps|swings|throws)/i }
         expect(counted).to be >= 1, "#{label} has no ball-skill block with a counted volume"
       end
+
+      expect(checked).to be >= 1, "no week has full day cards, so this rule checked nothing"
     end
 
     it "makes week 8 of a block Trials" do
@@ -217,10 +231,18 @@ RSpec.describe "content integrity" do
     DAD_RUNS = /\bdad (?:sprints|races|chases|runs)\b|\brace (?:dad|him)\b|\bchase (?:dad|him)\b/i
 
     it "asks him to sprint, race or chase nowhere before December" do
+      # Reads the day summaries as well as the card prose. Most days in a month
+      # that is only part written have a summary and no card, so checking only
+      # the cards would leave two weeks in three unread. This is the rule with
+      # the highest cost of being wrong, so it reads everything there is.
       each_day do |d, label|
         next if Date.parse(d["date"].to_s) >= Date.new(2026, 12, 1)
-        d["blocks"].to_a.each do |b|
-          expect(b["body"].to_s).not_to match(DAD_RUNS), "#{label} #{b['name']}: #{b['body']}"
+
+        prose = d["blocks"].to_a.map { |b| [ b["name"], b["body"] ].compact.join(" ") }
+        prose += d["summary_lines"].to_a
+
+        prose.each do |text|
+          expect(text.to_s).not_to match(DAD_RUNS), "#{label}: #{text}"
         end
       end
     end
@@ -236,7 +258,12 @@ RSpec.describe "content integrity" do
     each_week { |w, label| w["days"].each { |d| yield d, "#{label} #{d['dow']} #{d['date']}" } }
   end
 
+  # A month is authored a week at a time, so most weeks have day summaries and
+  # no full cards yet. Both name the challenge, so both are worth reading.
+  # Checking only the blocks would let every week without cards pass without
+  # ever being looked at.
   def challenge?(day)
-    day["blocks"].to_a.any? { |b| b["tag"] == "challenge" || b["name"] =~ /challenge/i }
+    day["blocks"].to_a.any? { |b| b["tag"] == "challenge" || b["name"] =~ /challenge/i } ||
+      day["summary_lines"].to_a.any? { |l| l =~ /challenge/i }
   end
 end
