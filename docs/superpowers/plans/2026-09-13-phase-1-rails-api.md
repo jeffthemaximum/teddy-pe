@@ -3831,6 +3831,15 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - Consumes: `User`, `Athlete` (Task 5), `ProgramYear`, `DayCard`, `Drill`.
 - Produces: `CoachEntry` with `drill_ratings`; `AthleteEntry` with `shared`; `CoachEntry.upsert_for(user:, program_year:, session_date:, attrs:, ratings:)`; the six journal endpoints; `WeekPayload` days carrying `coach_entry` and `athlete_entry`.
 
+> **What shipped differs from the code below, under Rulings 44 and 45.** The toggle itself holds exactly as designed: a review traced the read path and confirmed `Pundit.policy_scope!` heads the query, so an unshared entry is excluded in SQL and absent from the coach's payload on the list, on show by id, and in the week.
+>
+> - **`entry_for` batches.** The code below issues a query per day card, and a week has seven, so the payload cost 15 queries. It now costs 3. The batch begins from the policy scope and only narrows it, which is what keeps the guarantee: had it loaded entries directly, an unshared entry would have reached the coach through the one screen he opens while every list endpoint still filtered correctly.
+> - **The week payload has a positive control for the athlete entry.** Asserting only that the coach sees nil passes whether the scope filters correctly or the lookup is broken outright, and the second failure is bad for Teddy rather than for privacy: a lookup returning nil for his own entry opens his form blank, and a blank form saved back overwrites what he wrote.
+> - **Both `upsert_for` methods and the coach update action run in a transaction.** Without one, a rating failing validation answered 422 having already committed the entry and every earlier rating. Phase 2's offline queue is being built on writes being atomic.
+> - The 403 envelope is asserted by whole-body equality, not by status, which is the only form that could have caught a bare `head :forbidden`.
+>
+> See `.superpowers/sdd/2026-09-13-phase-1-rails-api/progress.md` and `git log`.
+
 **Two things here are load-bearing.**
 
 `POST` upserts on the natural key rather than creating blindly. One entry per user per year per session date, addressed by construction. That is what made the cross-device bug go away, and it is what will make the Phase 2 offline queue safe: a replayed write updates the same row instead of making a second one.
