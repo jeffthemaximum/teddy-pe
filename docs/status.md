@@ -22,16 +22,28 @@ Update this file whenever something is built, decided, or left open. It is the f
 
 ## Branches
 
-- `main`: first version (7 areas, tennis-tilted general athleticism).
-- `feature/ball-sports-and-mindset`: merged (commit cedf5d5).
-- `feature/drill-glossary-and-coach-diary`: the drill glossary and the coach's diary. Awaiting Jeff's review. After merge: rebuild, republish the artifact, and set the two Vercel env vars so the diary comes alive.
+- `main`: everything below the rewrite. Nine areas, the glossary, the diary, test results and the progress chart. This is what Vercel serves and it stays untouched until Jeff merges the rewrite.
+- `feature/ball-sports-and-mindset` and `feature/drill-glossary-and-coach-diary`: merged and stale. Tidying them is Jeff's call, not part of the rewrite.
+- **`feature/rails-react-rewrite`: the rewrite in flight.** Rails 8 API, React web app, React Native app, replacing `build.py`, the single HTML page, the four Vercel functions and the shared passphrase. Spec and the Phase 1 plan are written; no code yet. Works in a git worktree at `.claude/worktrees/feature+rails-react-rewrite`.
+
+## The rewrite
+
+Read `docs/rewrite-prompt.md` for the settled design, `docs/superpowers/specs/2026-09-13-rewrite-design.md` for the spec derived from the real data, and `docs/superpowers/plans/2026-09-13-phase-1-rails-api.md` for the Phase 1 implementation plan (16 tasks, 114 steps, test-first).
+
+Four phases, each with a hard review gate Jeff approves before the next begins:
+
+1. Rails API. Schema, seeds from YAML, auth, every endpoint, Pundit, specs green, deployed to Fly.
+2. `core/` and the React web app, including the offline queue.
+3. Migration and cutover. Only then is the old pipeline deleted.
+4. React Native app on the same ducks.
+
+If the program itself needs changing while the rewrite is in flight (a new month, a fix to a day card), do it on `main` in the old format. It gets ported into `backend/content/` during Phase 3. Do not try to keep the two in sync continuously.
 
 ## Open
 
 - **Jeff to do:** set the Vercel project's output directory to `public` (or let `vercel.json` do it), confirm `DATABASE_URL` and `DIARY_PASSPHRASE` are set, and redeploy. The site then asks for the passphrase before showing anything.
 - Whether to keep publishing `dist/artifact.html` to claude.ai, which is ungated and now shows a diary that cannot save.
 - Whether the missing offline queue matters in practice at a field with no signal.
-- Teddy's exact birthday.
 - One-hand vs two-hand backhand, to settle in the Fox block with his coach.
 - Youth basketball size (27.5 in) and a mat for keeper dive progressions before the Fox block.
 - Whether the November move changes any facility access (assumed: none).
@@ -40,6 +52,8 @@ Update this file whenever something is built, decided, or left open. It is the f
 
 ## Next
 
-- **Sep 15 to 17: record the baseline.** Open This Week, pick Baseline in the test sheet, type the numbers. They save to the database as you go and the Year tab starts charting immediately.
+- **Sep 15 to 17: record the baseline.** Open This Week, pick Baseline in the test sheet, type the numbers. They save to the database as you go and the Year tab starts charting immediately. This happens on the current site, off `main`. The rewrite does not touch it, and Phase 3 migrates these rows across with a count and a spot check before anything is dropped.
+
+- **The rewrite: Jeff reviews the Phase 1 plan, then Phase 1 gets built.** The gate report he gets at the end of it is listed at the bottom of the plan: branch diff, full test output, the `hie` table for his correction, measured cold start, verified monthly cost against prices published that day, and what an unauthenticated visitor can see.
 
 - October view (Cub weeks 4 to 8: Upside Down, Skip & Bound, Turn, Reactor, Cub Trials) and Week 2 daily cards. Pull the diary first, then write `data/plans/2026-10.json`, add glossary entries for the drills October introduces (wall handstand, A-skip, laces pass, med ball hip throw, inside hook turn, reaction starts, low bounds, pull-backs), point `data/current.json` at it, run `python3 build.py`.
