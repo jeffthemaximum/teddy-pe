@@ -53,7 +53,27 @@ class WeekPayload
         { id: b.id, position: b.position, minutes: b.minutes, name: b.name,
           tag: b.tag, name_tokens: b.name_tokens, body_tokens: b.body_tokens,
           drill_slugs: b.drill_slugs }
-      end
+      end,
+      coach_entry: entry_for(CoachEntry, card),
+      athlete_entry: entry_for(AthleteEntry, card)
     )
+  end
+
+  # Whatever the current user is allowed to see for this date, so the journal
+  # form opens filled in rather than fetching a second time. The policy scope
+  # does the filtering, which is how an unshared entry is absent rather than
+  # hidden. Loaded once per klass for the whole week, not once per card, so a
+  # seven day week costs two queries rather than fourteen.
+  def entry_for(klass, card)
+    return nil if @user.nil?
+    entry = entries_by_date(klass)[card.date]
+    entry && entry.as_json(except: %i[created_at updated_at])
+  end
+
+  def entries_by_date(klass)
+    @entries_by_date ||= {}
+    @entries_by_date[klass] ||= Pundit.policy_scope!(@user, klass)
+      .where(program_year_id: @week.month_plan.program_year_id, session_date: @week.day_cards.map(&:date))
+      .index_by(&:session_date)
   end
 end

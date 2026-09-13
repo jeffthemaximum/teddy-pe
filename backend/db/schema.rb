@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_13_195000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_13_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -36,6 +36,26 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_195000) do
     t.datetime "updated_at", null: false
     t.index ["program_year_id", "slug"], name: "index_areas_on_program_year_id_and_slug", unique: true
     t.index ["program_year_id"], name: "index_areas_on_program_year_id"
+  end
+
+  create_table "athlete_entries", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "athlete_id", null: false
+    t.bigint "program_year_id", null: false
+    t.bigint "day_card_id"
+    t.date "session_date", null: false
+    t.integer "felt"
+    t.text "best"
+    t.text "hard"
+    t.text "note"
+    t.boolean "shared", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["athlete_id"], name: "index_athlete_entries_on_athlete_id"
+    t.index ["day_card_id"], name: "index_athlete_entries_on_day_card_id"
+    t.index ["program_year_id"], name: "index_athlete_entries_on_program_year_id"
+    t.index ["user_id", "program_year_id", "session_date"], name: "index_athlete_entries_on_author_year_and_date", unique: true
+    t.index ["user_id"], name: "index_athlete_entries_on_user_id"
   end
 
   create_table "athletes", force: :cascade do |t|
@@ -107,6 +127,27 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_195000) do
     t.index ["program_year_id"], name: "index_blocks_on_program_year_id"
   end
 
+  create_table "coach_entries", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "athlete_id", null: false
+    t.bigint "program_year_id", null: false
+    t.bigint "day_card_id"
+    t.date "session_date", null: false
+    t.integer "overall"
+    t.integer "energy"
+    t.boolean "flag_pain", default: false, null: false
+    t.text "pain_note"
+    t.text "note"
+    t.string "challenge_num"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["athlete_id"], name: "index_coach_entries_on_athlete_id"
+    t.index ["day_card_id"], name: "index_coach_entries_on_day_card_id"
+    t.index ["program_year_id"], name: "index_coach_entries_on_program_year_id"
+    t.index ["user_id", "program_year_id", "session_date"], name: "index_coach_entries_on_author_year_and_date", unique: true
+    t.index ["user_id"], name: "index_coach_entries_on_user_id"
+  end
+
   create_table "day_blocks", force: :cascade do |t|
     t.bigint "day_card_id", null: false
     t.integer "position", null: false
@@ -157,6 +198,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_195000) do
     t.datetime "updated_at", null: false
     t.index ["program_year_id", "dow"], name: "index_day_roles_on_program_year_id_and_dow", unique: true
     t.index ["program_year_id"], name: "index_day_roles_on_program_year_id"
+  end
+
+  create_table "drill_ratings", force: :cascade do |t|
+    t.bigint "coach_entry_id", null: false
+    t.bigint "drill_id", null: false
+    t.bigint "program_year_id", null: false
+    t.date "session_date", null: false
+    t.string "rating", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["coach_entry_id", "drill_id"], name: "index_drill_ratings_on_coach_entry_id_and_drill_id", unique: true
+    t.index ["coach_entry_id"], name: "index_drill_ratings_on_coach_entry_id"
+    t.index ["drill_id", "session_date"], name: "index_drill_ratings_on_drill_id_and_session_date"
+    t.index ["drill_id"], name: "index_drill_ratings_on_drill_id"
+    t.index ["program_year_id"], name: "index_drill_ratings_on_program_year_id"
+    t.check_constraint "rating::text = ANY (ARRAY['not_yet'::character varying, 'getting'::character varying, 'owns'::character varying]::text[])", name: "drill_ratings_rating_check"
   end
 
   create_table "drills", force: :cascade do |t|
@@ -260,16 +317,27 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_195000) do
   add_foreign_key "area_cells", "areas"
   add_foreign_key "area_cells", "blocks"
   add_foreign_key "areas", "program_years"
+  add_foreign_key "athlete_entries", "athletes"
+  add_foreign_key "athlete_entries", "day_cards"
+  add_foreign_key "athlete_entries", "program_years"
+  add_foreign_key "athlete_entries", "users"
   add_foreign_key "athletes", "users"
   add_foreign_key "ball_gates", "program_years"
   add_foreign_key "battery_measures", "battery_tests"
   add_foreign_key "battery_measures", "program_years"
   add_foreign_key "battery_tests", "program_years"
   add_foreign_key "blocks", "program_years"
+  add_foreign_key "coach_entries", "athletes"
+  add_foreign_key "coach_entries", "day_cards"
+  add_foreign_key "coach_entries", "program_years"
+  add_foreign_key "coach_entries", "users"
   add_foreign_key "day_blocks", "day_cards"
   add_foreign_key "day_cards", "day_roles"
   add_foreign_key "day_cards", "weeks"
   add_foreign_key "day_roles", "program_years"
+  add_foreign_key "drill_ratings", "coach_entries"
+  add_foreign_key "drill_ratings", "drills"
+  add_foreign_key "drill_ratings", "program_years"
   add_foreign_key "month_plans", "blocks"
   add_foreign_key "month_plans", "program_years"
   add_foreign_key "patches", "areas"

@@ -14,6 +14,9 @@ Rails.application.routes.draw do
         get "plans/:month", to: "plans#show", as: :plan
         get "weeks/current", to: "weeks#current", as: :current_week
       end
+
+      resources :coach_entries,   only: %i[index show create update]
+      resources :athlete_entries, only: %i[index show create update]
     end
   end
 

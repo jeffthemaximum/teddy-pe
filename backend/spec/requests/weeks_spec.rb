@@ -50,4 +50,18 @@ RSpec.describe "this week", type: :request do
     get "/api/v1/program_years/#{year.id}/weeks/current"
     expect(response).to have_http_status(:unauthorized)
   end
+
+  it "opens the journal form filled in, and hides what Teddy has not shared" do
+    coach = create(:user, :coach)
+    teddy = create(:user, :athlete)
+    create(:coach_entry, user: coach, program_year: year, session_date: Date.new(2026, 9, 17), note: "Good day")
+    create(:athlete_entry, user: teddy, program_year: year, session_date: Date.new(2026, 9, 17))
+
+    get "/api/v1/program_years/#{year.id}/weeks/current?on=2026-09-17",
+      headers: { "Authorization" => "Bearer #{JwtService.encode(user: coach)}" }
+
+    thu = JSON.parse(response.body)["days"].find { |d| d["dow"] == "thu" }
+    expect(thu["coach_entry"]["note"]).to eq("Good day")
+    expect(thu["athlete_entry"]).to be_nil
+  end
 end
