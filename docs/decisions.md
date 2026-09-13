@@ -123,3 +123,34 @@ A record of the planning conversation, the pushbacks, and what Jeff decided. New
 **Open.**
 
 - The test sheet is the last thing to leave `localStorage`. Only the remembered tab remains there, which is a per-viewer convenience and fine where it is.
+
+## 2026-09-13 (night): rewrite as a Rails API, a React web app and a React Native app
+
+**What Jeff asked.** Rewrite the project as a decoupled Rails API with a React web frontend and a React Native app, following the patterns in the sibling repo `../burough_buddies`. The design was settled in advance and written to `docs/rewrite-prompt.md`. The full spec derived from it lives at `docs/superpowers/specs/2026-09-13-rewrite-design.md`.
+
+**Why this is worth the disruption.** Three things the current setup cannot do. Teddy has no way to write anything himself, because one shared passphrase means one identity. Nothing carries across years, because the page is built from one year's JSON and "year one" is assumed everywhere. And drill mastery is locked in a jsonb column, so the question the diary exists to answer ("how has the cartwheel gone over three years") cannot be asked.
+
+**Decisions Jeff made this session.**
+
+- **Branch off `feature/rewrite`**, not `main`, so the design brief travels with the work that implements it. `main` stays deployable and untouched until he merges, and the Vercel deploy off `main` keeps serving the current site through cutover.
+- **Three accounts, per-user passwords.** Jeff as coach, Teddy as athlete, Emily Barker (mom) as viewer. Viewer reads the program and writes nothing.
+- **No passphrase migration.** The shared `DIARY_PASSPHRASE` dies at Phase 3 cutover rather than becoming somebody's password. A shared secret should not survive into a per-user model.
+- **Teddy controls a per-entry "show Dad" toggle on his journal.** The alternatives were that Jeff reads everything, or that Jeff sees only a count. This was raised because `docs/architecture.md` already says the Champion's Log is Teddy's notebook and Jeff reads it only when invited, and an athlete journal the coach can read quietly digitizes the same thing. The toggle defaults to off, so sharing is a deliberate act rather than something he has to remember to switch off. Enforced in the Pundit scope, so an unshared entry is absent from Jeff's payload rather than present and hidden by the client. Emily sees no journal entries at all: shared means shared with Dad, not published. The Champion's Log itself stays on paper and never enters the software.
+- **High-intent efforts get a number per day card.** Nothing in the plan data counts them today, so the 40 a week budget could never fail a test. Claude proposes a number for each of the 21 cards already written, derived from the architecture's own split, and Jeff corrects the table at the Phase 1 gate.
+- **The offline queue comes back**, covering both journals and test results. It was removed in the cross-device fix and named as the cost at the time. Safe now because an entry is addressed by user, program year and session date, so a replayed write updates the same row instead of making a second one. That is the property the old per-device queue lacked.
+- **`rails docs:export` replaces `tools/pull.py`**, covering journals, results and plans. It does more than the old tool, because the program goes back into the repo as prose a person can read rather than only as YAML a seeder can read. Unshared athlete entries are excluded from the export as well as from the API.
+
+**Teddy's birthday, finally.** 9 January 2019. Open since the first planning session. He is 7 years 8 months at the start of this program year and turns 8 on 9 Jan 2027, inside the Coyote block.
+
+**Found while reading the data, and not obvious from outside it.**
+
+- There are 15 recordable test rows against 10 battery tests, because hop, throw and balance each record left and right and height stands outside the ten. Unit and progress direction live at the row level, and `test_result` keys on `t3r`, `t11l`, `h`. So a `BatteryMeasure` table is needed that the brief's model list did not name.
+- A day is written twice today, once as a month-view summary in `weeks[].days` and once as a full card in `cards.days`, and the two can drift. One `DayCard` now holds both.
+- Drill linking cannot stay a build-time HTML transform, because React Native cannot render an HTML string. It becomes a pure tokenizer in `core/` with the same matching rules `build.py` uses, unit tested against today's cases.
+- `api/results.js` deliberately stores test values as text, on the grounds that a number that will not parse is still worth keeping. That judgment survives: `TestResult` keeps the text and adds a parsed numeric beside it, so the chart reads what it can and nothing typed is ever discarded.
+
+**Open.**
+
+- The `hie` table, for Jeff's correction at the Phase 1 gate.
+- Actual hosting cost and measured cold start, to be verified at the Phase 1 gate against prices published then rather than quoted from the brief.
+- What an unauthenticated visitor can see once the bundle is public, to be demonstrated at the Phase 2 gate. Privacy moves entirely to the API, since a decoupled SPA has a readable bundle by definition.

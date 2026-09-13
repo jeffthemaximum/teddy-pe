@@ -71,7 +71,7 @@ Nothing is scoped to "year one". Every user-generated row carries `program_year_
 
 **`users`**: `email` (citext, unique), `password_digest`, `name`, `role` (enum `coach` / `athlete` / `viewer`), `last_seen_at`, timestamps.
 
-**`athletes`**: `name`, `birthday` (date, nullable for now, see open questions), `user_id` (nullable FK). Separate from `users` so a second child needs no migration.
+**`athletes`**: `name`, `birthday` (date, not null), `user_id` (nullable FK). Separate from `users` so a second child needs no migration, and nullable `user_id` so an athlete can exist before they have a login.
 
 **`program_years`**: `athlete_id`, `label` (`2026-27`), `starts_on`, `ends_on`, `status` (`draft` / `active` / `archived`), `north_star`, `rank_rule`, `ball_now`.
 
@@ -252,7 +252,7 @@ Until you merge, the Vercel deploy off `main` keeps serving the current site, so
 | Question | Answer |
 |---|---|
 | Branch base | `feature/rails-react-rewrite` off `feature/rewrite`, so the brief travels with the work |
-| Accounts | Coach, athlete, and family viewers |
+| Accounts | Coach, athlete and viewer, named in the accounts section below |
 | Passphrase | No migration. Fresh per-user passwords, the shared passphrase dies at cutover |
 | Athlete journal vs the Champion's Log | Teddy controls a per-entry "show Dad" toggle |
 | `hie` backfill | I propose a number per card, Jeff corrects at the Phase 1 gate |
@@ -261,13 +261,25 @@ Until you merge, the Vercel deploy off `main` keeps serving the current site, so
 
 The "show Dad" toggle is the one that shapes the kid-facing UI most. It has to be legible to a 7 year old without a sentence of explanation, so it reads as a single labelled switch in his own language rather than a privacy setting.
 
-## Still needed from Jeff
+## Accounts and the athlete record
 
-Three facts, all of which block seeding in Phase 1. Nothing else is waiting.
+Given by Jeff on 2026-09-13. Nothing is outstanding.
 
-1. **Teddy's exact birthday.** Open since the first session and now needed for the `Athlete` record. The column is nullable, so building proceeds and only the seed waits.
-2. **An email address for Teddy.** A real one or an alias on your domain. It is his login for the athlete journal.
-3. **The viewer list, names and email addresses.** Mom, grandparents, an outside tennis coach, whoever you want reading. The rake task prints a generated password per account.
+**Athlete:** Teddy Maxim, born **2019-01-09**. He is 7 years 8 months at the start of the program year and turns 8 on 2027-01-09, which falls in the Coyote block. That date matters in two places the architecture already cares about: the standard ball-progression path quotes red to age 8 and orange 8 to 10, which Teddy is ahead of either way, and the north star's "not precocious at 8" stops being an abstraction partway through this year.
+
+**Users** created by `rails users:create`:
+
+| Name | Email | Role |
+|---|---|---|
+| Jeff Maxim | jmaxim@trxtraining.com | coach |
+| Teddy Maxim | teddymaxim225@gmail.com | athlete |
+| Emily Barker (mom) | emmabark22@gmail.com | viewer |
+
+Teddy's `User` links to the `Athlete` row through `athletes.user_id`, which is what makes his journal his rather than a record about him.
+
+The rake task generates a password per account and prints it once. No password, and no `DIARY_PASSPHRASE`, is ever committed or seeded. The old shared passphrase is not carried anywhere and stops working at Phase 3 cutover.
+
+Emily reads the program, the plans and the drills. She sees no journal entry from either side, including Teddy's shared ones, because `shared` means shared with Dad rather than published.
 
 ## Phases and gates
 

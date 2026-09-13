@@ -4,7 +4,7 @@ Working memory for anyone (or any AI session) picking this project up cold. Keep
 
 ## Teddy
 
-- 7 years old (Sep 2026), homeschooled, only child. Reads well enough to follow his own daily card.
+- Born 9 January 2019. 7 years 8 months at the start of this program year, and turns 8 on 9 Jan 2027, inside the Coyote block. Homeschooled, only child. Reads well enough to follow his own daily card.
 - Very advanced tennis player for his age. On green ball.
 - Framed by Jeff as a future champion: most likely tennis, possibly high-level basketball or soccer goalkeeping. Prepared for that now, physically and mentally, through athleticism and enjoyment.
 - Handles a lot of volume. The program adds it as technical volume (touches, dribbles, swings), not intensity.
@@ -13,6 +13,16 @@ Working memory for anyone (or any AI session) picking this project up cold. Keep
 - Loves nearly all of it, and especially loves doing it with Dad. Skateboards at a skate park.
 - Organized week: Sat soccer + lacrosse + tennis (2h); Sun tennis (2h); Mon gymnastics; Tue swim. Tennis is a coached small group; Jeff also coaches him.
 - Home program adds dedicated basketball (Mon, Thu, alternate Sun) and soccer including keeper work (Tue, Wed, Fri, alternate Sun).
+
+## Who has access
+
+From the Rails rewrite onward, each person signs in with their own email and password. There is no shared passphrase.
+
+| Name | Email | Role | Can do |
+|---|---|---|---|
+| Jeff Maxim | jmaxim@trxtraining.com | coach | Everything, except an athlete entry Teddy has not shared |
+| Teddy Maxim | teddymaxim225@gmail.com | athlete | Reads his program and results, writes his own journal, chooses what to show Dad |
+| Emily Barker (mom) | emmabark22@gmail.com | viewer | Reads the program, the plans and the drills. Writes nothing, sees no journal |
 
 ## Jeff
 
