@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_13_191259) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_13_192420) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -61,6 +61,35 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_191259) do
     t.datetime "updated_at", null: false
     t.index ["program_year_id", "from_ball", "to_ball"], name: "index_ball_gates_on_year_and_progression", unique: true
     t.index ["program_year_id"], name: "index_ball_gates_on_program_year_id"
+  end
+
+  create_table "battery_measures", force: :cascade do |t|
+    t.bigint "program_year_id", null: false
+    t.bigint "battery_test_id"
+    t.string "test_id", null: false
+    t.integer "position", null: false
+    t.string "label", null: false
+    t.string "unit", null: false
+    t.string "direction", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["battery_test_id"], name: "index_battery_measures_on_battery_test_id"
+    t.index ["program_year_id", "test_id"], name: "index_battery_measures_on_program_year_id_and_test_id", unique: true
+    t.index ["program_year_id"], name: "index_battery_measures_on_program_year_id"
+    t.check_constraint "direction::text = ANY (ARRAY['lower'::character varying, 'higher'::character varying, 'growth'::character varying]::text[])", name: "battery_measures_direction_check"
+  end
+
+  create_table "battery_tests", force: :cascade do |t|
+    t.bigint "program_year_id", null: false
+    t.integer "position", null: false
+    t.string "name", null: false
+    t.text "protocol", null: false
+    t.string "area_name", null: false
+    t.string "unit", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["program_year_id", "name"], name: "index_battery_tests_on_year_and_name", unique: true
+    t.index ["program_year_id"], name: "index_battery_tests_on_program_year_id"
   end
 
   create_table "blocks", force: :cascade do |t|
@@ -150,6 +179,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_191259) do
   add_foreign_key "areas", "program_years"
   add_foreign_key "athletes", "users"
   add_foreign_key "ball_gates", "program_years"
+  add_foreign_key "battery_measures", "battery_tests"
+  add_foreign_key "battery_measures", "program_years"
+  add_foreign_key "battery_tests", "program_years"
   add_foreign_key "blocks", "program_years"
   add_foreign_key "day_roles", "program_years"
   add_foreign_key "patches", "areas"

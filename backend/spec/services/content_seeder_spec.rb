@@ -49,6 +49,8 @@ RSpec.describe ContentSeeder do
         ball_gates: BallGate.order(:id).pluck(:id),
         test_dates: TestDate.order(:id).pluck(:id),
         day_roles: DayRole.order(:id).pluck(:id),
+        battery_tests: BatteryTest.order(:id).pluck(:id),
+        battery_measures: BatteryMeasure.order(:id).pluck(:id),
         athletes: Athlete.order(:id).pluck(:id)
       }
     end
@@ -81,5 +83,43 @@ RSpec.describe ContentSeeder do
     role.name = "Wall Day"
     expect(role).not_to be_valid
     expect(role.errors[:name].first).to eq("on wed must be Fast Day")
+  end
+
+  describe "the battery" do
+    before { seed }
+
+    it "has ten tests and fifteen measures" do
+      expect(BatteryTest.count).to eq(10)
+      expect(BatteryMeasure.count).to eq(15)
+    end
+
+    it "records height, as growth, belonging to no test" do
+      height = BatteryMeasure.find_by!(test_id: "h")
+      expect(height.direction).to eq("growth")
+      expect(height.battery_test).to be_nil
+      expect(height.unit).to eq("cm")
+    end
+
+    it "ties both sides of a paired test to the same test" do
+      right = BatteryMeasure.find_by!(test_id: "t3r")
+      left  = BatteryMeasure.find_by!(test_id: "t3l")
+      expect(right.battery_test).to eq(left.battery_test)
+      expect(right.battery_test.name).to eq("Single-leg hop, each leg")
+    end
+
+    it "knows which way is progress" do
+      sprint = BatteryMeasure.find_by!(test_id: "t1")   # lower is better
+      jump   = BatteryMeasure.find_by!(test_id: "t2")   # higher is better
+      expect(sprint.improvement_from(4.5, 4.2)).to eq(:better)
+      expect(sprint.improvement_from(4.5, 4.8)).to eq(:worse)
+      expect(jump.improvement_from(120, 131)).to eq(:better)
+      expect(jump.improvement_from(120, 120)).to eq(:same)
+      expect(jump.improvement_from(nil, 120)).to be_nil
+    end
+
+    it "reads height as neither better nor worse" do
+      height = BatteryMeasure.find_by!(test_id: "h")
+      expect(height.improvement_from(120, 126)).to eq(:same)
+    end
   end
 end

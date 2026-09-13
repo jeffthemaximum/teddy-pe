@@ -8,6 +8,8 @@ class ProgramYear < ApplicationRecord
   has_many :ball_gates, -> { order(:position) }, dependent: :destroy
   has_many :test_dates, -> { order(:position) }, dependent: :destroy
   has_many :day_roles,  -> { order(:position) }, dependent: :destroy
+  has_many :battery_tests,    -> { order(:position) }, dependent: :destroy
+  has_many :battery_measures, -> { order(:position) }, dependent: :destroy
 
   validates :label, presence: true, uniqueness: { scope: :athlete_id }
   validates :ball_now, presence: true
