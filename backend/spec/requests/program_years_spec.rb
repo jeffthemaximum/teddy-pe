@@ -27,9 +27,41 @@ RSpec.describe "program years", type: :request do
 
     it "returns the whole year in one response" do
       expect(payload.keys).to include(
-        "id", "label", "starts_on", "ends_on", "ball_now", "rank_rule", "north_star",
+        "id", "label", "starts_on", "ends_on", "status", "ball_now", "rank_rule", "north_star",
         "blocks", "areas", "patches", "ball_gates", "battery", "test_dates",
         "day_roles", "current_block_key", "current_week_id"
+      )
+    end
+
+    it "carries the year's own facts, not just the collections" do
+      expect(payload).to include(
+        "id" => year.id,
+        "label" => "2026-27",
+        "starts_on" => "2026-09-14",
+        "ends_on" => "2027-08-15",
+        "status" => "active",
+        "ball_now" => "green"
+      )
+      expect(payload["rank_rule"]).to eq("Earn 7 of 9 to become a Fox")
+      expect(payload["north_star"]).to be_present
+    end
+
+    it "names the week containing the date asked about" do
+      # current_week_id had no assertion at all, so it could have been nil
+      # forever without a failing test. This is the field This Week loads from.
+      get "/api/v1/program_years/#{year.id}?on=2026-09-17", headers: auth(coach)
+      body = JSON.parse(response.body)
+
+      expect(body["current_week_id"]).to eq(
+        Week.joins(:month_plan).find_by(month_plans: { program_year_id: year.id }, number: 1).id
+      )
+    end
+
+    it "falls back to today when the date is unreadable" do
+      get "/api/v1/program_years/#{year.id}?on=not-a-date", headers: auth(coach)
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["current_block_key"]).to eq(
+        year.current_block(on: Date.current)&.key
       )
     end
 
