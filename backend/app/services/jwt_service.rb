@@ -9,13 +9,15 @@ class JwtService
 
   class InvalidToken < StandardError; end
 
-  def self.encode(user_id:, password_digest: nil, ttl: DEFAULT_TTL)
-    payload = { sub: user_id, iat: Time.current.to_i, exp: (Time.current + ttl).to_i }
-    # Changing a password invalidates every token issued before it, which is
-    # the only revocation a stateless design gets. Sixteen hex characters of a
-    # digest hash, never the digest itself.
-    payload[:pwd] = fingerprint(password_digest) if password_digest
-    JWT.encode(payload, secret, ALG)
+  def self.encode(user:, ttl: DEFAULT_TTL)
+    {
+      sub: user.id,
+      iat: Time.current.to_i,
+      exp: (Time.current + ttl).to_i,
+      # Derived here rather than passed in, so no caller can mint a token
+      # that survives a password change by forgetting an argument.
+      pwd: fingerprint(user.password_digest)
+    }.then { |payload| JWT.encode(payload, secret, ALG) }
   end
 
   def self.decode(token)

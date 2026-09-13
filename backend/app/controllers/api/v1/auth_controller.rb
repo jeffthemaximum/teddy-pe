@@ -14,7 +14,7 @@ module Api
         end
 
         render json: {
-          jwt: JwtService.encode(user_id: user.id, password_digest: user.password_digest),
+          jwt: JwtService.encode(user: user),
           user: UserSerializer.new(user).as_json
         }
       end

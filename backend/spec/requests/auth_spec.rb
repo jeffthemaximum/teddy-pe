@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "auth", type: :request do
   let!(:user) { create(:user, :coach, email: "jeff@example.com", password: "a-long-enough-password") }
-  let(:token) { JwtService.encode(user_id: user.id) }
+  let(:token) { JwtService.encode(user: user) }
 
   describe "POST /api/v1/auth/login" do
     it "returns a jwt and the user" do
@@ -48,7 +48,10 @@ RSpec.describe "auth", type: :request do
     end
 
     it "refuses a token for a user who no longer exists" do
-      get "/api/v1/me", headers: { "Authorization" => "Bearer #{JwtService.encode(user_id: 999_999)}" }
+      # A real signature, a sub with no matching row: the shape of a token
+      # for an account that has since been deleted.
+      missing_user_token = JWT.encode({ sub: 999_999, exp: 1.day.from_now.to_i }, Rails.application.secret_key_base, "HS256")
+      get "/api/v1/me", headers: { "Authorization" => "Bearer #{missing_user_token}" }
       expect(response).to have_http_status(:unauthorized)
     end
 
@@ -82,7 +85,7 @@ RSpec.describe "auth", type: :request do
     it "refuses to promote itself" do
       viewer = create(:user)
       patch "/api/v1/me", params: { user: { role: "coach" } },
-        headers: { "Authorization" => "Bearer #{JwtService.encode(user_id: viewer.id)}" }
+        headers: { "Authorization" => "Bearer #{JwtService.encode(user: viewer)}" }
       expect(response).to have_http_status(:ok)
       expect(viewer.reload.role).to eq("viewer")
     end
@@ -90,10 +93,14 @@ RSpec.describe "auth", type: :request do
     it "refuses a password change with no current password" do
       patch "/api/v1/me", params: { user: { password: "a-new-long-password" } },
         headers: { "Authorization" => "Bearer #{token}" }
-      expect(response).to have_http_status(:unauthorized)
-      expect(JSON.parse(response.body)).to eq(
-        "error" => { "code" => "unauthorized", "message" => "That current password does not match." }
+      expect(response).to have_http_status(422)
+      body = JSON.parse(response.body)
+      expect(body).to eq(
+        "error" => { "code" => "wrong_password", "message" => "That current password does not match." }
       )
+      # The whole point: this must read as a field error, not a dead token,
+      # so a typo does not drop Teddy or his mother to the login screen.
+      expect(body["error"]["code"]).not_to eq("unauthorized")
     end
 
     it "changes the password when the current password is correct" do
@@ -103,11 +110,30 @@ RSpec.describe "auth", type: :request do
       expect(response).to have_http_status(:ok)
       expect(user.reload.authenticate("a-new-long-password")).to be_truthy
     end
+
+    it "hands back a fresh token on a password change, and it works" do
+      patch "/api/v1/me",
+        params: { user: { password: "a-new-long-password", current_password: "a-long-enough-password" } },
+        headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:ok)
+      new_jwt = JSON.parse(response.body)["jwt"]
+      expect(new_jwt).to be_present
+
+      get "/api/v1/me", headers: { "Authorization" => "Bearer #{new_jwt}" }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "returns the payload unchanged, with no jwt key, on a plain name change" do
+      patch "/api/v1/me", params: { user: { name: "Jeff Maxim" } },
+        headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)).not_to have_key("jwt")
+    end
   end
 
   describe "a token issued before a password change" do
     it "stops working once that user changes their password" do
-      old_token = JwtService.encode(user_id: user.id, password_digest: user.password_digest)
+      old_token = JwtService.encode(user: user)
       patch "/api/v1/me",
         params: { user: { password: "a-new-long-password", current_password: "a-long-enough-password" } },
         headers: { "Authorization" => "Bearer #{old_token}" }
@@ -119,7 +145,7 @@ RSpec.describe "auth", type: :request do
 
     it "leaves a token for a different user unaffected" do
       other = create(:user, password: "another-long-password")
-      other_token = JwtService.encode(user_id: other.id, password_digest: other.password_digest)
+      other_token = JwtService.encode(user: other)
 
       patch "/api/v1/me",
         params: { user: { password: "a-new-long-password", current_password: "a-long-enough-password" } },
@@ -127,6 +153,27 @@ RSpec.describe "auth", type: :request do
       expect(response).to have_http_status(:ok)
 
       get "/api/v1/me", headers: { "Authorization" => "Bearer #{other_token}" }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "still accepts a token with no pwd claim at all, even after the password changes" do
+      # JwtService.encode always sets pwd now, so build a bare, hand-made
+      # token the way an already-issued or hand-rolled one would look: a real
+      # signature, no pwd claim. authorize_request's short-circuit is the only
+      # thing keeping this working, and that is the one guarantee here worth
+      # a direct test.
+      no_pwd_claim_token = JWT.encode(
+        { sub: user.id, iat: Time.current.to_i, exp: 1.day.from_now.to_i },
+        Rails.application.secret_key_base,
+        "HS256"
+      )
+
+      patch "/api/v1/me",
+        params: { user: { password: "a-new-long-password", current_password: "a-long-enough-password" } },
+        headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:ok)
+
+      get "/api/v1/me", headers: { "Authorization" => "Bearer #{no_pwd_claim_token}" }
       expect(response).to have_http_status(:ok)
     end
   end
