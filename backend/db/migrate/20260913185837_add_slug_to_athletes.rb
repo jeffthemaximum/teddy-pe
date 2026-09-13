@@ -4,7 +4,17 @@ class AddSlugToAthletes < ActiveRecord::Migration[8.0]
     # corrected. Keying on the name orphaned the athlete row and everything
     # hanging off it the first time somebody fixed a typo.
     add_column :athletes, :slug, :string
-    up_only { execute "update athletes set slug = 'teddy' where slug is null" }
+    up_only do
+      # The oldest athlete is Teddy, who the content keys on. Anyone else gets a
+      # slug derived from their id, because this backfill must not hand two rows
+      # the same value right before a unique index goes on.
+      execute <<~SQL
+        update athletes
+           set slug = case when id = (select min(id) from athletes) then 'teddy'
+                           else 'athlete-' || id end
+         where slug is null
+      SQL
+    end
     change_column_null :athletes, :slug, false
     add_index :athletes, :slug, unique: true
 

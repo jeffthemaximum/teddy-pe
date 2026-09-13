@@ -35,6 +35,18 @@ RSpec.describe "content integrity" do
           "#{b['key']} starts #{b['starts_on']}, but #{a['key']} ends #{a['ends_on']}"
       end
     end
+
+    it "gives every ordered collection distinct positions" do
+      {
+        "blocks" => PROGRAM["blocks"], "areas" => PROGRAM["areas"],
+        "ball_gates" => PROGRAM["ball_gates"], "battery_tests" => PROGRAM["battery_tests"],
+        "battery_measures" => PROGRAM["battery_measures"], "test_dates" => PROGRAM["test_dates"],
+        "day_roles" => PROGRAM["day_roles"]
+      }.each do |name, rows|
+        positions = rows.map { |r| r["position"] }
+        expect(positions.uniq.size).to eq(positions.size), "#{name} repeats a position: #{positions.inspect}"
+      end
+    end
   end
 
   describe "areas" do
