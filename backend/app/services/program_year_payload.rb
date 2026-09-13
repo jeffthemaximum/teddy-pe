@@ -127,7 +127,11 @@ class ProgramYearPayload
     return nil if rows.size < 2
     first, last = rows.first, rows.last
     days = (window_date(last.test_date.window) - window_date(first.test_date.window)).to_i
-    return nil if days.zero?
+    # Position orders the windows, and nothing forces position to agree with
+    # the calendar. A future content edit that disagreed would produce a
+    # negative span and a negative pace, which reads as shrinking and would
+    # quietly suppress the growth-load trigger this number exists to fire.
+    return nil if days <= 0
     ((last.numeric_value - first.numeric_value) / days * 365.25).to_f.round(1)
   end
 
