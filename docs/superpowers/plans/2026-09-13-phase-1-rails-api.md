@@ -1274,7 +1274,7 @@ require "rails_helper"
 
 RSpec.describe "auth", type: :request do
   let!(:user) { create(:user, :coach, email: "jeff@example.com", password: "a-long-enough-password") }
-  let(:token) { JwtService.encode(user_id: user.id) }
+  let(:token) { JwtService.encode(user: user) }
 
   describe "POST /api/v1/auth/login" do
     it "returns a jwt and the user" do
@@ -1320,7 +1320,7 @@ RSpec.describe "auth", type: :request do
     end
 
     it "refuses a token for a user who no longer exists" do
-      get "/api/v1/me", headers: { "Authorization" => "Bearer #{JwtService.encode(user_id: 999_999)}" }
+      get "/api/v1/me", headers: { "Authorization" => "Bearer #{JwtService.encode(user: User.new(id: 999_999, password_digest: "x"))}" }
       expect(response).to have_http_status(:unauthorized)
     end
 
@@ -1342,7 +1342,7 @@ RSpec.describe "auth", type: :request do
     it "refuses to promote itself" do
       viewer = create(:user)
       patch "/api/v1/me", params: { user: { role: "coach" } },
-        headers: { "Authorization" => "Bearer #{JwtService.encode(user_id: viewer.id)}" }
+        headers: { "Authorization" => "Bearer #{JwtService.encode(user: viewer)}" }
       expect(response).to have_http_status(:ok)
       expect(viewer.reload.role).to eq("viewer")
     end
@@ -1445,7 +1445,7 @@ module Api
           return render_error("unauthorized", "That email and password do not match.", :unauthorized)
         end
 
-        render json: { jwt: JwtService.encode(user_id: user.id), user: UserSerializer.new(user).as_json }
+        render json: { jwt: JwtService.encode(user: user), user: UserSerializer.new(user).as_json }
       end
     end
   end
@@ -2434,7 +2434,7 @@ RSpec.describe "drills", type: :request do
 
   let(:coach)  { create(:user, :coach) }
   let(:viewer) { create(:user) }
-  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user_id: user.id)}" }
+  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user: user)}" }
 
   it "lists every drill to a signed-in user" do
     get "/api/v1/drills", headers: auth(coach)
@@ -3249,7 +3249,7 @@ RSpec.describe "program years", type: :request do
   let(:year)   { ProgramYear.sole }
   let(:coach)  { create(:user, :coach) }
   let(:viewer) { create(:user) }
-  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user_id: user.id)}" }
+  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user: user)}" }
 
   describe "GET /api/v1/program_years" do
     it "lists the years with no program content in them" do
@@ -3535,7 +3535,7 @@ RSpec.describe "month plans", type: :request do
 
   let(:year)  { ProgramYear.sole }
   let(:coach) { create(:user, :coach) }
-  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user_id: user.id)}" }
+  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user: user)}" }
 
   it "returns a month's weeks with their day summaries" do
     get "/api/v1/program_years/#{year.id}/plans/2026-09", headers: auth(coach)
@@ -3583,7 +3583,7 @@ RSpec.describe "this week", type: :request do
 
   let(:year)  { ProgramYear.sole }
   let(:coach) { create(:user, :coach) }
-  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user_id: user.id)}" }
+  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user: user)}" }
 
   it "returns the week containing the date asked about, with full cards" do
     get "/api/v1/program_years/#{year.id}/weeks/current?on=2026-09-17", headers: auth(coach)
@@ -4080,7 +4080,7 @@ RSpec.describe "coach entries", type: :request do
   let(:coach)   { create(:user, :coach) }
   let(:teddy)   { create(:user, :athlete) }
   let(:viewer)  { create(:user) }
-  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user_id: user.id)}" }
+  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user: user)}" }
 
   let(:body) do
     { coach_entry: { program_year_id: year.id, session_date: "2026-09-17", overall: 4,
@@ -4170,7 +4170,7 @@ RSpec.describe "athlete entries", type: :request do
   let(:coach)  { create(:user, :coach) }
   let(:teddy)  { create(:user, :athlete) }
   let(:viewer) { create(:user) }
-  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user_id: user.id)}" }
+  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user: user)}" }
 
   let(:body) do
     { athlete_entry: { program_year_id: year.id, session_date: "2026-09-17", felt: 5,
@@ -4468,7 +4468,7 @@ Add to `weeks_spec.rb`:
     create(:athlete_entry, user: teddy, program_year: year, session_date: Date.new(2026, 9, 17))
 
     get "/api/v1/program_years/#{year.id}/weeks/current?on=2026-09-17",
-      headers: { "Authorization" => "Bearer #{JwtService.encode(user_id: coach.id)}" }
+      headers: { "Authorization" => "Bearer #{JwtService.encode(user: coach)}" }
 
     thu = JSON.parse(response.body)["days"].find { |d| d["dow"] == "thu" }
     expect(thu["coach_entry"]["note"]).to eq("Good day")
@@ -4562,7 +4562,7 @@ RSpec.describe "test results", type: :request do
   let(:coach)  { create(:user, :coach) }
   let(:teddy)  { create(:user, :athlete) }
   let(:viewer) { create(:user) }
-  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user_id: user.id)}" }
+  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user: user)}" }
 
   def post_result(user, test_id:, window: "2026-09", value:)
     post "/api/v1/test_results",
@@ -5044,7 +5044,7 @@ RSpec.describe "progression", type: :request do
   let(:athlete) { year.athlete }
   let(:coach)   { create(:user, :coach) }
   let(:viewer)  { create(:user) }
-  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user_id: user.id)}" }
+  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user: user)}" }
 
   # A second year, so nothing can quietly assume there is one.
   let!(:next_year) do
