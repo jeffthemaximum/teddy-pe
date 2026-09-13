@@ -4908,7 +4908,16 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: `Patch`, `Block` (Task 6), `DrillRating` (Task 12), `TestResult`, `BatteryMeasure` (Tasks 7 and 13).
-- Produces: `PatchAward`, `RankAward` with the 7 of 9 validation; `ProgressionPayload.new(athlete).as_json`; `GET /api/v1/progression`; the Year payload's `patch_awards` and `rank_awards`.
+- Produces: `PatchAward`, `RankAward` with the 7 of 9 validation; `ProgressionPayload.new(athlete, user:).as_json`; `GET /api/v1/progression`; the Year payload's `patch_awards` and `rank_awards`.
+
+> **What shipped differs from the code below, under Rulings 49 to 51.** The hard parts of this task were right as written: the battery series joins on `test_id` rather than a per-year id, drill mastery groups by slug with nothing year-scoped, and seven of nine is enforced at both the model and a database check constraint. The endpoint costs 8 fixed queries, 6 for a viewer.
+>
+> - **`cm_per_year` lives once, on `TestResult`.** This plan carried the same `recorded_at` growth-pace bug in two services. Task 13 fixed one copy and this one survived. Worse, the test here could not tell the versions apart, because the fixture's timestamps and its windows were both a year apart. Extracting it means Task 13's height spec, which posts both heights in a single run, discriminates for both callers.
+> - **Rank history now genuinely crosses a year.** The example below creates one award in one year, so deleting the second program year left it green. The section the endpoint leads with was the one place a year-one assumption survived the whole suite.
+> - **`patches_earned`'s block scoping is tested.** Every example awarded one block's patches, so a version with no block filter passed all of them. That is the shape of a rank awarded on the previous rank's patches.
+> - Height is selected by `direction == "growth"` in both places rather than by `test_id == "h"` in one, and battery cards sort by `position` rather than lexically, which had them rendering `t1, t10, t11l, t11r, t2`.
+>
+> See `.superpowers/sdd/2026-09-13-phase-1-rails-api/progress.md` and `git log`.
 
 This is the endpoint the whole schema was shaped for. A year of plans could have stayed in a JSON file. Rank history, a battery charted across every year, height over time and per-drill mastery could not.
 
