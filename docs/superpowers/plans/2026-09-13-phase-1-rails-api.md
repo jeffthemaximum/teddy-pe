@@ -4557,6 +4557,16 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - Consumes: `BatteryMeasure`, `TestDate` (Tasks 6 and 7).
 - Produces: `TestResult` with `raw_value` and `numeric_value`; `TestResult.upsert_for(...)`; `GET /api/v1/test_results`; `POST /api/v1/test_results`; the Year payload's `battery.results` and `battery.progress`.
 
+> **The `cm_per_year` code below is wrong, under Rulings 46 and 47.** It computes the growth pace from `recorded_at`, which is wall-clock **write** time. Two height measurements taken three months apart can be typed in during the same sitting, so that version measures data entry rather than elapsed growth, and it returns nil against this task's own height spec.
+>
+> That number is not cosmetic. A fast growth pace is the documented trigger for halving jumping and sprinting volume for 8 to 12 weeks, so a pace derived from typing speed either misses a real growth spurt or fires a false one.
+>
+> - **The span comes from each row's `test_date.window`**, which is when the measurement was taken. A review confirmed no better source exists in the schema: `TestDate#display` is free text like "Sep 15-17" with no parse contract.
+> - **Known precision, measured:** anchoring a window to the first of its month gives 91 days where the real gap between the Baseline and December windows is about 83 to 87. A 5 to 8 percent overestimate. Adequate for a coarse trigger on an 8 to 12 week intervention, not adequate as a precise growth velocity, and it should be described that way.
+> - **A non-positive span returns nil.** Nothing forces `test_date.position` to agree with the calendar, and a content edit that disagreed produced a negative pace, which reads as shrinking and would have quietly suppressed the trigger. Proven: the mismatch gave -12.0 before the guard.
+>
+> See `.superpowers/sdd/2026-09-13-phase-1-rails-api/progress.md` and `git log`.
+
 `api/results.js` deliberately stores the value as text, because a number that will not parse is still worth keeping. That judgment survives. `raw_value` keeps what was typed and `numeric_value` holds the parse when one is possible, so the chart reads what it can and nothing typed is ever discarded. Clearing a value deletes the row, so a mistyped number can be taken back.
 
 - [ ] **Step 1: Write the migration**
