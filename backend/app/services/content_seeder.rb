@@ -6,12 +6,13 @@
 class ContentSeeder
   class MissingContent < StandardError; end
 
-  attr_reader :year_label, :counts, :year
+  attr_reader :year_label, :counts, :year, :bare
 
   def initialize(year_label:, root: Rails.root.join("content/program_years"))
     @year_label = year_label
     @dir = root.join(year_label)
     @counts = Hash.new(0)
+    @bare = []
     raise MissingContent, "no content at #{@dir}" unless File.directory?(@dir)
   end
 
@@ -29,6 +30,7 @@ class ContentSeeder
       seed_drills(load_yaml("drills.yml").fetch("drills"))
       tests = seed_battery_tests(program.fetch("battery_tests"))
       seed_battery_measures(program.fetch("battery_measures"), tests)
+      seed_plans(blocks)
     end
     counts
   end
@@ -144,5 +146,69 @@ class ContentSeeder
       upsert(year.battery_measures, { test_id: row.fetch("test_id") },
              row.slice("position", "label", "unit", "direction").merge("battery_test" => test))
     end
+  end
+
+  def seed_plans(blocks)
+    tokenizer = BodyTokenizer.new(Drill.terms)
+    roles = year.day_roles.index_by(&:dow)
+
+    Dir[@dir.join("plans/*.yml")].sort.each do |path|
+      doc = YAML.load_file(path, permitted_classes: [ Date ])
+      seed_month_plan(doc, blocks, roles, tokenizer)
+    end
+  end
+
+  def seed_month_plan(doc, blocks, roles, tokenizer)
+    attrs = doc.fetch("month_plan")
+    block = blocks[attrs.fetch("block")] or
+      raise MissingContent, "plan #{attrs['month']} names unknown block #{attrs['block']}"
+
+    plan = upsert(MonthPlan, { program_year: year, month: attrs.fetch("month") },
+                  attrs.slice("label", "range_display").merge("block" => block))
+
+    doc.fetch("weeks").each do |row|
+      week = upsert(plan.weeks, { number: row.fetch("number") },
+                    row.slice("position_in_block", "theme", "dates_display", "targets", "challenge", "trials")
+                       .merge("block" => block))
+      seed_days(week, row.fetch("days"), roles, tokenizer)
+    end
+  end
+
+  def seed_days(week, rows, roles, tokenizer)
+    rows.each_with_index do |row, index|
+      card = upsert(week.day_cards, { date: row.fetch("date") },
+                    { day_role: roles[row.fetch("dow")], dow: row.fetch("dow"),
+                      name: row.fetch("name"), minutes: row.fetch("minutes"),
+                      intensity: row.fetch("intensity"), hie: row.fetch("hie"),
+                      summary_lines: row.fetch("summary_lines", []),
+                      dad_note: row["dad_note"], position: index, drill_slugs: [] })
+
+      slugs = seed_blocks_for(card, row["blocks"] || [], tokenizer)
+      card.update!(drill_slugs: slugs)
+    end
+  end
+
+  # Returns the day's drill slugs in first-mention order, which is what the
+  # journal's rating chips are built from.
+  def seed_blocks_for(card, rows, tokenizer)
+    day_slugs = []
+
+    rows.each_with_index do |row, index|
+      tokens = tokenizer.tokenize(name: row.fetch("name"), body: row["body"].to_s)
+      upsert(card.day_blocks, { position: index },
+             { minutes: row.fetch("minutes"), name: row.fetch("name"), body: row["body"],
+               tag: row["tag"], name_tokens: tokens[:name_tokens],
+               body_tokens: tokens[:body_tokens], drill_slugs: tokens[:drill_slugs] })
+      day_slugs |= tokens[:drill_slugs]
+    end
+
+    # Blocks where nothing matched are the gaps to fill when the next month is
+    # written. build.py printed this; so does the seeder.
+    rows.each_with_index do |row, index|
+      next unless card.day_blocks.find_by(position: index)&.drill_slugs&.empty?
+      @bare << "#{card.dow} · #{row.fetch('name')}"
+    end
+
+    day_slugs
   end
 end

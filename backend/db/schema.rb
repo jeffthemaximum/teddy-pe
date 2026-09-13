@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_13_194700) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_13_195000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -76,7 +76,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_194700) do
     t.index ["battery_test_id"], name: "index_battery_measures_on_battery_test_id"
     t.index ["program_year_id", "test_id"], name: "index_battery_measures_on_program_year_id_and_test_id", unique: true
     t.index ["program_year_id"], name: "index_battery_measures_on_program_year_id"
-    t.check_constraint "direction::text = ANY (ARRAY['lower'::character varying::text, 'higher'::character varying::text, 'growth'::character varying::text])", name: "battery_measures_direction_check"
+    t.check_constraint "direction::text = ANY (ARRAY['lower'::character varying, 'higher'::character varying, 'growth'::character varying]::text[])", name: "battery_measures_direction_check"
   end
 
   create_table "battery_tests", force: :cascade do |t|
@@ -107,6 +107,43 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_194700) do
     t.index ["program_year_id"], name: "index_blocks_on_program_year_id"
   end
 
+  create_table "day_blocks", force: :cascade do |t|
+    t.bigint "day_card_id", null: false
+    t.integer "position", null: false
+    t.string "minutes", null: false
+    t.string "name", null: false
+    t.text "body"
+    t.string "tag"
+    t.jsonb "name_tokens", default: [], null: false
+    t.jsonb "body_tokens", default: [], null: false
+    t.string "drill_slugs", default: [], null: false, array: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["day_card_id", "position"], name: "index_day_blocks_on_day_card_id_and_position", unique: true
+    t.index ["day_card_id"], name: "index_day_blocks_on_day_card_id"
+    t.check_constraint "tag IS NULL OR (tag::text = ANY (ARRAY['test'::character varying, 'challenge'::character varying]::text[]))", name: "day_blocks_tag_check"
+  end
+
+  create_table "day_cards", force: :cascade do |t|
+    t.bigint "week_id", null: false
+    t.bigint "day_role_id"
+    t.date "date", null: false
+    t.string "dow", null: false
+    t.string "name", null: false
+    t.string "minutes", null: false
+    t.integer "intensity", null: false
+    t.integer "hie", default: 0, null: false
+    t.text "summary_lines", default: [], null: false, array: true
+    t.text "dad_note"
+    t.string "drill_slugs", default: [], null: false, array: true
+    t.integer "position", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["day_role_id"], name: "index_day_cards_on_day_role_id"
+    t.index ["week_id", "date"], name: "index_day_cards_on_week_id_and_date", unique: true
+    t.index ["week_id"], name: "index_day_cards_on_week_id"
+  end
+
   create_table "day_roles", force: :cascade do |t|
     t.bigint "program_year_id", null: false
     t.string "dow", null: false
@@ -135,6 +172,19 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_194700) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_drills_on_slug", unique: true
+  end
+
+  create_table "month_plans", force: :cascade do |t|
+    t.bigint "program_year_id", null: false
+    t.bigint "block_id", null: false
+    t.string "month", null: false
+    t.string "label", null: false
+    t.string "range_display", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["block_id"], name: "index_month_plans_on_block_id"
+    t.index ["program_year_id", "month"], name: "index_month_plans_on_program_year_id_and_month", unique: true
+    t.index ["program_year_id"], name: "index_month_plans_on_program_year_id"
   end
 
   create_table "patches", force: :cascade do |t|
@@ -190,6 +240,23 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_194700) do
     t.check_constraint "role::text = ANY (ARRAY['coach'::character varying::text, 'athlete'::character varying::text, 'viewer'::character varying::text])", name: "users_role_check"
   end
 
+  create_table "weeks", force: :cascade do |t|
+    t.bigint "month_plan_id", null: false
+    t.bigint "block_id", null: false
+    t.integer "number", null: false
+    t.integer "position_in_block", null: false
+    t.string "theme", null: false
+    t.string "dates_display", null: false
+    t.text "targets", default: [], null: false, array: true
+    t.text "challenge", null: false
+    t.boolean "trials", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["block_id"], name: "index_weeks_on_block_id"
+    t.index ["month_plan_id", "number"], name: "index_weeks_on_month_plan_id_and_number", unique: true
+    t.index ["month_plan_id"], name: "index_weeks_on_month_plan_id"
+  end
+
   add_foreign_key "area_cells", "areas"
   add_foreign_key "area_cells", "blocks"
   add_foreign_key "areas", "program_years"
@@ -199,10 +266,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_194700) do
   add_foreign_key "battery_measures", "program_years"
   add_foreign_key "battery_tests", "program_years"
   add_foreign_key "blocks", "program_years"
+  add_foreign_key "day_blocks", "day_cards"
+  add_foreign_key "day_cards", "day_roles"
+  add_foreign_key "day_cards", "weeks"
   add_foreign_key "day_roles", "program_years"
+  add_foreign_key "month_plans", "blocks"
+  add_foreign_key "month_plans", "program_years"
   add_foreign_key "patches", "areas"
   add_foreign_key "patches", "blocks"
   add_foreign_key "patches", "program_years"
   add_foreign_key "program_years", "athletes"
   add_foreign_key "test_dates", "program_years"
+  add_foreign_key "weeks", "blocks"
+  add_foreign_key "weeks", "month_plans"
 end
