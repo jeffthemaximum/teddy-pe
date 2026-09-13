@@ -77,8 +77,62 @@ class ProgramYearPayload
       measures: @year.battery_measures.map do |m|
         { id: m.id, test_id: m.test_id, position: m.position, label: m.label,
           unit: m.unit, direction: m.direction, battery_test_id: m.battery_test_id }
-      end
+      end,
+      results: results.map { |r| { window: r.test_date.window, test_id: r.battery_measure.test_id,
+                                   raw_value: r.raw_value, numeric_value: r.numeric_value&.to_s } },
+      progress: progress
     }
+  end
+
+  def results
+    @results ||= TestResult.where(program_year: @year)
+                           .includes(:test_date, :battery_measure)
+                           .sort_by { |r| r.test_date.position }
+  end
+
+  # One card per measure: latest value, change since baseline with the
+  # direction applied, and a series for the sparkline. Fifteen tests in
+  # different units on one axis would mean nothing, so they stay separate.
+  def progress
+    by_measure = results.group_by(&:battery_measure_id)
+
+    @year.battery_measures.map do |measure|
+      rows = (by_measure[measure.id] || [])
+      baseline = rows.first
+      latest = rows.last
+
+      card = {
+        test_id: measure.test_id, label: measure.label, unit: measure.unit,
+        direction: measure.direction,
+        baseline: baseline&.numeric_value&.to_s,
+        latest: latest&.numeric_value&.to_s,
+        change: measure.improvement_from(baseline&.numeric_value, latest&.numeric_value)&.to_s,
+        series: rows.map { |r| { window: r.test_date.window, value: r.numeric_value&.to_s } }
+      }
+      measure.direction == "growth" ? card.merge(cm_per_year: cm_per_year(rows)) : card
+    end
+  end
+
+  # Height reports a pace. A fast one is the trigger for the growth-load
+  # protocol in the architecture: halve jumping and sprinting for 8 to 12
+  # weeks and double down on skill and mobility.
+  #
+  # The pace is measured against the calendar the test windows sit on
+  # (test_date.window, "YYYY-MM"), not against recorded_at. recorded_at is
+  # when the number was typed in, which can happen the same afternoon for a
+  # baseline and a catch-up retest, or days after the window it belongs to;
+  # neither tells you how much time actually passed between the two
+  # measurements.
+  def cm_per_year(rows)
+    return nil if rows.size < 2
+    first, last = rows.first, rows.last
+    days = (window_date(last.test_date.window) - window_date(first.test_date.window)).to_i
+    return nil if days.zero?
+    ((last.numeric_value - first.numeric_value) / days * 365.25).to_f.round(1)
+  end
+
+  def window_date(window)
+    Date.strptime(window, "%Y-%m")
   end
 
   def test_dates

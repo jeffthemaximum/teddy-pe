@@ -17,6 +17,7 @@ Rails.application.routes.draw do
 
       resources :coach_entries,   only: %i[index create update]
       resources :athlete_entries, only: %i[index show create update]
+      resources :test_results,    only: %i[index create]
     end
   end
 

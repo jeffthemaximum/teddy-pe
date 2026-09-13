@@ -1,0 +1,96 @@
+require "rails_helper"
+
+RSpec.describe "test results", type: :request do
+  before { ContentSeeder.new(year_label: "2026-27").seed! }
+
+  let(:year)   { ProgramYear.sole }
+  let(:coach)  { create(:user, :coach) }
+  let(:teddy)  { create(:user, :athlete) }
+  let(:viewer) { create(:user) }
+  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user: user)}" }
+
+  def post_result(user, test_id:, window: "2026-09", value:)
+    post "/api/v1/test_results",
+      params: { test_result: { program_year_id: year.id, window: window,
+                               test_id: test_id, value: value } },
+      as: :json, headers: auth(user)
+  end
+
+  it "records a number and parses it for the chart" do
+    post_result(coach, test_id: "t1", value: "4.42")
+    expect(response).to have_http_status(:ok)
+
+    result = TestResult.sole
+    expect(result.raw_value).to eq("4.42")
+    expect(result.numeric_value).to eq(4.42)
+    expect(result.battery_measure.test_id).to eq("t1")
+    expect(result.test_date.window).to eq("2026-09")
+  end
+
+  it "keeps a value it cannot parse rather than dropping it" do
+    post_result(coach, test_id: "t8", value: "15 to 18")
+    expect(response).to have_http_status(:ok)
+    expect(TestResult.sole.raw_value).to eq("15 to 18")
+    expect(TestResult.sole.numeric_value).to eq(15)
+  end
+
+  it "refuses a value with no digit in it" do
+    post_result(coach, test_id: "t1", value: "pretty fast")
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(TestResult.count).to eq(0)
+  end
+
+  it "overwrites rather than duplicating on a second save" do
+    post_result(coach, test_id: "t1", value: "4.42")
+    post_result(coach, test_id: "t1", value: "4.31")
+    expect(TestResult.count).to eq(1)
+    expect(TestResult.sole.raw_value).to eq("4.31")
+  end
+
+  it "deletes the row when the value is cleared, so a mistype can be taken back" do
+    post_result(coach, test_id: "t1", value: "4.42")
+    post_result(coach, test_id: "t1", value: "")
+    expect(response).to have_http_status(:ok)
+    expect(TestResult.count).to eq(0)
+  end
+
+  it "refuses a measure that is not in this year's battery" do
+    post_result(coach, test_id: "t99", value: "10")
+    expect(response).to have_http_status(:not_found)
+  end
+
+  it "lets Teddy record his own numbers and a viewer record none" do
+    post_result(teddy, test_id: "t5", value: "22")
+    expect(response).to have_http_status(:ok)
+
+    post_result(viewer, test_id: "t5", value: "30")
+    expect(response).to have_http_status(:forbidden)
+  end
+
+  describe "the progress panel" do
+    before do
+      post_result(coach, test_id: "t1", window: "2026-09", value: "4.60")
+      post_result(coach, test_id: "t1", window: "2026-12", value: "4.31")
+      post_result(coach, test_id: "h",  window: "2026-09", value: "128")
+      post_result(coach, test_id: "h",  window: "2026-12", value: "131")
+    end
+
+    it "reports each measure's latest value and direction of travel" do
+      get "/api/v1/program_years/#{year.id}", headers: auth(coach)
+      progress = JSON.parse(response.body).dig("battery", "progress")
+
+      sprint = progress.find { |p| p["test_id"] == "t1" }
+      expect(sprint["baseline"]).to eq("4.6")
+      expect(sprint["latest"]).to eq("4.31")
+      expect(sprint["change"]).to eq("better")
+      expect(sprint["series"].size).to eq(2)
+    end
+
+    it "reads height as growth rather than as better or worse" do
+      get "/api/v1/program_years/#{year.id}", headers: auth(coach)
+      height = JSON.parse(response.body).dig("battery", "progress").find { |p| p["test_id"] == "h" }
+      expect(height["change"]).to eq("same")
+      expect(height["cm_per_year"]).to be_within(0.5).of(12.0)
+    end
+  end
+end

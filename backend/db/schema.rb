@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_13_200000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_13_201000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -285,6 +285,25 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_200000) do
     t.index ["program_year_id"], name: "index_test_dates_on_program_year_id"
   end
 
+  create_table "test_results", force: :cascade do |t|
+    t.bigint "program_year_id", null: false
+    t.bigint "athlete_id", null: false
+    t.bigint "test_date_id", null: false
+    t.bigint "battery_measure_id", null: false
+    t.bigint "recorded_by_user_id", null: false
+    t.string "raw_value", null: false
+    t.decimal "numeric_value", precision: 10, scale: 3
+    t.datetime "recorded_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["athlete_id"], name: "index_test_results_on_athlete_id"
+    t.index ["battery_measure_id"], name: "index_test_results_on_battery_measure_id"
+    t.index ["program_year_id", "test_date_id", "battery_measure_id"], name: "index_test_results_on_year_window_and_measure", unique: true
+    t.index ["program_year_id"], name: "index_test_results_on_program_year_id"
+    t.index ["recorded_by_user_id"], name: "index_test_results_on_recorded_by_user_id"
+    t.index ["test_date_id"], name: "index_test_results_on_test_date_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.citext "email", null: false
     t.string "password_digest", null: false
@@ -345,6 +364,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_200000) do
   add_foreign_key "patches", "program_years"
   add_foreign_key "program_years", "athletes"
   add_foreign_key "test_dates", "program_years"
+  add_foreign_key "test_results", "athletes"
+  add_foreign_key "test_results", "battery_measures"
+  add_foreign_key "test_results", "program_years"
+  add_foreign_key "test_results", "test_dates"
+  add_foreign_key "test_results", "users", column: "recorded_by_user_id"
   add_foreign_key "weeks", "blocks"
   add_foreign_key "weeks", "month_plans"
 end
