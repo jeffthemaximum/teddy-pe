@@ -64,4 +64,21 @@ RSpec.describe "this week", type: :request do
     expect(thu["coach_entry"]["note"]).to eq("Good day")
     expect(thu["athlete_entry"]).to be_nil
   end
+
+  it "carries Teddy his own entry, shared or not" do
+    teddy = create(:user, :athlete)
+    create(:athlete_entry, user: teddy, program_year: year,
+           session_date: Date.new(2026, 9, 17), best: "The cartwheel felt like flying")
+
+    get "/api/v1/program_years/#{year.id}/weeks/current?on=2026-09-17", headers: auth(teddy)
+    thu = JSON.parse(response.body)["days"].find { |d| d["dow"] == "thu" }
+
+    # The nil assertion for the coach passes whether the scope filters or the
+    # lookup is simply broken. This is the half that tells them apart, and it
+    # is the one that matters to Teddy: a lookup returning nil for his own
+    # entry opens his form blank, and a blank form saved back overwrites what
+    # he wrote.
+    expect(thu["athlete_entry"]).to be_present
+    expect(thu["athlete_entry"]["best"]).to eq("The cartwheel felt like flying")
+  end
 end

@@ -14,17 +14,21 @@ class CoachEntry < ApplicationRecord
   scope :flagged, -> { where(flag_pain: true) }
 
   # Addressed by (author, year, date), so a second device and a replayed
-  # offline write both land on the same row.
+  # offline write both land on the same row. Wrapped in a transaction so a
+  # bad rating never leaves the entry saved with only some of its ratings:
+  # the write the Phase 2 offline queue replays has to be all or nothing.
   def self.upsert_for(user:, program_year:, session_date:, attrs: {}, ratings: nil)
-    entry = find_or_initialize_by(user: user, program_year: program_year, session_date: session_date)
-    entry.athlete ||= program_year.athlete
-    entry.day_card ||= DayCard.joins(week: :month_plan)
-                              .where(month_plans: { program_year_id: program_year.id })
-                              .find_by(date: session_date)
-    entry.assign_attributes(attrs)
-    entry.save!
-    entry.replace_ratings!(ratings) unless ratings.nil?
-    entry
+    transaction do
+      entry = find_or_initialize_by(user: user, program_year: program_year, session_date: session_date)
+      entry.athlete ||= program_year.athlete
+      entry.day_card ||= DayCard.joins(week: :month_plan)
+                                .where(month_plans: { program_year_id: program_year.id })
+                                .find_by(date: session_date)
+      entry.assign_attributes(attrs)
+      entry.save!
+      entry.replace_ratings!(ratings) unless ratings.nil?
+      entry
+    end
   end
 
   # A rating that is sent replaces what was there. A drill left out of the

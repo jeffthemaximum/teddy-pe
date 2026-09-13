@@ -58,6 +58,11 @@ RSpec.describe "coach entries", type: :request do
       params: body.merge(ratings: { "split-step" => "brilliant" }), as: :json, headers: auth(coach)
     expect(response).to have_http_status(:unprocessable_entity)
     expect(JSON.parse(response.body).dig("error", "code")).to eq("unprocessable")
+
+    # The whole write is one transaction: a bad rating must not leave the
+    # entry committed with only some of its ratings saved.
+    expect(CoachEntry.count).to eq(0)
+    expect(DrillRating.count).to eq(0)
   end
 
   it "ignores a drill slug that does not exist rather than failing the save" do

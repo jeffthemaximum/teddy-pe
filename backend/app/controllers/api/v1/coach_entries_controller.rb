@@ -30,8 +30,10 @@ module Api
       def update
         entry = policy_scope(CoachEntry).find(params[:id])
         authorize entry
-        entry.update!(entry_params.except(:program_year_id, :session_date))
-        entry.replace_ratings!(ratings_param) if ratings_param
+        CoachEntry.transaction do
+          entry.update!(entry_params.except(:program_year_id, :session_date))
+          entry.replace_ratings!(ratings_param) if ratings_param
+        end
         render json: { coach_entry: serialize(entry) }
       end
 
@@ -49,7 +51,7 @@ module Api
       # because that is a real mistake worth surfacing.
       def ratings_param
         raw = params[:ratings]
-        return nil if raw.blank?
+        return nil if raw.blank? || !raw.respond_to?(:to_unsafe_h)
         raw.to_unsafe_h.select { |slug, _| slug.to_s.match?(/\A[a-z0-9-]{1,64}\z/) }
       end
 

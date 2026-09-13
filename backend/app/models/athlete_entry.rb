@@ -16,14 +16,18 @@ class AthleteEntry < ApplicationRecord
 
   scope :shared_with_coach, -> { where(shared: true) }
 
+  # Wrapped in a transaction for the same reason as CoachEntry.upsert_for:
+  # the write the Phase 2 offline queue replays has to be all or nothing.
   def self.upsert_for(user:, program_year:, session_date:, attrs: {})
-    entry = find_or_initialize_by(user: user, program_year: program_year, session_date: session_date)
-    entry.athlete ||= program_year.athlete
-    entry.day_card ||= DayCard.joins(week: :month_plan)
-                              .where(month_plans: { program_year_id: program_year.id })
-                              .find_by(date: session_date)
-    entry.assign_attributes(attrs)
-    entry.save!
-    entry
+    transaction do
+      entry = find_or_initialize_by(user: user, program_year: program_year, session_date: session_date)
+      entry.athlete ||= program_year.athlete
+      entry.day_card ||= DayCard.joins(week: :month_plan)
+                                .where(month_plans: { program_year_id: program_year.id })
+                                .find_by(date: session_date)
+      entry.assign_attributes(attrs)
+      entry.save!
+      entry
+    end
   end
 end
