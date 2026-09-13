@@ -2170,7 +2170,16 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: `battery_tests` and `battery_measures` from `program.yml`; `ProgramYear` from Task 6.
-- Produces: `ProgramYear#battery_tests`, `#battery_measures`; `BatteryTest#battery_measures`; `BatteryMeasure#direction`, `#improvement_from(baseline, latest)` returning `:better`, `:worse`, `:same` or `nil`.
+- Produces: `ProgramYear#battery_tests`, `#battery_measures`; `BatteryTest#key`, `#battery_measures`; `BatteryMeasure#direction`, `#improvement_from(baseline, latest)` returning `:better`, `:worse`, `:same` or `nil`.
+
+> **What shipped differs from the code below, under Rulings 26 and 27.** The implementer refused this task's `battery_tests` finder before shipping it, and was right to: the code below keys on `position` with a unique index on it, which is the same defect Task 6 had to fix twice.
+>
+> - `battery_tests` has an explicit `key` (`sprint_20m`, `broad_jump`, and so on), unique per program year. The keys are written out in the converter, never derived from the name, because a derived key would change on a rename and defeat the point. The name uniqueness is dropped at both the index and the validation, so a name is free to be reworded.
+> - `battery_measures` reference `battery_test_key` rather than a position, so a mistyped reference dies naming the key instead of resolving to nothing.
+> - The content spec pins the set of measures with no protocol to exactly `h`, `t11r` and `t11l`. It previously skipped any measure with no protocol without saying which ones should have none, so a misspelled key name produced a measure indistinguishable from height.
+> - No unique index on `position` anywhere.
+>
+> See `.superpowers/sdd/2026-09-13-phase-1-rails-api/progress.md` and `git log`.
 
 This is the table the brief's model list did not name. Fifteen recordable rows sit against ten tests, because hop, throw and balance each record left and right, and height stands outside the ten. Unit and direction live at the row level because that is where `TestResult` keys.
 
