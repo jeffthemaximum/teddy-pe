@@ -6,11 +6,13 @@ module Api
         year = policy_scope(ProgramYear).find(params[:program_year_id])
         authorize year, :show?
 
-        # Preload what WeekPayload walks per week (block, day cards, and each
-        # card's day role and day blocks) so the query count does not grow
-        # with the number of weeks in the plan.
+        # Preload what WeekPayload actually walks in summary mode (block, day
+        # cards, each card's day role) so the query count does not grow with
+        # the number of weeks in the plan. Not day_blocks: the month view
+        # never reads a card's blocks, so preloading them here would load
+        # every DayBlock row in the month for a screen that discards it.
         plan = year.month_plans
-                   .includes(:block, weeks: [ :block, { day_cards: [ :day_role, :day_blocks ] } ])
+                   .includes(:block, weeks: [ :block, { day_cards: :day_role } ])
                    .find_by!(month: params[:month])
 
         render json: {
