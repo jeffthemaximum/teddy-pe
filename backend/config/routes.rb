@@ -9,6 +9,7 @@ Rails.application.routes.draw do
       patch "me",         to: "me#update"
       get   "drills",       to: "drills#index"
       get   "drills/:slug", to: "drills#show"
+      get   "progression",  to: "progression#show"
 
       resources :program_years, only: %i[index show] do
         get "plans/:month", to: "plans#show", as: :plan

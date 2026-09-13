@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_13_201000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_13_202000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -244,6 +244,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_201000) do
     t.index ["program_year_id"], name: "index_month_plans_on_program_year_id"
   end
 
+  create_table "patch_awards", force: :cascade do |t|
+    t.bigint "athlete_id", null: false
+    t.bigint "program_year_id", null: false
+    t.bigint "patch_id", null: false
+    t.date "awarded_on", null: false
+    t.text "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["athlete_id", "patch_id"], name: "index_patch_awards_on_athlete_id_and_patch_id", unique: true
+    t.index ["athlete_id"], name: "index_patch_awards_on_athlete_id"
+    t.index ["patch_id"], name: "index_patch_awards_on_patch_id"
+    t.index ["program_year_id"], name: "index_patch_awards_on_program_year_id"
+  end
+
   create_table "patches", force: :cascade do |t|
     t.bigint "program_year_id", null: false
     t.bigint "block_id", null: false
@@ -271,6 +285,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_201000) do
     t.datetime "updated_at", null: false
     t.index ["athlete_id", "label"], name: "index_program_years_on_athlete_id_and_label", unique: true
     t.index ["athlete_id"], name: "index_program_years_on_athlete_id"
+  end
+
+  create_table "rank_awards", force: :cascade do |t|
+    t.bigint "athlete_id", null: false
+    t.bigint "program_year_id", null: false
+    t.bigint "block_id", null: false
+    t.date "awarded_on", null: false
+    t.integer "patch_count", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["athlete_id", "block_id"], name: "index_rank_awards_on_athlete_id_and_block_id", unique: true
+    t.index ["athlete_id"], name: "index_rank_awards_on_athlete_id"
+    t.index ["block_id"], name: "index_rank_awards_on_block_id"
+    t.index ["program_year_id"], name: "index_rank_awards_on_program_year_id"
+    t.check_constraint "patch_count >= 7", name: "rank_awards_seven_of_nine_check"
   end
 
   create_table "test_dates", force: :cascade do |t|
@@ -359,10 +388,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_201000) do
   add_foreign_key "drill_ratings", "program_years"
   add_foreign_key "month_plans", "blocks"
   add_foreign_key "month_plans", "program_years"
+  add_foreign_key "patch_awards", "athletes"
+  add_foreign_key "patch_awards", "patches"
+  add_foreign_key "patch_awards", "program_years"
   add_foreign_key "patches", "areas"
   add_foreign_key "patches", "blocks"
   add_foreign_key "patches", "program_years"
   add_foreign_key "program_years", "athletes"
+  add_foreign_key "rank_awards", "athletes"
+  add_foreign_key "rank_awards", "blocks"
+  add_foreign_key "rank_awards", "program_years"
   add_foreign_key "test_dates", "program_years"
   add_foreign_key "test_results", "athletes"
   add_foreign_key "test_results", "battery_measures"

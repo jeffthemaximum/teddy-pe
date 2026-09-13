@@ -27,7 +27,11 @@ class ProgramYearPayload
       test_dates: test_dates,
       day_roles: day_roles,
       current_block_key: @year.current_block(on: @on)&.key,
-      current_week_id: Week.current(@year, on: @on)&.id
+      current_week_id: Week.current(@year, on: @on)&.id,
+      patch_awards: @year.patch_awards.map { |a|
+        { patch_id: a.patch_id, awarded_on: a.awarded_on, note: a.note } },
+      rank_awards: @year.rank_awards.includes(:block).map { |a|
+        { block_key: a.block.key, awarded_on: a.awarded_on, patch_count: a.patch_count } }
     }
   end
 

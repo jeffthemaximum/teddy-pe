@@ -11,6 +11,8 @@ class ProgramYear < ApplicationRecord
   has_many :battery_tests,    -> { order(:position) }, dependent: :destroy
   has_many :battery_measures, -> { order(:position) }, dependent: :destroy
   has_many :month_plans, -> { order(:month) }, dependent: :destroy
+  has_many :patch_awards, dependent: :destroy
+  has_many :rank_awards, dependent: :destroy
 
   validates :label, presence: true, uniqueness: { scope: :athlete_id }
   validates :ball_now, presence: true

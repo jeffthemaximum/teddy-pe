@@ -1,6 +1,9 @@
 class Athlete < ApplicationRecord
   belongs_to :user, optional: true
   has_many :program_years, dependent: :destroy
+  has_many :patch_awards, dependent: :destroy
+  has_many :rank_awards, dependent: :destroy
+  has_many :test_results, dependent: :destroy
 
   validates :name, presence: true
   validates :birthday, presence: true
