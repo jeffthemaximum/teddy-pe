@@ -30,7 +30,13 @@ RUN apt-get update -qq && \
 COPY --from=build /usr/local/bundle /usr/local/bundle
 COPY --from=build /rails /rails
 
-RUN useradd rails --create-home --shell /bin/bash && chown -R rails:rails /rails db log tmp
+# log and tmp are excluded from the image by .dockerignore (the local
+# contents of both are dev-only and none of our business in the image), so
+# they don't exist yet here. Create them before chown or it fails on a
+# missing directory.
+RUN useradd rails --create-home --shell /bin/bash && \
+    mkdir -p log tmp && \
+    chown -R rails:rails /rails db log tmp
 USER rails:rails
 
 EXPOSE 3000
