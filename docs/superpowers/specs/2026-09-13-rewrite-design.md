@@ -105,7 +105,7 @@ Nothing is scoped to "year one". Every user-generated row carries `program_year_
 
 **`coach_entries`**: `user_id`, `athlete_id`, `program_year_id`, `session_date`, `day_card_id` (nullable), `overall` (1 to 5), `energy` (1 to 5), `flag_pain`, `pain_note`, `note`, `challenge_num`. Unique on `(user_id, program_year_id, session_date)`.
 
-**`athlete_entries`**: `user_id`, `athlete_id`, `program_year_id`, `session_date`, `day_card_id` (nullable), `felt` (1 to 5), `best` (text), `hard` (text), `note` (text). Unique on `(user_id, program_year_id, session_date)`. Teddy's own words, his own form, not a copy of the coach form.
+**`athlete_entries`**: `user_id`, `athlete_id`, `program_year_id`, `session_date`, `day_card_id` (nullable), `felt` (1 to 5), `best` (text), `hard` (text), `note` (text), `shared` (boolean, default false). Unique on `(user_id, program_year_id, session_date)`. Teddy's own words in his own form, with his own fields. `shared` is the toggle he controls. It defaults to off, so showing Dad is always something he chooses rather than something he has to remember to switch off.
 
 **`drill_ratings`**: `coach_entry_id`, `drill_id`, `rating` (`not_yet` / `getting` / `owns`), plus `program_year_id` and `session_date` carried on the row. Unique on `(coach_entry_id, drill_id)`, indexed on `(drill_id, session_date)`. The denormalized pair is there because the whole point of leaving jsonb is asking "how has the cartwheel gone across three years" without a join through every entry.
 
@@ -134,7 +134,9 @@ The brief asks for these to fail a test rather than reach Teddy. Here is exactly
 | Week 8 of every block is Trials at half volume | Content spec: the week at `position_in_block` 8 has `trials` true, a theme matching Trials, and a total minutes under the block's mean, followed by a `RankAward`. |
 | Jeff does not sprint in fall 2026 | Content spec: no `DayCard` dated before 2026-12-01 has a block whose body asks Dad to sprint, race or chase. A word list, reviewed with you. |
 
-**The high intent effort budget needs a field that does not exist today.** Nothing in `data/plans/2026-09.json` records a count of high intent efforts. `level` (1 to 4) is an intensity band, not a number, so it can enforce "never two consecutive high-impact days" and "Sunday and Monday are low", but it cannot enforce 40 a week. I propose adding `hie:` per day card in the YAML, backfilled from the architecture's own stated split (Wednesday 20 to 30, Thursday 5 to 10, Friday at most 5, Sunday and Monday zero). Backfilling means assigning numbers to cards you already wrote, so I want your sign-off rather than my guess. Until then the budget rule is written as a pending spec.
+**The high intent effort budget needs a field that does not exist today.** Nothing in `data/plans/2026-09.json` records a count of high intent efforts. `level` (1 to 4) is an intensity band rather than a number, so it can enforce "never two consecutive high-impact days" and "Sunday and Monday are low", but it cannot enforce 40 a week.
+
+**Settled:** an `hie:` integer is added per day card in the YAML. I derive a number for each of the 21 cards already written, from the architecture's own stated split (Wednesday 20 to 30, Thursday 5 to 10, Friday at most 5, Sunday and Monday zero) and from what each card actually asks for, then bring Jeff the full table at the Phase 1 gate for correction. Every number is shown with the blocks it was counted from, so a wrong one is obvious rather than buried.
 
 ## Backend
 
@@ -146,9 +148,11 @@ Auth is `has_secure_password` with bcrypt. `POST /api/v1/auth/login` returns `{ 
 
 Pundit policies, one sentence each:
 
-- **Coach** reads and writes everything for their athlete.
-- **Athlete** reads their own program year, plans, weeks and drills, reads their own test results, and writes only their own `AthleteEntry`.
+- **Coach** reads and writes everything for their athlete, with one exception: an `AthleteEntry` is visible only when Teddy has set `shared`. The policy scope filters on it, so an unshared entry is absent from the payload rather than present and hidden by the client.
+- **Athlete** reads their own program year, plans, weeks and drills, reads their own test results, and writes only their own `AthleteEntry`, including its `shared` flag.
 - **Viewer** reads the program, the plans and the drills. Writes nothing. Sees no journal entry from either side.
+
+A request spec asserts the coach gets a 404 on an unshared entry by id and that it never appears in a list payload. That is the whole point of the toggle, so it gets a test rather than a comment.
 
 ### API surface
 
@@ -221,9 +225,13 @@ Until you merge, the Vercel deploy off `main` keeps serving the current site, so
 
 **The privacy model inverts.** Today `api/page.js` serves the HTML only to a signed-in visitor and `public/` holds nothing but robots.txt, specifically because Vercel gives the filesystem precedence over rewrites. A decoupled SPA has a publicly readable bundle by definition. So privacy moves entirely to the API: no program content, no drill text, no plan data and nothing about Teddy is baked into the JavaScript bundle or fetched without a valid JWT. Request specs assert every content endpoint returns 401 without a token. At the Phase 2 gate I will fetch the deployed bundle unauthenticated and show you exactly what a stranger can read, which should be a login form and nothing else.
 
-**The repo stops being the diary's memory.** `tools/pull.py` exists so entries land in the repo before planning. Deleting it without a replacement breaks the principle in `CLAUDE.md`. Proposed replacement, for your decision at the Phase 1 gate: a `rails docs:export` task writing `docs/journal/<year>/<month>.md` and `docs/results/<year>.md` from the database, run before any planning session. Same job, no Python, and it exports plans too so the repo holds the program as prose as well as YAML.
+**The repo stops being the diary's memory.** `tools/pull.py` exists so entries land in the repo before planning. Deleting it without a replacement breaks the principle in `CLAUDE.md`.
 
-**Saving with no signal currently fails and loses the entry.** This is open in `docs/status.md`, and a tennis court is where it bites. My recommendation is to fix it rather than carry it forward: a small write-through queue in `core/` backed by the `ClientStorage` port. The safety comes from the id discipline that already fixed the cross-device bug, since an entry is addressed by `(user, program_year, session_date)` and a replayed write updates the same row rather than creating a second one. That is the property the old per-device queue lacked. I will bring you the working version at the Phase 2 gate and you can still say no.
+**Settled:** `rails docs:export` writes `docs/journal/<year>/<month>.md`, `docs/results/<year>.md` and the plans as readable prose, run before any planning session. It does more than `pull.py` did, because the program goes back into the repo as text a person can read rather than only as YAML a seeder can read. Unshared athlete entries are excluded from the export, the same as they are from the API.
+
+**Saving with no signal currently fails and loses the entry.** This is open in `docs/status.md`, and a tennis court is where it bites.
+
+**Settled:** a write-through queue in `core/` covering both the journals and the test results, backed by the `ClientStorage` port. The safety comes from the id discipline that already fixed the cross-device bug, since an entry is addressed by `(user, program_year, session_date)` and a result by `(program_year, test_date, measure)`, so a replayed write updates the same row rather than creating a second one. That is the property the old per-device queue lacked. The queue shows its depth in the UI, so a pending save is visible rather than assumed, and it is demonstrated against a simulated dead connection at the Phase 2 gate.
 
 **A sleeping server means a slow first load.** Scale-to-zero on Fly plus an autosuspended Neon branch can add seconds to the first request. The clients handle it with a real loading state on first paint, no blank screen, and no timeout below the apiClient's 15 seconds. I will measure the real cold start at the Phase 1 gate.
 
@@ -237,20 +245,34 @@ Until you merge, the Vercel deploy off `main` keeps serving the current site, so
 6. `Area` gets a slug, so cross-year progression joins on it without a shared table.
 7. Ball gates carry no date column at all, which turns "gated on skill, never on date" into something the schema will not let you violate.
 8. `rails docs:export` replaces `tools/pull.py`, and exports plans as well as journals.
+9. The `shared` toggle defaults to off. A toggle Teddy has to remember to switch off is not really his, so sharing is the deliberate act.
 
-## Open questions
+## Decisions Jeff made, 2026-09-13
 
-These need you. The first three block Phase 1 seeding, the fourth blocks the athlete journal design.
+| Question | Answer |
+|---|---|
+| Branch base | `feature/rails-react-rewrite` off `feature/rewrite`, so the brief travels with the work |
+| Accounts | Coach, athlete, and family viewers |
+| Passphrase | No migration. Fresh per-user passwords, the shared passphrase dies at cutover |
+| Athlete journal vs the Champion's Log | Teddy controls a per-entry "show Dad" toggle |
+| `hie` backfill | I propose a number per card, Jeff corrects at the Phase 1 gate |
+| Offline | Queue both journals and test results |
+| Repo memory | `rails docs:export` covering journals, results and plans |
 
-1. **Teddy's exact birthday.** Open since the first session and now needed for the `Athlete` record. The column is nullable so nothing is blocked until seeding.
-2. **The email addresses for the accounts.** You chose coach plus athlete plus family viewers. I have `jmaxim@trxtraining.com` for the coach. I need an address for Teddy (a real one or an alias on your domain) and the list of viewers with names. The rake task prints a generated password for each and nobody keeps the old shared passphrase.
-3. **The `hie` backfill.** Adding a high intent effort count per day card is the only way to enforce the 40 a week budget as a test. Numbers for cards you already wrote should be yours, not mine.
-4. **Does the athlete journal step on the Champion's Log?** `docs/architecture.md` says the Champion's Log is a notebook Teddy writes in himself and that it is his, and you read it only when invited. An `AthleteEntry` the coach can read is close enough to that to be worth asking about before I build it. Three options: coach can read athlete entries (they are a reflection on the session, and the Log stays on paper and private), athlete entries are private to Teddy with only a count visible to you, or Teddy gets a per-entry "show Dad" toggle he controls. My instinct is the first, with the Log staying entirely off the screen and on paper, but this is a parenting call and not a software one.
+The "show Dad" toggle is the one that shapes the kid-facing UI most. It has to be legible to a 7 year old without a sentence of explanation, so it reads as a single labelled switch in his own language rather than a privacy setting.
+
+## Still needed from Jeff
+
+Three facts, all of which block seeding in Phase 1. Nothing else is waiting.
+
+1. **Teddy's exact birthday.** Open since the first session and now needed for the `Athlete` record. The column is nullable, so building proceeds and only the seed waits.
+2. **An email address for Teddy.** A real one or an alias on your domain. It is his login for the athlete journal.
+3. **The viewer list, names and email addresses.** Mom, grandparents, an outside tennis coach, whoever you want reading. The rake task prints a generated password per account.
 
 ## Phases and gates
 
-1. **Rails API.** Schema, models, seeds from converted YAML, auth, all endpoints, Pundit policies, RSpec request and content specs green, running against Neon and deployed to Fly. Report at the gate: verified hosting cost, measured cold start, the `docs:export` proposal, and the branch diff.
-2. **`core/` and the web app.** The shared package with reducer and saga tests, then login, Year, month, This Week, Glossary, both journal forms, progression charts. Report at the gate: what an unauthenticated visitor can see, and the offline decision with the queue built.
+1. **Rails API.** Schema, models, seeds from converted YAML, auth, all endpoints, Pundit policies including the `shared` scope, `rails docs:export`, RSpec request and content specs green, running against Neon and deployed to Fly. Report at the gate: verified hosting cost, measured cold start, the full `hie` table for your correction, and the branch diff.
+2. **`core/` and the web app.** The shared package with reducer and saga tests, then login, Year, month, This Week, Glossary, both journal forms with Teddy's toggle, progression charts, and the offline queue. Report at the gate: what an unauthenticated visitor can see, and the queue demonstrated against a dead connection.
 3. **Migration and cutover.** Content converted, Neon rows migrated and verified by count and spot check, Vercel repointed, then the old pipeline deleted.
 4. **React Native app.** Expo and expo-router on the same ducks. No duck redefined.
 
