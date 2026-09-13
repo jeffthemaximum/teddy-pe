@@ -17,7 +17,10 @@ primary_region = "ewr"
   RAILS_ENV = "production"
   RAILS_LOG_TO_STDOUT = "true"
   RAILS_MAX_THREADS = "3"
-  WEB_CONCURRENCY = "1"
+  # Single mode, not cluster mode with one worker. Puma says so itself in the
+  # boot log, and on a 512MB machine a master process plus one worker is paying
+  # twice for one worker's work.
+  WEB_CONCURRENCY = "0"
 
 [http_service]
   internal_port = 3000
@@ -29,8 +32,6 @@ primary_region = "ewr"
   auto_start_machines = true
   min_machines_running = 0
 
-  [http_service.http_options]
-    h2_backend = true
 
 [[http_service.checks]]
   interval = "30s"
