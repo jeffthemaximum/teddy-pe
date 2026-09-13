@@ -6,6 +6,12 @@ gem "rails", "~> 8.0.0"
 gem "puma", "~> 6.4"
 gem "pg", "~> 1.5"
 
+# Rails 8.0 still passes quirks_mode to JSON.generate, which json 3.x removed,
+# so every `render json:` raises ArgumentError against an unpinned json. This
+# is a constraint on a gem that is already here transitively rather than a new
+# dependency. Drop the pin when Rails stops passing quirks_mode.
+gem "json", "~> 2.7"
+
 # JSON API
 gem "active_model_serializers", "~> 0.10"
 
