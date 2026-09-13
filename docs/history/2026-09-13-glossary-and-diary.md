@@ -44,3 +44,17 @@ One thing noticed and deliberately not fixed: the Year tab has a 20px horizontal
 ## Left for Jeff
 
 Create the Neon database and set `DATABASE_URL` and `DIARY_PASSPHRASE` in Vercel. Until then the diary saves on the device and says plainly that it is not configured.
+
+## Follow-up the same evening: cross-device diary and a real gate
+
+Jeff tried the diary for real and found the hole in it. An entry written on his computer saved, synced, showed in the database and survived a refresh, but his phone showed nothing for that day.
+
+The cause was the id: `e-<date>-<device>`, with the device part a random salt held in each browser's `localStorage`. Two devices wrote two rows for one day, and the form prefilled from the local log rather than the database. The local-first design that made offline capture work was precisely what broke cross-device editing.
+
+He asked for three things: one entry per day editable from anywhere, no local storage at all, and the whole site behind the database password.
+
+The first two are the same change. The id is now derived on the server from the session date, so two devices address one row by construction; the client does not send an id at all. The page loads the week from the API and writes back to it, with unsaved edits held in memory only. Existing per-device rows are collapsed to one per date on the first request after deploy. The offline queue is gone, which was named as the cost before building.
+
+The gate needed care. A password screen in the page would have been theatre, since the HTML would still be sent to anyone who asked. Checking the Vercel docs settled the design: the filesystem takes precedence over rewrites, and there is a known trap where rewriting `/` to a function silently fails if the output directory contains an `index.html`. So the output directory now points at `public/`, which holds only a robots.txt, and `/` is rewritten to `api/page.js`, which returns `site/index.html` only to a signed-in visitor. The cookie holds a signed, expiring token rather than the passphrase.
+
+Testing found one bug: after a failed load the Save button stayed disabled forever, so a transient network blip would have left the form permanently dead until a refresh. A test asserts the recovery now. The suite covers token forgery and expiry, a cookie signed with a different secret, the login page not leaking any site markup, and a simulated two-device edit against one shared fake database.

@@ -16,7 +16,8 @@ Update this file whenever something is built, decided, or left open. It is the f
 - September view: Cub weeks 1 to 3 (Sep 14 to Oct 4): Baseline & Land, Stick It, Brake.
 - This Week: daily cards for Sep 14 to 20 with the baseline test sheet (saves in the viewer's browser only).
 - Drill glossary: `data/drills.json`, 84 entries covering everything written so far. `build.py` links names and aliases into card prose and block titles at build time; tapping one opens a sheet with how to do it, what to watch for and the cue. Fourth tab lists all of them with a filter. The markdown export carries a glossary appendix for the week.
-- Coach's diary: form on This Week (session, how it went, energy, pain flag, note, challenge number, and a rating per drill from that day's card). Saves to the device, then syncs to Neon through `api/diary.js` behind a passphrase. `tools/diary_pull.py` pulls entries into `data/diary.json`. Entries produce proposed plan changes only.
+- Coach's diary: form on This Week (session, how it went, energy, pain flag, note, challenge number, and a rating per drill from that day's card). One entry per session date, stored only in Neon and keyed by date on the server, so every device opens and edits the same entry. No local storage, so saving needs a connection. `tools/diary_pull.py` pulls entries into `data/diary.json`. Entries produce proposed plan changes only.
+- Passphrase gate on the whole Vercel site: `api/page.js` serves the page only to a signed-in visitor, `api/login.js` exchanges the passphrase for a 90 day signed cookie, and `public/` (robots.txt only) is the sole publicly served directory.
 
 ## Branches
 
@@ -26,7 +27,9 @@ Update this file whenever something is built, decided, or left open. It is the f
 
 ## Open
 
-- **Jeff to do:** create the Neon database, set `DATABASE_URL` and `DIARY_PASSPHRASE` in Vercel, redeploy, then enter the passphrase once on each device. Until then the diary saves locally and says it is not configured.
+- **Jeff to do:** set the Vercel project's output directory to `public` (or let `vercel.json` do it), confirm `DATABASE_URL` and `DIARY_PASSPHRASE` are set, and redeploy. The site then asks for the passphrase before showing anything.
+- Whether to keep publishing `dist/artifact.html` to claude.ai, which is ungated and now shows a diary that cannot save.
+- Whether the missing offline queue matters in practice at a field with no signal.
 - Baseline test numbers (Sep 15 to 17) to record in `data/results.json` and chart on the Year view.
 - Teddy's exact birthday.
 - One-hand vs two-hand backhand, to settle in the Fox block with his coach.

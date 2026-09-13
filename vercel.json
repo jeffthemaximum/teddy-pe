@@ -2,7 +2,13 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "buildCommand": null,
-  "outputDirectory": "site",
+  "outputDirectory": "public",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "functions": {
+    "api/page.js": { "includeFiles": "site/**" }
+  },
+  "rewrites": [
+    { "source": "/", "destination": "/api/page" }
+  ]
 }
