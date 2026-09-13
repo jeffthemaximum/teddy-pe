@@ -37,6 +37,22 @@ PATCH_AREA = {
 }.freeze
 
 DOW = %w[mon tue wed thu fri sat sun].freeze
+
+# CLAUDE.md requires one tennis, one basketball and one soccer sub-target every
+# week. All three are present in every week of the September plan, but only
+# basketball and soccer are labeled with their sport. These three targets are
+# the tennis one for their week, each named in the architecture's Tennis
+# strands (Footwork: split step on Dad's clap; Ball: rally count). Labeling them
+# to match the other two makes a week's three ball sports equally scannable
+# mid-session, and changes nothing Teddy actually does.
+#
+# Keyed on the exact source string, so this can relabel only the three targets
+# it was written for and can never catch something else by accident.
+TENNIS_LABEL = {
+  "Split step on Dad's clap"            => "Tennis: split step on Dad's clap",
+  "15-ball rally"                       => "Tennis: 15-ball rally",
+  "Split step into a shuffle, 10 of 10" => "Tennis: split step into a shuffle, 10 of 10"
+}.freeze
 MONTH_ABBR = %w[Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec]
   .each_with_index.to_h { |m, i| [ m, i + 1 ] }.freeze
 
@@ -196,9 +212,18 @@ weeks = plan["weeks"].map do |w|
     day
   end
 
+  targets = w["targets"].map { |t| TENNIS_LABEL.fetch(t, t) }
+
+  # The same rule the content spec enforces, checked here so a week that loses
+  # one of its three ball sports fails at conversion rather than at seed time.
+  { "tennis" => /tennis/i, "basketball" => /basketball/i, "soccer" => /soccer|keeper/i }
+    .each do |sport, pattern|
+      die("week #{w['n']} has no #{sport} sub-target") unless targets.any? { |t| t =~ pattern }
+    end
+
   { "number" => w["n"], "position_in_block" => w["n"], "theme" => w["theme"],
     "dates_display" => w["dates"], "trials" => w["theme"].downcase.include?("trials"),
-    "targets" => w["targets"], "challenge" => w["challenge"], "days" => days }
+    "targets" => targets, "challenge" => w["challenge"], "days" => days }
 end
 
 FileUtils.mkdir_p(File.join(OUT, "plans"))
