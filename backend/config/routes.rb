@@ -4,7 +4,9 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      # Endpoints arrive in later tasks.
+      post  "auth/login", to: "auth#login"
+      get   "me",         to: "me#show"
+      patch "me",         to: "me#update"
     end
   end
 
