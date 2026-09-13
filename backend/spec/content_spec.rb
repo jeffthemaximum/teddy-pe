@@ -283,16 +283,20 @@ RSpec.describe "content integrity" do
     end
 
     it "uses only the two tags the cards are written with" do
-      # Bold and quote are the whole vocabulary. Anything else in angle brackets
-      # renders differently in the old build and the new tokenizer, so the guard
-      # is to keep it out of the prose rather than to reconcile two matchers.
+      # Every left angle bracket has to begin one of these four. Scanning for
+      # complete tags misses an unclosed one, and an unclosed bracket is exactly
+      # what the old build treats as markup and never scans for drills, so a
+      # body starting "<30s rest" links a different set there than here.
       allowed = %w[<b> </b> <q> </q>]
 
       each_day do |d, label|
         d["blocks"].to_a.each do |b|
           [ b["name"], b["body"] ].compact.each do |text|
-            text.scan(/<[^>]*>/).each do |tag|
-              expect(allowed).to include(tag), "#{label} #{b['name']} uses #{tag}"
+            text.to_enum(:scan, /</).each do
+              at = Regexp.last_match.begin(0)
+              opens_a_tag = allowed.any? { |tag| text[at, tag.length] == tag }
+              expect(opens_a_tag).to be(true),
+                "#{label} #{b['name']} has a stray < at #{at}: #{text[at, 24].inspect}"
             end
           end
         end
