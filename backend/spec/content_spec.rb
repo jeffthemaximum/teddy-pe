@@ -1,0 +1,242 @@
+require "spec_helper"
+require "yaml"
+require "date"
+
+# Guards the hand-authored program against drift. It validates the YAML the
+# seeder consumes, so a bad edit fails here instead of reaching Teddy.
+#
+# No Rails, no database. Everything this needs is in the files.
+RSpec.describe "content integrity" do
+  CONTENT = File.expand_path("../content/program_years/2026-27", __dir__)
+  PROGRAM = YAML.load_file(File.join(CONTENT, "program.yml"))
+  DRILLS  = YAML.load_file(File.join(CONTENT, "drills.yml"))["drills"]
+  PLANS   = Dir[File.join(CONTENT, "plans/*.yml")].sort.map { |f| YAML.load_file(f) }
+
+  DAY_ROLES = {
+    "mon" => "Floor Day", "tue" => "Rings Day", "wed" => "Fast Day",
+    "thu" => "Wall Day",  "fri" => "Skate Day", "sat" => "Game Day",
+    "sun" => "Court Day"
+  }.freeze
+
+  let(:block_keys) { PROGRAM["blocks"].map { |b| b["key"] } }
+  let(:area_slugs) { PROGRAM["areas"].map { |a| a["slug"] } }
+
+  describe "the year" do
+    it "runs from the first block to the last" do
+      py = PROGRAM["program_year"]
+      expect(py["starts_on"].to_s).to eq(PROGRAM["blocks"].first["starts_on"].to_s)
+      expect(py["ends_on"].to_s).to eq(PROGRAM["blocks"].last["ends_on"].to_s)
+    end
+
+    it "has six blocks in order with no gaps" do
+      expect(PROGRAM["blocks"].size).to eq(6)
+      PROGRAM["blocks"].each_cons(2) do |a, b|
+        expect(Date.parse(b["starts_on"].to_s)).to eq(Date.parse(a["ends_on"].to_s) + 1),
+          "#{b['key']} starts #{b['starts_on']}, but #{a['key']} ends #{a['ends_on']}"
+      end
+    end
+  end
+
+  describe "areas" do
+    it "has exactly nine, with unique slugs" do
+      expect(area_slugs.size).to eq(9)
+      expect(area_slugs.uniq.size).to eq(9)
+    end
+
+    it "gives every area a cell for every block" do
+      PROGRAM["areas"].each do |a|
+        expect(a["cells"].keys).to match_array(block_keys), "area #{a['slug']}"
+        a["cells"].each { |k, v| expect(v.to_s.strip).not_to be_empty, "#{a['slug']}/#{k} is blank" }
+      end
+    end
+  end
+
+  describe "patches" do
+    it "has nine for each rank that has any" do
+      PROGRAM["patches"].group_by { |p| p["block"] }.each do |block, ps|
+        expect(ps.size).to eq(9), "#{block} has #{ps.size} patches, needs 9"
+        expect(ps.map { |p| p["area"] }.uniq.size).to eq(9), "#{block} repeats an area"
+      end
+    end
+
+    it "references known blocks and areas" do
+      PROGRAM["patches"].each do |p|
+        expect(block_keys).to include(p["block"])
+        expect(area_slugs).to include(p["area"])
+      end
+    end
+  end
+
+  describe "the tennis ball progression" do
+    it "is gated on skill and never on a date" do
+      PROGRAM["ball_gates"].each do |g|
+        expect(g.keys).not_to include("date", "starts_on", "expected_on"),
+          "#{g['label']} carries a date, and the gates move on skill only"
+        expect(g["requirement"].to_s.strip).not_to be_empty
+      end
+    end
+
+    it "has exactly one active gate" do
+      expect(PROGRAM["ball_gates"].count { |g| g["status"] == "active" }).to eq(1)
+    end
+  end
+
+  describe "the test battery" do
+    it "has ten tests and fifteen recordable measures" do
+      expect(PROGRAM["battery_tests"].size).to eq(10)
+      expect(PROGRAM["battery_measures"].size).to eq(15)
+    end
+
+    it "records height at every test date" do
+      expect(PROGRAM["battery_measures"].map { |m| m["test_id"] }).to include("h")
+      height = PROGRAM["battery_measures"].find { |m| m["test_id"] == "h" }
+      expect(height["direction"]).to eq("growth")
+    end
+
+    it "gives every measure a direction the chart can read" do
+      PROGRAM["battery_measures"].each do |m|
+        expect(%w[lower higher growth]).to include(m["direction"]), "measure #{m['test_id']}"
+      end
+    end
+
+    it "points every measure at a real battery test, or at none on purpose" do
+      positions = PROGRAM["battery_tests"].map { |t| t["position"] }
+      PROGRAM["battery_measures"].each do |m|
+        next if m["battery_test_position"].nil?
+        expect(positions).to include(m["battery_test_position"]), "measure #{m['test_id']}"
+      end
+    end
+
+    it "has unique test ids" do
+      ids = PROGRAM["battery_measures"].map { |m| m["test_id"] }
+      expect(ids.uniq.size).to eq(ids.size)
+    end
+  end
+
+  describe "day roles" do
+    it "are the seven fixed roles, in week order" do
+      actual = PROGRAM["day_roles"].sort_by { |r| r["position"] }.to_h { |r| [ r["dow"], r["name"] ] }
+      expect(actual).to eq(DAY_ROLES)
+    end
+
+    it "keeps Saturday off for the home program" do
+      sat = PROGRAM["day_roles"].find { |r| r["dow"] == "sat" }
+      expect(sat["minutes"]).to eq("off")
+    end
+  end
+
+  describe "drills" do
+    it "has unique slugs and no blank fields" do
+      slugs = DRILLS.map { |d| d["slug"] }
+      expect(slugs.uniq.size).to eq(slugs.size)
+      DRILLS.each do |d|
+        %w[name area_name short watch cue].each do |field|
+          expect(d[field].to_s.strip).not_to be_empty, "#{d['slug']} has a blank #{field}"
+        end
+        expect(d["how"]).to be_an(Array).and(satisfy { |h| h.any? }), "#{d['slug']} has no how-to"
+      end
+    end
+
+    it "names an area the year actually has" do
+      names = PROGRAM["areas"].map { |a| a["name"] }
+      DRILLS.each { |d| expect(names).to include(d["area_name"]), "drill #{d['slug']}" }
+    end
+  end
+
+  describe "every month plan" do
+    it "names a block the year has" do
+      PLANS.each { |p| expect(block_keys).to include(p["month_plan"]["block"]) }
+    end
+
+    it "gives every week one theme, 5 or 6 sub-targets and a challenge" do
+      each_week do |w, label|
+        expect(w["theme"].to_s.strip).not_to be_empty, label
+        expect(w["targets"].size).to be_between(5, 6), "#{label} has #{w['targets'].size} sub-targets"
+        expect(w["challenge"].to_s.strip).not_to be_empty, label
+      end
+    end
+
+    it "includes a tennis, a basketball and a soccer sub-target every week" do
+      { "tennis" => /tennis/i, "basketball" => /basketball/i, "soccer" => /soccer|keeper/i }
+        .each do |sport, pattern|
+          each_week do |w, label|
+            expect(w["targets"].any? { |t| t =~ pattern }).to be(true),
+              "#{label} has no #{sport} sub-target"
+          end
+        end
+    end
+
+    it "puts every day on the role its weekday owns" do
+      each_day do |d, label|
+        expect(d["role"]).to eq(DAY_ROLES.fetch(d["dow"])), label
+        expect(Date.parse(d["date"].to_s).strftime("%a").downcase).to eq(d["dow"]), label
+      end
+    end
+
+    it "attempts the Challenge of the Week early and late" do
+      each_week do |w, label|
+        carded = w["days"].select { |d| d["blocks"] }
+        next if carded.empty?
+        early = carded.select { |d| %w[mon tue].include?(d["dow"]) }
+        late  = carded.select { |d| d["dow"] == "fri" }
+        expect(early.any? { |d| challenge?(d) }).to be(true), "#{label} has no early challenge attempt"
+        expect(late.any? { |d| challenge?(d) }).to be(true), "#{label} has no Friday challenge attempt"
+      end
+    end
+
+    it "counts ball skills in touches rather than minutes" do
+      each_week do |w, label|
+        carded = w["days"].select { |d| d["blocks"] }
+        next if carded.empty?
+        counted = carded.flat_map { |d| d["blocks"] }
+          .select { |b| b["name"] =~ /basketball|soccer|tennis/i }
+          .count { |b| b["body"] =~ /\d+\s*(dribbles|touches|passes|reps|swings|throws)/i }
+        expect(counted).to be >= 1, "#{label} has no ball-skill block with a counted volume"
+      end
+    end
+
+    it "makes week 8 of a block Trials" do
+      each_week do |w, label|
+        next unless w["position_in_block"] == 8
+        expect(w["trials"]).to be(true), label
+        expect(w["theme"]).to match(/trials/i), label
+      end
+    end
+
+    it "leaves Saturday's home program off" do
+      each_day do |d, label|
+        next unless d["dow"] == "sat"
+        expect(d["blocks"].to_a.count { |b| b["minutes"].to_s =~ /\d/ }).to be <= 1, label
+      end
+    end
+  end
+
+  describe "Jeff's running, limited through fall 2026" do
+    # Fall cards keep him feeding, timing, demonstrating and competing from a
+    # fixed position. Chase and race games phase in during the Coyote block.
+    DAD_RUNS = /\bdad (?:sprints|races|chases|runs)\b|\brace (?:dad|him)\b|\bchase (?:dad|him)\b/i
+
+    it "asks him to sprint, race or chase nowhere before December" do
+      each_day do |d, label|
+        next if Date.parse(d["date"].to_s) >= Date.new(2026, 12, 1)
+        d["blocks"].to_a.each do |b|
+          expect(b["body"].to_s).not_to match(DAD_RUNS), "#{label} #{b['name']}: #{b['body']}"
+        end
+      end
+    end
+  end
+
+  def each_week
+    PLANS.each do |p|
+      p["weeks"].each { |w| yield w, "#{p['month_plan']['month']} week #{w['number']}" }
+    end
+  end
+
+  def each_day
+    each_week { |w, label| w["days"].each { |d| yield d, "#{label} #{d['dow']} #{d['date']}" } }
+  end
+
+  def challenge?(day)
+    day["blocks"].to_a.any? { |b| b["tag"] == "challenge" || b["name"] =~ /challenge/i }
+  end
+end
