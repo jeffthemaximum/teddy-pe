@@ -3536,7 +3536,16 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: `MonthPlan`, `Week`, `DayCard`, `DayBlock` (Task 9); `ProgramYearPolicy` (Task 10).
-- Produces: `WeekPayload.new(week, user:).as_json`; `GET /api/v1/program_years/:id/plans/:month`; `GET /api/v1/program_years/:id/weeks/current`.
+- Produces: `WeekPayload.new(week, user:, detailed:).as_json`; `GET /api/v1/program_years/:id/plans/:month`; `GET /api/v1/program_years/:id/weeks/current`.
+
+> **What shipped adds to the code below, under Rulings 40 to 43.**
+>
+> - **Both controllers preload what their payload walks.** The code below loads a plan's weeks with no preloading, so the month view's query count grew with the number of weeks: 21 queries for September's three. A full month has five. The machine scales to zero and the database autosuspends, so every extra round trip is paid on a wake-up. Fixed to 10, then to 8 once the first fix's over-preloading came out.
+> - **The month view preloads no `day_blocks`.** The first fix included them, and a summary view returns before reading any. That is the usual overcorrection after an N+1, paid in a query and in every block row in the month.
+> - **A negative-shape example asserts the month view excludes `blocks` and `dad_note`.** One builder a flag apart is the whole design and only the positive case was tested.
+> - **Flatness is pinned as a relationship, not an absolute count.** The spec counts queries, adds two weeks, and asserts the count is unchanged. An absolute number would churn on unrelated changes and teach people to bump it without reading it.
+>
+> See `.superpowers/sdd/2026-09-13-phase-1-rails-api/progress.md` and `git log`.
 
 Journal entries join the week payload in Task 12, so the form opens filled in rather than fetching twice.
 
