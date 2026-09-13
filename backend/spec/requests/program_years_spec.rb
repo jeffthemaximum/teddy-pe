@@ -53,16 +53,22 @@ RSpec.describe "program years", type: :request do
       body = JSON.parse(response.body)
 
       expect(body["current_week_id"]).to eq(
-        Week.joins(:month_plan).find_by(month_plans: { program_year_id: year.id }, number: 1).id
+        Week.joins(:month_plan)
+            .find_by(month_plans: { program_year_id: year.id, month: "2026-09" }, number: 1).id
       )
     end
 
     it "falls back to today when the date is unreadable" do
-      get "/api/v1/program_years/#{year.id}?on=not-a-date", headers: auth(coach)
-      expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body)["current_block_key"]).to eq(
-        year.current_block(on: Date.current)&.key
-      )
+      # Pinned inside the Cub block, because the expected value has to be
+      # something only a real fallback to today can produce. Asserting against
+      # today's own block outside the program year compares nil to nil, which
+      # passes whatever the fallback does.
+      travel_to Date.new(2026, 10, 1) do
+        get "/api/v1/program_years/#{year.id}?on=not-a-date", headers: auth(coach)
+
+        expect(response).to have_http_status(:ok)
+        expect(JSON.parse(response.body)["current_block_key"]).to eq("cub")
+      end
     end
 
     it "carries the nine areas with a cell per block, in block order" do
