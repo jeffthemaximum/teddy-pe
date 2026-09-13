@@ -6,7 +6,12 @@ module Api
         year = policy_scope(ProgramYear).find(params[:program_year_id])
         authorize year, :show?
 
-        plan = year.month_plans.find_by!(month: params[:month])
+        # Preload what WeekPayload walks per week (block, day cards, and each
+        # card's day role and day blocks) so the query count does not grow
+        # with the number of weeks in the plan.
+        plan = year.month_plans
+                   .includes(:block, weeks: [ :block, { day_cards: [ :day_role, :day_blocks ] } ])
+                   .find_by!(month: params[:month])
 
         render json: {
           month: plan.month,

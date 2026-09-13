@@ -8,6 +8,12 @@ class WeekPayload
   end
 
   def as_json(*)
+    # The controllers preload what this walks (block, day_cards, and each
+    # card's day_role and day_blocks). Reaching for day_cards once here,
+    # rather than once for the sum and again for the days array, is what
+    # keeps that preload from being undone by a second, un-preloaded load.
+    cards = @week.day_cards.to_a
+
     {
       id: @week.id,
       number: @week.number,
@@ -18,9 +24,9 @@ class WeekPayload
       challenge: @week.challenge,
       trials: @week.trials,
       block_key: @week.block.key,
-      high_intent_efforts: @week.high_intent_efforts,
+      high_intent_efforts: cards.sum(&:hie),
       budget: @week.budget,
-      days: @week.day_cards.includes(:day_blocks, :day_role).map { |c| day(c) }
+      days: cards.map { |c| day(c) }
     }
   end
 
