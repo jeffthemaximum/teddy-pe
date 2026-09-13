@@ -1653,18 +1653,15 @@ RSpec.describe ContentSeeder do
 
   it "is idempotent, so a second run changes no counts and no ids" do
     seed
-    before = { ProgramYear.count => :years, AreaCell.count => :cells }
     year_id = ProgramYear.sole.id
-    counts_before = [ ProgramYear.count, Block.count, Area.count, AreaCell.count,
-                      Patch.count, BallGate.count, TestDate.count, DayRole.count ]
+    counts = -> { [ ProgramYear.count, Block.count, Area.count, AreaCell.count,
+                    Patch.count, BallGate.count, TestDate.count, DayRole.count ] }
+    before = counts.call
 
     described_class.new(year_label: "2026-27").seed!
 
-    counts_after = [ ProgramYear.count, Block.count, Area.count, AreaCell.count,
-                     Patch.count, BallGate.count, TestDate.count, DayRole.count ]
-    expect(counts_after).to eq(counts_before)
+    expect(counts.call).to eq(before)
     expect(ProgramYear.sole.id).to eq(year_id)
-    expect(before).to be_present
   end
 
   it "picks the current year from a date, with nothing hardcoded" do
