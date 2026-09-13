@@ -37,17 +37,26 @@ RSpec.describe ContentSeeder do
     expect(BallGate.column_names).not_to include("date", "starts_on", "expected_on")
   end
 
-  it "is idempotent, so a second run changes no counts and no ids" do
+  it "is idempotent, so a second run changes no row and no id" do
     seed
-    year_id = ProgramYear.sole.id
-    counts = -> { [ ProgramYear.count, Block.count, Area.count, AreaCell.count,
-                    Patch.count, BallGate.count, TestDate.count, DayRole.count ] }
-    before = counts.call
+    snapshot = lambda do
+      {
+        program_years: ProgramYear.order(:id).pluck(:id),
+        blocks: Block.order(:id).pluck(:id),
+        areas: Area.order(:id).pluck(:id),
+        area_cells: AreaCell.order(:id).pluck(:id),
+        patches: Patch.order(:id).pluck(:id),
+        ball_gates: BallGate.order(:id).pluck(:id),
+        test_dates: TestDate.order(:id).pluck(:id),
+        day_roles: DayRole.order(:id).pluck(:id),
+        athletes: Athlete.order(:id).pluck(:id)
+      }
+    end
+    before = snapshot.call
 
     described_class.new(year_label: "2026-27").seed!
 
-    expect(counts.call).to eq(before)
-    expect(ProgramYear.sole.id).to eq(year_id)
+    expect(snapshot.call).to eq(before)
   end
 
   it "picks the current year from a date, with nothing hardcoded" do

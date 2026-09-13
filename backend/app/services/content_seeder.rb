@@ -49,7 +49,8 @@ class ContentSeeder
   end
 
   def seed_athlete(attrs)
-    upsert(Athlete, { name: attrs.fetch("name") }, { birthday: attrs.fetch("birthday") })
+    upsert(Athlete, { slug: attrs.fetch("slug") },
+           attrs.slice("name", "birthday"))
   end
 
   def seed_year(athlete, attrs)
@@ -89,8 +90,12 @@ class ContentSeeder
 
   def seed_ball_gates(rows)
     rows.each do |row|
-      upsert(year.ball_gates, { position: row.fetch("position") },
-             row.slice("from_ball", "to_ball", "label", "requirement", "status"))
+      # The gate is identified by the progression it guards, not by where it
+      # happens to sit in the file. Keying on position meant reordering the
+      # list wrote one gate's requirement onto another gate's row.
+      upsert(year.ball_gates,
+             row.slice("from_ball", "to_ball"),
+             row.slice("position", "label", "requirement", "status"))
     end
   end
 

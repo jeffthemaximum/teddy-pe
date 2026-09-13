@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_13_184649) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_13_185837) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -44,6 +44,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_184649) do
     t.bigint "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "slug", null: false
+    t.index ["slug"], name: "index_athletes_on_slug", unique: true
     t.index ["user_id"], name: "index_athletes_on_user_id", unique: true
   end
 
@@ -57,6 +59,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_184649) do
     t.string "status", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["program_year_id", "from_ball", "to_ball"], name: "index_ball_gates_on_year_and_progression", unique: true
     t.index ["program_year_id", "position"], name: "index_ball_gates_on_program_year_id_and_position", unique: true
     t.index ["program_year_id"], name: "index_ball_gates_on_program_year_id"
   end

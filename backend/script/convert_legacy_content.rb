@@ -135,7 +135,7 @@ day_roles = program["roles"].each_with_index.map do |(dow, name, _org, minutes, 
 end
 
 File.write(File.join(OUT, "program.yml"), {
-  "athlete" => { "name" => "Teddy Maxim", "birthday" => "2019-01-09" },
+  "athlete" => { "slug" => "teddy", "name" => "Teddy Maxim", "birthday" => "2019-01-09" },
   "program_year" => {
     "label" => "2026-27", "starts_on" => blocks.first["starts_on"],
     "ends_on" => blocks.last["ends_on"], "status" => "active",

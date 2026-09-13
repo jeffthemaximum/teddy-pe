@@ -4,6 +4,7 @@ class Athlete < ApplicationRecord
 
   validates :name, presence: true
   validates :birthday, presence: true
+  validates :slug, presence: true, uniqueness: true
 
   def age_on(date)
     years = date.year - birthday.year

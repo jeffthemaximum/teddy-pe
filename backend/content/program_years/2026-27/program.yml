@@ -1,5 +1,6 @@
 ---
 athlete:
+  slug: teddy
   name: Teddy Maxim
   birthday: '2019-01-09'
 program_year:
