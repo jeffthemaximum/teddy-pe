@@ -2623,6 +2623,15 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - Consumes: `plans/2026-09.yml` (Tasks 2 and 4), `Drill.terms` (Task 8), `ProgramYear`, `Block`, `DayRole` (Task 6).
 - Produces: `BodyTokenizer.new(terms)` with `#tokenize(name:, body:)` returning `{ name_tokens:, body_tokens:, drill_slugs: }`; `MonthPlan#weeks`; `Week#day_cards`; `DayCard#day_blocks`, `#drill_slugs`, `#hie`; `DayBlock#body_tokens`, `#drill_slugs`.
 
+> **What shipped differs from the code below, under Rulings 30 to 33.** The port itself is faithful: a review ran `build.py`'s matcher and this Ruby against 28 constructed inputs in both languages and found the matching rules identical, and the regression target holds at 63 drills across week 1 with the same four bare blocks. What changed is what the tests actually check, and one constraint on how cards may be written.
+>
+> - The longest-term example below is **vacuous**: it passes with the term sort inverted, because `crawl` is a suffix of `bear crawl` and the two never compete at the same starting position. It uses a genuine prefix collision instead, modelled on the one the real content has: `skipping` against `skipping rope`, which resolve to different drills.
+> - A committed example now walks every seeded `DayBlock` asserting the joined token text equals the prose with tags stripped, for titles as well as bodies. That property was verified once by hand over one week and by nothing thereafter.
+> - **Block prose may contain only `<b>`, `</b>`, `<q>` and `</q>`, and no other left angle bracket at all.** `build.py` treats any run beginning with `<` as markup and never scans it for drills, so prose like `"<30s rest"` links a different set of drills in the old build than in the new one. The content spec forbids it rather than reconciling two matchers. This means a card cannot say "hold for <3s" or "5 < 3 reps".
+> - A nil day role raises rather than seeding silently, and the plan-seeder spec no longer assumes a single month plan.
+>
+> See `.superpowers/sdd/2026-09-13-phase-1-rails-api/progress.md` and `git log`.
+
 **A design refinement worth naming.** The spec said `core/` would tokenize. Doing it in the seeder instead is better: the matcher then exists once rather than twice, the content spec can assert its output, and the clients only render an array. `day_blocks.body` keeps the raw prose for export and search, `body_tokens` holds the render tree, and `drill_slugs` falls out of it. Flag this at the Phase 1 gate.
 
 Token shape, flat so React Native can render it as `Text` children:
