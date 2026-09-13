@@ -522,7 +522,7 @@ weeks:
     - Broad jump ×3
     - Soccer game
   - dow: thu
-    date: '2026-09-01'
+    date: '2026-10-01'
     name: Split & Shuffle
     role: Wall Day
     minutes: 100–120
@@ -533,7 +533,7 @@ weeks:
     - 'Tennis: split step + shuffle before every drop feed; FH/BH ×20; rally 15–20'
     - 'Basketball: defensive slides, jump stop, chest and bounce pass on the move'
   - dow: fri
-    date: '2026-09-02'
+    date: '2026-10-02'
     name: Skate & Brake
     role: Skate Day
     minutes: 90–120
@@ -545,7 +545,7 @@ weeks:
     - Jump rope
     - 'Challenge: Red Light (Fri)'
   - dow: sat
-    date: '2026-09-03'
+    date: '2026-10-03'
     name: Game Day
     role: Game Day
     minutes: 'off'
@@ -554,7 +554,7 @@ weeks:
     - Home program off
     - Evening shake-out
   - dow: sun
-    date: '2026-09-04'
+    date: '2026-10-04'
     name: Quick Card
     role: Court Day
     minutes: 30–45

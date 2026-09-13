@@ -95,7 +95,9 @@ test_dates = program["testDates"].each_with_index.map do |(window, label, displa
 end
 
 day_roles = program["roles"].each_with_index.map do |(dow, name, _org, minutes, intensity, note), i|
-  { "dow" => dow.downcase, "position" => i, "name" => name,
+  # 1-based, like every other position in this file, so a person editing the
+  # YAML by hand does not have to remember which collection counts from zero.
+  { "dow" => dow.downcase, "position" => i + 1, "name" => name,
     "organized" => program["org"].fetch(dow), "minutes" => minutes,
     "intensity" => intensity, "note" => note }
 end
@@ -135,9 +137,32 @@ full_cards = plan["cards"]["days"].to_h do |d|
   [ Date.new(yyyy, mm, dnum.to_i).iso8601, d ]
 end
 
+# Day numbers in the legacy file carry no month, and a week can straddle one.
+# Week 3 is "Sep 28 - Oct 4", so its day numbers restart at 1 on the Thursday.
+# Walk the plan in order and roll the month forward whenever a day number goes
+# backwards.
+cursor_year, cursor_month, previous_dnum = plan_year, plan_month, 0
+
 weeks = plan["weeks"].map do |w|
   days = w["days"].map do |(dow, dnum, name, lines)|
-    date = Date.new(plan_year, plan_month, dnum).iso8601
+    if dnum < previous_dnum
+      cursor_month += 1
+      if cursor_month > 12
+        cursor_month = 1
+        cursor_year += 1
+      end
+    end
+    previous_dnum = dnum
+
+    date_obj = Date.new(cursor_year, cursor_month, dnum)
+    # The weekday is the check that catches bad date arithmetic on the first
+    # run. A day that lands on the wrong weekday means the conversion is wrong,
+    # never that the plan is.
+    unless date_obj.strftime("%a").downcase == dow.downcase
+      die("#{date_obj.iso8601} is a #{date_obj.strftime('%a')} but the plan calls it #{dow}")
+    end
+
+    date = date_obj.iso8601
     role = role_by_dow.fetch(dow.downcase)
     card = full_cards[date]
     if card && card["name"] != name

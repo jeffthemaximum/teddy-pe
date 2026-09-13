@@ -475,7 +475,7 @@ test_dates:
   position: 5
 day_roles:
 - dow: mon
-  position: 0
+  position: 1
   name: Floor Day
   organized:
   - Gymnastics
@@ -483,7 +483,7 @@ day_roles:
   intensity: 1
   note: Tumbling homework, landing, basketball handling. Low impact after gym.
 - dow: tue
-  position: 1
+  position: 2
   name: Rings Day
   organized:
   - Swim
@@ -491,21 +491,21 @@ day_roles:
   intensity: 2
   note: Rings, hangs, strength, soccer touch and passing at the wall.
 - dow: wed
-  position: 2
+  position: 3
   name: Fast Day
   organized: []
   minutes: 100–120
   intensity: 3
   note: The one high-impact home day. Speed, power, soccer at speed, games.
 - dow: thu
-  position: 3
+  position: 4
   name: Wall Day
   organized: []
   minutes: 100–120
   intensity: 2
   note: Tennis wall and court, throwing, basketball skill block.
 - dow: fri
-  position: 4
+  position: 5
   name: Skate Day
   organized: []
   minutes: 90–120
@@ -513,7 +513,7 @@ day_roles:
   note: Skate park, balance, keeper work on grass, weekly challenge. Low impact before
     Saturday.
 - dow: sat
-  position: 5
+  position: 6
   name: Game Day
   organized:
   - Soccer
@@ -523,7 +523,7 @@ day_roles:
   intensity: 4
   note: Home program off. 5-min evening shake-out.
 - dow: sun
-  position: 6
+  position: 7
   name: Court Day
   organized:
   - Tennis 2h
