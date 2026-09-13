@@ -136,6 +136,26 @@ RSpec.describe "program years", type: :request do
       expect(JSON.parse(response.body)["current_block_key"]).to eq("coyote")
     end
 
+    it "carries the awards a coach has recorded, not merely the keys" do
+      cub = year.blocks.find_by!(key: "cub")
+      noted_patch, *other_patches = cub.patches.order(:id).first(7)
+      PatchAward.create!(athlete: year.athlete, program_year: year, patch: noted_patch,
+                         awarded_on: Date.new(2026, 11, 8), note: "Nailed the cartwheel")
+      other_patches.each do |patch|
+        PatchAward.create!(athlete: year.athlete, program_year: year, patch: patch, awarded_on: Date.new(2026, 11, 8))
+      end
+      RankAward.create!(athlete: year.athlete, program_year: year, block: cub,
+                        awarded_on: Date.new(2026, 11, 8), patch_count: 7)
+
+      expect(payload["patch_awards"].size).to eq(7)
+      expect(payload["patch_awards"]).to include(
+        a_hash_including("patch_id" => noted_patch.id, "awarded_on" => "2026-11-08", "note" => "Nailed the cartwheel")
+      )
+      expect(payload["rank_awards"]).to eq(
+        [ { "block_key" => "cub", "awarded_on" => "2026-11-08", "patch_count" => 7 } ]
+      )
+    end
+
     it "lets a viewer read the program" do
       get "/api/v1/program_years/#{year.id}", headers: auth(viewer)
       expect(response).to have_http_status(:ok)

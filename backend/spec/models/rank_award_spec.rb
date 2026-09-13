@@ -13,6 +13,19 @@ RSpec.describe RankAward do
     end
   end
 
+  # Content only defines patches for Cub so far, so a second block that can
+  # actually be scoped against needs its own areas and patches built by hand.
+  def rankable_block(program_year, key:)
+    block = program_year.blocks.create!(key: key, name: key.capitalize, position: 50,
+                                        starts_on: program_year.starts_on, ends_on: program_year.ends_on,
+                                        focus: "probe")
+    2.times do |i|
+      area = program_year.areas.create!(slug: "#{key}-area-#{i}", name: "Area #{i}", position: 50 + i)
+      program_year.patches.create!(block: block, area: area, name: "Patch #{i}", requirement: "Do it")
+    end
+    block
+  end
+
   it "ranks up on seven of nine" do
     award_patches(7)
     award = RankAward.new(athlete: athlete, program_year: year, block: cub,
@@ -39,5 +52,19 @@ RSpec.describe RankAward do
   it "counts the patches actually earned for a block" do
     award_patches(8)
     expect(RankAward.patches_earned(athlete, cub)).to eq(8)
+  end
+
+  it "does not count a patch awarded for a different block" do
+    # A version with no block filter would still pass every other example
+    # here, since none of them ever award outside Cub. That is the shape of
+    # a rank-up bypass: claiming a later rank on the previous rank's patches.
+    award_patches(7)
+    other_block = rankable_block(year, key: "otherblock")
+    other_block.patches.each do |patch|
+      PatchAward.create!(athlete: athlete, program_year: year, patch: patch, awarded_on: Date.new(2027, 1, 3))
+    end
+
+    expect(RankAward.patches_earned(athlete, cub)).to eq(7)
+    expect(RankAward.patches_earned(athlete, other_block)).to eq(other_block.patches.count)
   end
 end

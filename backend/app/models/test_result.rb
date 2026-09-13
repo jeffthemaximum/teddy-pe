@@ -22,6 +22,29 @@ class TestResult < ApplicationRecord
     record
   end
 
+  # Growth pace in centimetres a year, from the windows the measurements were
+  # taken in rather than when they were typed. Two heights measured three
+  # months apart can be entered in one sitting, so recorded_at times data
+  # entry. A fast pace is the trigger for halving jumping and sprinting for 8
+  # to 12 weeks, so it has to come from the right clock.
+  #
+  # Returns nil on a non-positive span: nothing forces a test date's position
+  # to agree with the calendar, and a misordered pair produced a negative
+  # pace that read as shrinking and suppressed the trigger.
+  def self.cm_per_year(rows)
+    return nil if rows.size < 2
+
+    first, last = rows.first, rows.last
+    days = (window_date(last) - window_date(first)).to_i
+    return nil if days <= 0
+
+    ((last.numeric_value - first.numeric_value) / days * 365.25).to_f.round(1)
+  end
+
+  def self.window_date(result)
+    Date.strptime(result.test_date.window, "%Y-%m")
+  end
+
   private
 
   # Kept as text, parsed where possible. "15 to 18" stores as typed and charts

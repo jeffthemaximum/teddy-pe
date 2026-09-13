@@ -113,34 +113,13 @@ class ProgramYearPayload
         change: measure.improvement_from(baseline&.numeric_value, latest&.numeric_value)&.to_s,
         series: rows.map { |r| { window: r.test_date.window, value: r.numeric_value&.to_s } }
       }
-      measure.direction == "growth" ? card.merge(cm_per_year: cm_per_year(rows)) : card
+      # Height reports a pace rather than a verdict. A fast one is the
+      # trigger for the growth-load protocol: halve jumping and sprinting
+      # for 8 to 12 weeks and double down on skill and mobility. See
+      # TestResult.cm_per_year for why it is measured against the test
+      # windows rather than recorded_at.
+      measure.direction == "growth" ? card.merge(cm_per_year: TestResult.cm_per_year(rows)) : card
     end
-  end
-
-  # Height reports a pace. A fast one is the trigger for the growth-load
-  # protocol in the architecture: halve jumping and sprinting for 8 to 12
-  # weeks and double down on skill and mobility.
-  #
-  # The pace is measured against the calendar the test windows sit on
-  # (test_date.window, "YYYY-MM"), not against recorded_at. recorded_at is
-  # when the number was typed in, which can happen the same afternoon for a
-  # baseline and a catch-up retest, or days after the window it belongs to;
-  # neither tells you how much time actually passed between the two
-  # measurements.
-  def cm_per_year(rows)
-    return nil if rows.size < 2
-    first, last = rows.first, rows.last
-    days = (window_date(last.test_date.window) - window_date(first.test_date.window)).to_i
-    # Position orders the windows, and nothing forces position to agree with
-    # the calendar. A future content edit that disagreed would produce a
-    # negative span and a negative pace, which reads as shrinking and would
-    # quietly suppress the growth-load trigger this number exists to fire.
-    return nil if days <= 0
-    ((last.numeric_value - first.numeric_value) / days * 365.25).to_f.round(1)
-  end
-
-  def window_date(window)
-    Date.strptime(window, "%Y-%m")
   end
 
   def test_dates
