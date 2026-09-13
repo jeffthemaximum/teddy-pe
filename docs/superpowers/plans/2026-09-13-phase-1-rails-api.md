@@ -3243,6 +3243,14 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - Consumes: everything seeded in Tasks 6 to 9.
 - Produces: `ProgramYearPayload.new(year, on:).as_json`; `GET /api/v1/program_years`; `GET /api/v1/program_years/:id`.
 
+> **What shipped adds to the code below, under Rulings 38 and 39.**
+>
+> - **Patches are ordered by their area's position**, so the Year view always renders Speed through Compete & Mindset in order. `patches` has no `position` column by design, since a patch is identified by its block and its area, which left the nine coming back in database order.
+> - The year's own scalar fields are asserted by value, not by key presence. `current_week_id` in particular had no assertion at all, and This Week loads from it, so it could have been nil indefinitely with a green suite.
+> - The unreadable-date fallback is tested with the clock pinned inside a real block, because asserting against today's own block compares nil to nil while today sits outside the program year. **Known limit:** that example proves the fallback lands inside the currently open block rather than outside every block. It cannot prove the fallback is exactly `Date.current`, because nothing in this payload is day-granular, so a fallback a few days off would still pass.
+>
+> See `.superpowers/sdd/2026-09-13-phase-1-rails-api/progress.md` and `git log`.
+
 One request returns the whole Year tab, the way `PassportController#payload` does it in the sibling. Splitting it only buys round trips on a server that may have just woken up. Patch awards, rank awards and test results join this payload in Tasks 13 and 14.
 
 - [ ] **Step 1: Write the failing request spec**
