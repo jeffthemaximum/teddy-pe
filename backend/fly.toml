@@ -5,6 +5,14 @@ primary_region = "ewr"
 
 [build]
 
+# Runs in a throwaway machine before the new version serves traffic, so the
+# schema is in place before the first request and before the health check,
+# which asks the database a question and fails the deploy if it cannot answer.
+# content:seed is idempotent and keyed on natural keys, so running it on every
+# deploy is how a content change reaches production: edit the YAML, deploy.
+[deploy]
+  release_command = "bin/rails db:prepare content:seed"
+
 [env]
   RAILS_ENV = "production"
   RAILS_LOG_TO_STDOUT = "true"
