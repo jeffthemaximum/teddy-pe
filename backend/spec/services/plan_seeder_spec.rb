@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "seeding the month plan" do
   before { ContentSeeder.new(year_label: "2026-27").seed! }
 
-  let(:plan) { MonthPlan.sole }
+  let(:plan) { MonthPlan.find_by!(month: "2026-09") }
   let(:week1) { plan.weeks.find_by!(number: 1) }
   let(:thursday) { week1.day_cards.find_by!(dow: "thu") }
 
@@ -68,5 +68,18 @@ RSpec.describe "seeding the month plan" do
     counts = [ MonthPlan.count, Week.count, DayCard.count, DayBlock.count ]
     ContentSeeder.new(year_label: "2026-27").seed!
     expect([ MonthPlan.count, Week.count, DayCard.count, DayBlock.count ]).to eq(counts)
+  end
+
+  it "loses no prose anywhere in the month" do
+    # The tokens replace the prose in every view, so any text the tokenizer
+    # drops is text a reader never sees again. This walks every seeded block
+    # rather than a sample, because the next month's prose is unwritten and
+    # this is the only assertion that will cover it.
+    tags = /<\/?[a-z]+>/i
+
+    DayBlock.find_each do |block|
+      expect(block.body_tokens.map { |t| t["text"] }.join).to eq(block.body.to_s.gsub(tags, "")), block.name
+      expect(block.name_tokens.map { |t| t["text"] }.join).to eq(block.name.gsub(tags, "")), block.name
+    end
   end
 end

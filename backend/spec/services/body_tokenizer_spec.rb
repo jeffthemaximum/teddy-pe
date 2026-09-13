@@ -4,7 +4,8 @@ RSpec.describe BodyTokenizer do
   # Longest first, the way Drill.terms hands them over.
   let(:terms) do
     [ [ "bear crawl", "bear-crawl" ], [ "split step", "split-step" ],
-      [ "crawl", "crawl" ], [ "pass", "pass" ] ].sort_by { |t, _| -t.length }
+      [ "skip rope", "skip-rope" ], [ "crawl", "crawl" ],
+      [ "skip", "skip" ], [ "pass", "pass" ] ].sort_by { |t, _| -t.length }
   end
   let(:tokenizer) { described_class.new(terms) }
 
@@ -20,8 +21,13 @@ RSpec.describe BodyTokenizer do
     expect(result[:drill_slugs]).to eq([ "bear-crawl" ])
   end
 
-  it "prefers the longest term, so bear crawl beats crawl" do
-    expect(tokenize(body: "bear crawl")[:drill_slugs]).to eq([ "bear-crawl" ])
+  it "prefers the longest term, so skip rope beats skip" do
+    # A prefix collision, not a suffix one. "crawl" inside "bear crawl" never
+    # competes at the same starting position, so it cannot detect a broken
+    # sort. "skip" and "skip rope" both start at the same character, which is
+    # where the ordering actually decides the answer. The real content has
+    # exactly one collision of this shape: "skipping" and "skipping rope".
+    expect(tokenize(body: "Ten skip ropes.")[:drill_slugs]).to eq([ "skip-rope" ])
   end
 
   it "tolerates a plural" do

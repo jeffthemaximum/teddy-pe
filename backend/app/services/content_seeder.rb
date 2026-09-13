@@ -176,8 +176,11 @@ class ContentSeeder
 
   def seed_days(week, rows, roles, tokenizer)
     rows.each_with_index do |row, index|
+      role = roles[row.fetch("dow")] or
+        raise MissingContent, "#{row['date']} names unknown day role #{row['dow']}"
+
       card = upsert(week.day_cards, { date: row.fetch("date") },
-                    { day_role: roles[row.fetch("dow")], dow: row.fetch("dow"),
+                    { day_role: role, dow: row.fetch("dow"),
                       name: row.fetch("name"), minutes: row.fetch("minutes"),
                       intensity: row.fetch("intensity"), hie: row.fetch("hie"),
                       summary_lines: row.fetch("summary_lines", []),

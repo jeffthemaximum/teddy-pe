@@ -281,6 +281,23 @@ RSpec.describe "content integrity" do
         expect(d["blocks"].to_a.count { |b| b["minutes"].to_s =~ /\d/ }).to be <= 1, label
       end
     end
+
+    it "uses only the two tags the cards are written with" do
+      # Bold and quote are the whole vocabulary. Anything else in angle brackets
+      # renders differently in the old build and the new tokenizer, so the guard
+      # is to keep it out of the prose rather than to reconcile two matchers.
+      allowed = %w[<b> </b> <q> </q>]
+
+      each_day do |d, label|
+        d["blocks"].to_a.each do |b|
+          [ b["name"], b["body"] ].compact.each do |text|
+            text.scan(/<[^>]*>/).each do |tag|
+              expect(allowed).to include(tag), "#{label} #{b['name']} uses #{tag}"
+            end
+          end
+        end
+      end
+    end
   end
 
   describe "Jeff's running, limited through fall 2026" do
