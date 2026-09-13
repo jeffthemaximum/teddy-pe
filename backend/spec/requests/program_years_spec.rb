@@ -47,6 +47,30 @@ RSpec.describe "program years", type: :request do
       end
     end
 
+    it "carries the six blocks in position order" do
+      expect(payload["blocks"].map { |b| b["key"] }).to eq(
+        %w[cub fox coyote wolf puma cheetah]
+      )
+    end
+
+    it "carries the seven fixed day roles" do
+      roles = payload["day_roles"]
+      expect(roles.size).to eq(7)
+      expect(roles.map { |r| [ r["dow"], r["name"] ] }).to match_array(
+        [ [ "mon", "Floor Day" ], [ "tue", "Rings Day" ], [ "wed", "Fast Day" ],
+          [ "thu", "Wall Day" ], [ "fri", "Skate Day" ], [ "sat", "Game Day" ],
+          [ "sun", "Court Day" ] ]
+      )
+    end
+
+    it "carries the test dates in position order" do
+      dates = payload["test_dates"]
+      expect(dates.size).to eq(5)
+      expect(dates.map { |d| d["label"] }).to eq(
+        [ "Baseline", "Retest 1", "Retest 2", "Retest 3", "Final" ]
+      )
+    end
+
     it "orders the nine patches by their area's position, not merely returning nine" do
       patches = payload["patches"]
       expect(patches.size).to eq(9)
