@@ -2479,7 +2479,7 @@ Token shape, flat so React Native can render it as `Text` children:
 ```json
 [
   { "type": "text",  "style": "bold",  "text": "Test: " },
-  { "type": "drill", "style": "bold",  "text": "rally count", "slug": "tennis-rally-count" },
+  { "type": "drill", "style": "bold",  "text": "rally count", "slug": "rally-count" },
   { "type": "text",  "style": "plain", "text": " with Dad, cooperative." }
 ]
 ```
@@ -3647,7 +3647,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - Create: `backend/app/models/{coach_entry,athlete_entry,drill_rating}.rb`
 - Create: `backend/app/policies/{coach_entry_policy,athlete_entry_policy}.rb`
 - Create: `backend/app/controllers/api/v1/{coach_entries_controller,athlete_entries_controller}.rb`
-- Create: `backend/spec/factories/{coach_entries,athlete_entries}.rb`, `backend/spec/requests/coach_entries_spec.rb`, `backend/spec/requests/athlete_entries_spec.rb`
+- Create: `backend/spec/factories/{program_years,coach_entries,athlete_entries}.rb`, `backend/spec/requests/coach_entries_spec.rb`, `backend/spec/requests/athlete_entries_spec.rb`, `backend/spec/models/drill_rating_spec.rb`
 - Modify: `backend/app/services/week_payload.rb`, `backend/config/routes.rb`
 
 **Interfaces:**
@@ -3866,6 +3866,23 @@ end
 
 - [ ] **Step 4: Write the factories and the failing specs**
 
+`backend/spec/factories/program_years.rb`. Most specs seed a real year rather
+than building one, but the journal factories fall back to this when no seed has
+run:
+
+```ruby
+FactoryBot.define do
+  factory :program_year do
+    athlete
+    sequence(:label) { |n| "20#{25 + n}-#{(26 + n) % 100}" }
+    starts_on { Date.new(2026, 9, 14) }
+    ends_on { Date.new(2027, 8, 15) }
+    status { "active" }
+    ball_now { "green" }
+  end
+end
+```
+
 `backend/spec/factories/coach_entries.rb`:
 
 ```ruby
@@ -4069,10 +4086,61 @@ RSpec.describe "athlete entries", type: :request do
 end
 ```
 
+`backend/spec/models/drill_rating_spec.rb`. The streak rules come straight out
+of `docs/architecture.md`, and the diary proposes rather than edits, so this
+reports a streak and changes nothing:
+
+```ruby
+require "rails_helper"
+
+RSpec.describe DrillRating do
+  before { ContentSeeder.new(year_label: "2026-27").seed! }
+
+  let(:year)  { ProgramYear.sole }
+  let(:coach) { create(:user, :coach) }
+  let(:drill) { Drill.find_by!(slug: "split-step") }
+
+  def rate(date, rating)
+    entry = CoachEntry.upsert_for(user: coach, program_year: year, session_date: date)
+    DrillRating.create!(coach_entry: entry, drill: drill, program_year: year,
+                        session_date: date, rating: rating)
+  end
+
+  it "sees three owns-it sessions in a row, which progresses or retires a drill" do
+    %w[2026-09-14 2026-09-16 2026-09-17].each { |d| rate(Date.parse(d), "owns") }
+    expect(described_class.streak("split-step", "owns")).to be(true)
+  end
+
+  it "sees three not-yet sessions in a row, which drops it to an easier entry" do
+    %w[2026-09-14 2026-09-16 2026-09-17].each { |d| rate(Date.parse(d), "not_yet") }
+    expect(described_class.streak("split-step", "not_yet")).to be(true)
+  end
+
+  it "does not call two in a row a streak" do
+    rate(Date.new(2026, 9, 14), "owns")
+    rate(Date.new(2026, 9, 16), "owns")
+    expect(described_class.streak("split-step", "owns")).to be(false)
+  end
+
+  it "breaks the streak when the middle session disagrees" do
+    rate(Date.new(2026, 9, 14), "owns")
+    rate(Date.new(2026, 9, 16), "getting")
+    rate(Date.new(2026, 9, 17), "owns")
+    expect(described_class.streak("split-step", "owns")).to be(false)
+  end
+
+  it "reads the streak in session order across years" do
+    rate(Date.new(2026, 9, 17), "not_yet")
+    rate(Date.new(2026, 9, 16), "owns")
+    expect(described_class.for_drill("split-step").map(&:rating)).to eq(%w[owns not_yet])
+  end
+end
+```
+
 - [ ] **Step 5: Run them and watch them fail**
 
-Run: `bundle exec rspec spec/requests/coach_entries_spec.rb spec/requests/athlete_entries_spec.rb`
-Expected: FAIL with routing errors.
+Run: `bundle exec rspec spec/requests/coach_entries_spec.rb spec/requests/athlete_entries_spec.rb spec/models/drill_rating_spec.rb`
+Expected: FAIL with `uninitialized constant CoachEntry` and routing errors.
 
 - [ ] **Step 6: Write the controllers**
 
@@ -4633,3 +4701,1020 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```
 
 ---
+
+### Task 14: Awards, and progression across years
+
+**Files:**
+- Create: `backend/db/migrate/<ts>_create_awards.rb`, `backend/app/models/patch_award.rb`, `backend/app/models/rank_award.rb`
+- Create: `backend/app/services/progression_payload.rb`, `backend/app/controllers/api/v1/progression_controller.rb`, `backend/app/policies/progression_policy.rb`
+- Create: `backend/spec/models/rank_award_spec.rb`, `backend/spec/requests/progression_spec.rb`
+- Modify: `backend/app/services/program_year_payload.rb`, `backend/config/routes.rb`
+
+**Interfaces:**
+- Consumes: `Patch`, `Block` (Task 6), `DrillRating` (Task 12), `TestResult`, `BatteryMeasure` (Tasks 7 and 13).
+- Produces: `PatchAward`, `RankAward` with the 7 of 9 validation; `ProgressionPayload.new(athlete).as_json`; `GET /api/v1/progression`; the Year payload's `patch_awards` and `rank_awards`.
+
+This is the endpoint the whole schema was shaped for. A year of plans could have stayed in a JSON file. Rank history, a battery charted across every year, height over time and per-drill mastery could not.
+
+- [ ] **Step 1: Write the migration**
+
+```ruby
+class CreateAwards < ActiveRecord::Migration[8.0]
+  def change
+    create_table :patch_awards do |t|
+      t.references :athlete, null: false, foreign_key: true
+      t.references :program_year, null: false, foreign_key: true
+      t.references :patch, null: false, foreign_key: true
+      t.date :awarded_on, null: false
+      t.text :note
+      t.timestamps
+    end
+    add_index :patch_awards, %i[athlete_id patch_id], unique: true
+
+    create_table :rank_awards do |t|
+      t.references :athlete, null: false, foreign_key: true
+      t.references :program_year, null: false, foreign_key: true
+      t.references :block, null: false, foreign_key: true
+      t.date :awarded_on, null: false
+      t.integer :patch_count, null: false
+      t.timestamps
+    end
+    add_index :rank_awards, %i[athlete_id block_id], unique: true
+    # Seven of nine. Two lagging areas never block progress, three do.
+    add_check_constraint :rank_awards, "patch_count >= 7", name: "rank_awards_seven_of_nine_check"
+  end
+end
+```
+
+- [ ] **Step 2: Write the failing model spec**
+
+`backend/spec/models/rank_award_spec.rb`:
+
+```ruby
+require "rails_helper"
+
+RSpec.describe RankAward do
+  before { ContentSeeder.new(year_label: "2026-27").seed! }
+
+  let(:year)    { ProgramYear.sole }
+  let(:athlete) { year.athlete }
+  let(:cub)     { year.blocks.find_by!(key: "cub") }
+
+  def award_patches(n)
+    cub.patches.order(:id).first(n).each do |patch|
+      PatchAward.create!(athlete: athlete, program_year: year, patch: patch, awarded_on: Date.new(2026, 11, 8))
+    end
+  end
+
+  it "ranks up on seven of nine" do
+    award_patches(7)
+    award = RankAward.new(athlete: athlete, program_year: year, block: cub,
+                          awarded_on: Date.new(2026, 11, 8), patch_count: 7)
+    expect(award).to be_valid
+  end
+
+  it "refuses a rank-up on six" do
+    award_patches(6)
+    award = RankAward.new(athlete: athlete, program_year: year, block: cub,
+                          awarded_on: Date.new(2026, 11, 8), patch_count: 6)
+    expect(award).not_to be_valid
+    expect(award.errors[:patch_count].first).to eq("needs 7 of 9 to rank up")
+  end
+
+  it "refuses a count that claims more patches than were actually awarded" do
+    award_patches(7)
+    award = RankAward.new(athlete: athlete, program_year: year, block: cub,
+                          awarded_on: Date.new(2026, 11, 8), patch_count: 9)
+    expect(award).not_to be_valid
+    expect(award.errors[:patch_count].first).to eq("says 9 but 7 patches are awarded for Cub")
+  end
+
+  it "counts the patches actually earned for a block" do
+    award_patches(8)
+    expect(RankAward.patches_earned(athlete, cub)).to eq(8)
+  end
+end
+```
+
+- [ ] **Step 3: Run it and watch it fail**
+
+Run: `bundle exec rspec spec/models/rank_award_spec.rb`
+Expected: FAIL with `uninitialized constant RankAward`.
+
+- [ ] **Step 4: Write the models**
+
+`backend/app/models/patch_award.rb`:
+
+```ruby
+class PatchAward < ApplicationRecord
+  belongs_to :athlete
+  belongs_to :program_year
+  belongs_to :patch
+
+  validates :awarded_on, presence: true
+  validates :patch_id, uniqueness: { scope: :athlete_id }
+end
+```
+
+`backend/app/models/rank_award.rb`:
+
+```ruby
+class RankAward < ApplicationRecord
+  REQUIRED_PATCHES = 7
+  TOTAL_AREAS = 9
+
+  belongs_to :athlete
+  belongs_to :program_year
+  belongs_to :block
+
+  validates :awarded_on, presence: true
+  validates :block_id, uniqueness: { scope: :athlete_id }
+  validate  :earned_seven_of_nine
+
+  scope :chronological, -> { order(:awarded_on) }
+
+  def self.patches_earned(athlete, block)
+    PatchAward.where(athlete: athlete, patch_id: block.patches.select(:id)).count
+  end
+
+  private
+
+  # Seven of nine, so two lagging areas never block progress and three do.
+  def earned_seven_of_nine
+    if patch_count.to_i < REQUIRED_PATCHES
+      return errors.add(:patch_count, "needs #{REQUIRED_PATCHES} of #{TOTAL_AREAS} to rank up")
+    end
+
+    return if block.blank? || athlete.blank?
+    actual = self.class.patches_earned(athlete, block)
+    return if patch_count.to_i <= actual
+    errors.add(:patch_count, "says #{patch_count} but #{actual} patches are awarded for #{block.name}")
+  end
+end
+```
+
+Add to `ProgramYear`:
+
+```ruby
+  has_many :patch_awards, dependent: :destroy
+  has_many :rank_awards, dependent: :destroy
+```
+
+Add to `Athlete`:
+
+```ruby
+  has_many :patch_awards, dependent: :destroy
+  has_many :rank_awards, dependent: :destroy
+  has_many :test_results, dependent: :destroy
+```
+
+- [ ] **Step 5: Add awards to the Year payload**
+
+In `program_year_payload.rb`, add to the `as_json` hash:
+
+```ruby
+      patch_awards: @year.patch_awards.map { |a|
+        { patch_id: a.patch_id, awarded_on: a.awarded_on, note: a.note } },
+      rank_awards: @year.rank_awards.includes(:block).map { |a|
+        { block_key: a.block.key, awarded_on: a.awarded_on, patch_count: a.patch_count } },
+```
+
+- [ ] **Step 6: Write the failing progression spec**
+
+`backend/spec/requests/progression_spec.rb`:
+
+```ruby
+require "rails_helper"
+
+RSpec.describe "progression", type: :request do
+  before { ContentSeeder.new(year_label: "2026-27").seed! }
+
+  let(:year)    { ProgramYear.sole }
+  let(:athlete) { year.athlete }
+  let(:coach)   { create(:user, :coach) }
+  let(:viewer)  { create(:user) }
+  def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user_id: user.id)}" }
+
+  # A second year, so nothing can quietly assume there is one.
+  let!(:next_year) do
+    ProgramYear.create!(athlete: athlete, label: "2027-28", starts_on: Date.new(2027, 9, 13),
+                        ends_on: Date.new(2028, 8, 13), status: "draft", ball_now: "green").tap do |y|
+      y.battery_measures.create!(test_id: "t1", position: 1, label: "20m sprint", unit: "s", direction: "lower")
+      y.battery_measures.create!(test_id: "h", position: 15, label: "Height", unit: "cm", direction: "growth")
+      y.test_dates.create!(window: "2027-09", label: "Baseline", display: "Sep 13-17", position: 1)
+    end
+  end
+
+  def record(year, window, test_id, value, on:)
+    TestResult.create!(program_year: year, athlete: athlete,
+                       test_date: year.test_dates.find_by!(window: window),
+                       battery_measure: year.battery_measures.find_by!(test_id: test_id),
+                       recorded_by_user: coach, raw_value: value, recorded_at: on)
+  end
+
+  before do
+    record(year, "2026-09", "t1", "4.60", on: Time.zone.local(2026, 9, 16))
+    record(year, "2026-12", "t1", "4.31", on: Time.zone.local(2026, 12, 9))
+    record(next_year, "2027-09", "t1", "4.05", on: Time.zone.local(2027, 9, 15))
+    record(year, "2026-09", "h", "128", on: Time.zone.local(2026, 9, 15))
+    record(next_year, "2027-09", "h", "140", on: Time.zone.local(2027, 9, 15))
+  end
+
+  it "charts a battery measure across every year, not just this one" do
+    get "/api/v1/progression", headers: auth(coach)
+    expect(response).to have_http_status(:ok)
+
+    sprint = JSON.parse(response.body)["battery"].find { |m| m["test_id"] == "t1" }
+    expect(sprint["series"].map { |p| p["window"] }).to eq(%w[2026-09 2026-12 2027-09])
+    expect(sprint["series"].map { |p| p["year_label"] }).to eq(%w[2026-27 2026-27 2027-28])
+    expect(sprint["first"]).to eq("4.6")
+    expect(sprint["latest"]).to eq("4.05")
+    expect(sprint["change"]).to eq("better")
+  end
+
+  it "reports height over time with a growth pace" do
+    get "/api/v1/progression", headers: auth(coach)
+    height = JSON.parse(response.body)["height"]
+    expect(height["series"].size).to eq(2)
+    expect(height["cm_per_year"]).to be_within(0.5).of(12.0)
+  end
+
+  it "returns rank history in order" do
+    cub = year.blocks.find_by!(key: "cub")
+    cub.patches.order(:id).first(7).each do |patch|
+      PatchAward.create!(athlete: athlete, program_year: year, patch: patch, awarded_on: Date.new(2026, 11, 8))
+    end
+    RankAward.create!(athlete: athlete, program_year: year, block: cub,
+                      awarded_on: Date.new(2026, 11, 8), patch_count: 7)
+
+    get "/api/v1/progression", headers: auth(coach)
+    ranks = JSON.parse(response.body)["ranks"]
+    expect(ranks.first).to include("block_key" => "cub", "patch_count" => 7, "year_label" => "2026-27")
+  end
+
+  it "carries drill mastery forward across years" do
+    entry_2026 = create(:coach_entry, user: coach, program_year: year, session_date: Date.new(2026, 9, 17))
+    entry_2027 = create(:coach_entry, user: coach, program_year: next_year, session_date: Date.new(2027, 9, 16))
+    drill = Drill.find_by!(slug: "split-step")
+    DrillRating.create!(coach_entry: entry_2026, drill: drill, program_year: year,
+                        session_date: entry_2026.session_date, rating: "not_yet")
+    DrillRating.create!(coach_entry: entry_2027, drill: drill, program_year: next_year,
+                        session_date: entry_2027.session_date, rating: "owns")
+
+    get "/api/v1/progression", headers: auth(coach)
+    mastery = JSON.parse(response.body)["drills"].find { |d| d["slug"] == "split-step" }
+    expect(mastery["latest"]).to eq("owns")
+    expect(mastery["history"].map { |h| h["rating"] }).to eq(%w[not_yet owns])
+    expect(mastery["history"].map { |h| h["year_label"] }).to eq(%w[2026-27 2027-28])
+  end
+
+  it "lets a viewer see progress but no journal-derived mastery" do
+    get "/api/v1/progression", headers: auth(viewer)
+    expect(response).to have_http_status(:ok)
+    body = JSON.parse(response.body)
+    expect(body["battery"]).to be_present
+    expect(body["drills"]).to eq([])
+  end
+
+  it "refuses an unauthenticated visitor" do
+    get "/api/v1/progression"
+    expect(response).to have_http_status(:unauthorized)
+  end
+end
+```
+
+- [ ] **Step 7: Write the payload, policy and controller**
+
+`backend/app/services/progression_payload.rb`:
+
+```ruby
+# Everything that crosses a year boundary. This is the endpoint the schema was
+# shaped for: a single year of plans could have stayed in a JSON file, but rank
+# history, a battery charted across every year, height over time and drill
+# mastery could not.
+#
+# Battery measures join across years on test_id, the way areas join on slug.
+class ProgressionPayload
+  def initialize(athlete, user:)
+    @athlete = athlete
+    @user = user
+  end
+
+  def as_json(*)
+    { years: years, ranks: ranks, battery: battery, height: height, drills: drills }
+  end
+
+  private
+
+  def program_years
+    @program_years ||= ProgramYear.where(athlete: @athlete).order(:starts_on).to_a
+  end
+
+  def year_labels
+    @year_labels ||= program_years.to_h { |y| [ y.id, y.label ] }
+  end
+
+  def years
+    program_years.map { |y| { id: y.id, label: y.label, starts_on: y.starts_on, ends_on: y.ends_on, status: y.status } }
+  end
+
+  def ranks
+    RankAward.where(athlete: @athlete).includes(:block).chronological.map do |a|
+      { block_key: a.block.key, block_name: a.block.name, awarded_on: a.awarded_on,
+        patch_count: a.patch_count, year_label: year_labels[a.program_year_id] }
+    end
+  end
+
+  def results
+    @results ||= TestResult.where(athlete: @athlete)
+                           .includes(:test_date, :battery_measure)
+                           .sort_by { |r| [ r.test_date.window, r.id ] }
+  end
+
+  def battery
+    results.reject { |r| r.battery_measure.direction == "growth" }
+           .group_by { |r| r.battery_measure.test_id }
+           .map { |test_id, rows| measure_card(test_id, rows) }
+           .sort_by { |card| card[:test_id] }
+  end
+
+  def measure_card(test_id, rows)
+    measure = rows.last.battery_measure
+    first, last = rows.first, rows.last
+
+    { test_id: test_id, label: measure.label, unit: measure.unit, direction: measure.direction,
+      first: first.numeric_value&.to_s, latest: last.numeric_value&.to_s,
+      change: measure.improvement_from(first.numeric_value, last.numeric_value)&.to_s,
+      series: rows.map { |r| point(r) } }
+  end
+
+  def height
+    rows = results.select { |r| r.battery_measure.test_id == "h" }
+    return { series: [], cm_per_year: nil } if rows.empty?
+
+    { series: rows.map { |r| point(r) }, cm_per_year: cm_per_year(rows) }
+  end
+
+  # A jump in this pace is the trigger for the growth-load protocol: halve
+  # jumping and sprinting for 8 to 12 weeks, double down on skill and mobility.
+  def cm_per_year(rows)
+    return nil if rows.size < 2
+    days = (rows.last.recorded_at.to_date - rows.first.recorded_at.to_date).to_i
+    return nil if days.zero?
+    ((rows.last.numeric_value - rows.first.numeric_value) / days * 365.25).to_f.round(1)
+  end
+
+  def point(result)
+    { window: result.test_date.window, value: result.numeric_value&.to_s,
+      recorded_at: result.recorded_at, year_label: year_labels[result.program_year_id] }
+  end
+
+  # Mastery comes out of the coach's journal, so a viewer gets none of it.
+  def drills
+    return [] unless @user&.coach? || @user&.athlete?
+
+    DrillRating.where(program_year_id: program_years.map(&:id))
+               .includes(:drill).order(:session_date)
+               .group_by { |r| r.drill.slug }
+               .map do |slug, rows|
+                 { slug: slug, name: rows.first.drill.name, latest: rows.last.rating,
+                   history: rows.map { |r| { session_date: r.session_date, rating: r.rating,
+                                             year_label: year_labels[r.program_year_id] } } }
+               end
+               .sort_by { |d| d[:name] }
+  end
+end
+```
+
+`backend/app/policies/progression_policy.rb`:
+
+```ruby
+class ProgressionPolicy < ApplicationPolicy
+  def show? = read_program?
+end
+```
+
+`backend/app/controllers/api/v1/progression_controller.rb`:
+
+```ruby
+module Api
+  module V1
+    class ProgressionController < ApiController
+      # GET /api/v1/progression
+      def show
+        athlete = current_user.athlete || Athlete.first
+        return render_not_found if athlete.nil?
+
+        authorize athlete, :show?, policy_class: ProgressionPolicy
+        render json: ProgressionPayload.new(athlete, user: current_user).as_json
+      end
+    end
+  end
+end
+```
+
+Routes: `get "progression", to: "progression#show"`.
+
+- [ ] **Step 8: Migrate, run and commit**
+
+```bash
+bundle exec rails db:migrate
+bundle exec rspec
+git add backend
+git commit -m "Awards, and progression across years
+
+RankAward validates seven of nine twice over: a check constraint in the
+database and a model validation that also refuses a count claiming more
+patches than were actually awarded.
+
+GET /progression is the endpoint the schema was shaped for. A single year
+of plans could have stayed in a JSON file. Rank history, each battery
+measure charted across every year, height over time with a cm per year
+pace, and per-drill mastery could not.
+
+Battery measures join across years on test_id, the way areas join on
+slug, so nothing needs a shared table and nothing assumes one year. The
+spec creates a second program year for exactly that reason.
+
+Mastery comes out of the coach's journal, so a viewer gets the charts and
+none of the ratings.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
+```
+
+---
+
+### Task 15: `rails docs:export`, so the repo stays the memory
+
+**Files:**
+- Create: `backend/app/services/docs_exporter.rb`, `backend/lib/tasks/docs.rake`
+- Create: `backend/spec/services/docs_exporter_spec.rb`
+
+**Interfaces:**
+- Consumes: `CoachEntry`, `AthleteEntry`, `DrillRating` (Task 12), `TestResult` (Task 13), `MonthPlan` (Task 9).
+- Produces: `DocsExporter.new(athlete, root:).export!` returning the list of paths written; `rails docs:export`.
+
+`tools/pull.py` exists so entries land in the repo before planning. Deleting it without a replacement breaks the principle in `CLAUDE.md` that this repo is the complete memory of the project. This does the same job and more, because it puts the program back into `docs/` as prose a person can read rather than only as YAML a seeder can read.
+
+Unshared athlete entries are excluded, the same as they are from the API. Enforcing the toggle in one place and leaking it in another would make it worthless.
+
+- [ ] **Step 1: Write the failing spec**
+
+`backend/spec/services/docs_exporter_spec.rb`:
+
+```ruby
+require "rails_helper"
+
+RSpec.describe DocsExporter do
+  before { ContentSeeder.new(year_label: "2026-27").seed! }
+
+  let(:year)    { ProgramYear.sole }
+  let(:athlete) { year.athlete }
+  let(:coach)   { create(:user, :coach) }
+  let(:teddy)   { create(:user, :athlete) }
+  let(:root)    { Pathname.new(Dir.mktmpdir) }
+
+  after { FileUtils.remove_entry(root) }
+
+  def export = described_class.new(athlete, root: root).export!
+
+  it "writes a journal file per month" do
+    create(:coach_entry, user: coach, program_year: year, session_date: Date.new(2026, 9, 17),
+           overall: 4, energy: 3, note: "Finish stayed high all session.")
+    export
+
+    path = root.join("journal/2026-27/2026-09.md")
+    expect(path).to exist
+    body = path.read
+    expect(body).to include("2026-09-17")
+    expect(body).to include("Finish stayed high all session.")
+    expect(body).to include("Wall & Ball")
+  end
+
+  it "writes the drill ratings beside the entry that made them" do
+    entry = create(:coach_entry, user: coach, program_year: year, session_date: Date.new(2026, 9, 17))
+    entry.replace_ratings!({ "split-step" => "owns" })
+    export
+
+    expect(root.join("journal/2026-27/2026-09.md").read).to include("split-step: owns")
+  end
+
+  it "leaves out an athlete entry Teddy has not shared" do
+    create(:athlete_entry, user: teddy, program_year: year,
+           session_date: Date.new(2026, 9, 17), best: "secret thing")
+    export
+
+    expect(root.join("journal/2026-27/2026-09.md").read).not_to include("secret thing")
+  end
+
+  it "includes one he has shared" do
+    create(:athlete_entry, :shared, user: teddy, program_year: year,
+           session_date: Date.new(2026, 9, 17), best: "The cartwheel felt like flying")
+    export
+
+    body = root.join("journal/2026-27/2026-09.md").read
+    expect(body).to include("The cartwheel felt like flying")
+    expect(body).to include("Teddy")
+  end
+
+  it "writes the results table with a direction on every row" do
+    TestResult.upsert_for(program_year: year, test_date: year.test_dates.find_by!(window: "2026-09"),
+                          battery_measure: year.battery_measures.find_by!(test_id: "t1"),
+                          value: "4.42", user: coach)
+    export
+
+    body = root.join("results/2026-27.md").read
+    expect(body).to include("20m sprint")
+    expect(body).to include("4.42")
+    expect(body).to include("lower")
+  end
+
+  it "writes the month plan as readable prose" do
+    export
+    body = root.join("plans/2026-27/2026-09.md").read
+
+    expect(body).to include("Cub block · Weeks 1–3")
+    expect(body).to include("Week 1: Baseline & Land")
+    expect(body).to include("Challenge of the week:")
+    expect(body).to include("Wall & Ball")
+    expect(body).to include("Dad notes:")
+    expect(body).to include("high-intent efforts: 2")
+    # Prose rather than markup, the way the tokens render it.
+    expect(body).not_to include("<b>")
+    expect(body).not_to include("<q>")
+  end
+
+  it "names every file it wrote" do
+    paths = export
+    expect(paths.map { |p| p.to_s.sub("#{root}/", "") })
+      .to include("plans/2026-27/2026-09.md", "results/2026-27.md")
+  end
+
+  it "is safe to run twice" do
+    export
+    first = root.join("plans/2026-27/2026-09.md").read
+    export
+    expect(root.join("plans/2026-27/2026-09.md").read).to eq(first)
+  end
+end
+```
+
+- [ ] **Step 2: Run it and watch it fail**
+
+Run: `bundle exec rspec spec/services/docs_exporter_spec.rb`
+Expected: FAIL with `uninitialized constant DocsExporter`.
+
+- [ ] **Step 3: Write the exporter**
+
+`backend/app/services/docs_exporter.rb`:
+
+```ruby
+# Writes the database back into docs/ as prose.
+#
+# This replaces tools/pull.py. The repo is the complete memory of the project,
+# and journals, results and plans all have to be readable there before a
+# planning session starts.
+#
+# An athlete entry Teddy has not shared is left out, exactly as it is left out
+# of the API. Enforcing the toggle in one place and leaking it in another would
+# make it worthless.
+class DocsExporter
+  RATING_WORDS = { "not_yet" => "not yet", "getting" => "getting there", "owns" => "owns it" }.freeze
+
+  def initialize(athlete, root: Rails.root.join("../docs"))
+    @athlete = athlete
+    @root = Pathname.new(root)
+    @written = []
+  end
+
+  def export!
+    ProgramYear.where(athlete: @athlete).order(:starts_on).each do |year|
+      export_journal(year)
+      export_results(year)
+      export_plans(year)
+    end
+    @written
+  end
+
+  private
+
+  def write(relative, body)
+    path = @root.join(relative)
+    FileUtils.mkdir_p(path.dirname)
+    path.write(body.rstrip + "\n")
+    @written << path
+    path
+  end
+
+  def cards_by_date(year)
+    @cards ||= {}
+    @cards[year.id] ||= DayCard.joins(week: :month_plan)
+                               .where(month_plans: { program_year_id: year.id })
+                               .index_by(&:date)
+  end
+
+  # ---- journals -----------------------------------------------------------
+
+  def export_journal(year)
+    coach = CoachEntry.where(program_year: year).includes(drill_ratings: :drill)
+    athlete = AthleteEntry.where(program_year: year).shared_with_coach
+    return if coach.empty? && athlete.empty?
+
+    by_month = (coach.to_a + athlete.to_a).group_by { |e| e.session_date.strftime("%Y-%m") }
+
+    by_month.each do |month, entries|
+      lines = [ "# Journal, #{month}", "", "Athlete: #{@athlete.name}. Program year #{year.label}.", "" ]
+
+      entries.group_by(&:session_date).sort.each do |date, on_that_day|
+        card = cards_by_date(year)[date]
+        lines << "## #{date} #{card ? "· #{card.name}" : ''}".rstrip
+        lines << ""
+        on_that_day.sort_by { |e| e.class.name }.each do |entry|
+          lines.concat(entry.is_a?(CoachEntry) ? coach_lines(entry) : athlete_lines(entry))
+        end
+      end
+
+      write("journal/#{year.label}/#{month}.md", lines.join("\n"))
+    end
+  end
+
+  def coach_lines(entry)
+    lines = [ "**Coach.**" ]
+    lines << "How it went: #{entry.overall}/5. Energy: #{entry.energy}/5." if entry.overall || entry.energy
+    lines << "Pain flagged. #{entry.pain_note}".strip if entry.flag_pain
+    lines << "Challenge number: #{entry.challenge_num}" if entry.challenge_num.present?
+    lines << entry.note if entry.note.present?
+
+    ratings = entry.drill_ratings.sort_by { |r| r.drill.name }
+    if ratings.any?
+      lines << ""
+      lines << "Drills:"
+      ratings.each { |r| lines << "- #{r.drill.slug}: #{r.rating} (#{RATING_WORDS[r.rating]})" }
+    end
+    lines << ""
+    lines
+  end
+
+  def athlete_lines(entry)
+    lines = [ "**Teddy.** Shared with Dad." ]
+    lines << "How it felt: #{entry.felt}/5." if entry.felt
+    lines << "Best thing: #{entry.best}" if entry.best.present?
+    lines << "Hard thing: #{entry.hard}" if entry.hard.present?
+    lines << entry.note if entry.note.present?
+    lines << ""
+    lines
+  end
+
+  # ---- results ------------------------------------------------------------
+
+  def export_results(year)
+    results = TestResult.where(program_year: year).includes(:test_date, :battery_measure)
+    windows = year.test_dates.to_a
+
+    lines = [ "# Test results, #{year.label}", "", "Athlete: #{@athlete.name}.", "" ]
+    lines << "| Test | Unit | Progress is | " + windows.map(&:label).join(" | ") + " |"
+    lines << "|---|---|---|" + ([ "---" ] * windows.size).join("|") + "|"
+
+    by_key = results.index_by { |r| [ r.battery_measure_id, r.test_date_id ] }
+    year.battery_measures.each do |measure|
+      cells = windows.map { |w| by_key[[ measure.id, w.id ]]&.raw_value || "" }
+      lines << "| #{measure.label} | #{measure.unit} | #{measure.direction} | #{cells.join(' | ')} |"
+    end
+
+    write("results/#{year.label}.md", lines.join("\n"))
+  end
+
+  # ---- plans --------------------------------------------------------------
+
+  def export_plans(year)
+    year.month_plans.includes(weeks: { day_cards: :day_blocks }).each do |plan|
+      lines = [ "# #{plan.label} (#{plan.range_display})", "" ]
+
+      plan.weeks.each do |week|
+        lines << "## Week #{week.number}: #{week.theme} (#{week.dates_display})"
+        lines << ""
+        lines << "Sub-targets: #{week.targets.join('; ')}"
+        lines << ""
+        lines << "Challenge of the week: #{week.challenge}"
+        lines << ""
+        lines << "High-intent efforts: #{week.high_intent_efforts} of #{week.budget}."
+        lines << ""
+        week.day_cards.each { |card| lines.concat(card_lines(card)) }
+      end
+
+      write("plans/#{year.label}/#{plan.month}.md", lines.join("\n"))
+    end
+  end
+
+  def card_lines(card)
+    minutes = card.minutes == "off" ? "home off" : "#{card.minutes} min"
+    lines = [ "### #{card.dow.capitalize} #{card.date} · #{card.day_role&.name} · #{card.name} (#{minutes}, high-intent efforts: #{card.hie})", "" ]
+
+    if card.day_blocks.any?
+      card.day_blocks.each do |block|
+        tag = { "test" => " [battery]", "challenge" => " [challenge]" }[block.tag].to_s
+        body = plain(block.body_tokens)
+        lines << "- **#{plain(block.name_tokens)}#{tag}** (#{block.minutes})#{body.present? ? ": #{body}" : ''}"
+      end
+    else
+      card.summary_lines.each { |line| lines << "- #{line}" }
+    end
+
+    lines << ""
+    lines << "Dad notes: #{card.dad_note}" if card.dad_note.present?
+    lines << ""
+    lines
+  end
+
+  # Tokens back to plain prose. The markup never existed in the database, so
+  # this is the join rather than a strip.
+  def plain(tokens) = Array(tokens).map { |t| t["text"] }.join
+end
+```
+
+`backend/lib/tasks/docs.rake`:
+
+```ruby
+namespace :docs do
+  desc "Export journals, results and plans into docs/ so the repo stays the memory"
+  task export: :environment do
+    athlete = Athlete.first or abort("No athlete yet. Run content:seed first.")
+    paths = DocsExporter.new(athlete).export!
+    paths.each { |p| puts p.to_s.sub("#{Rails.root.join('..')}/", "") }
+    puts "#{paths.size} file(s) written. Read them before planning the next month."
+  end
+end
+```
+
+- [ ] **Step 4: Run it, then run it for real**
+
+```bash
+bundle exec rspec spec/services/docs_exporter_spec.rb
+bundle exec rails docs:export
+```
+
+Expected: 8 examples green, and `docs/plans/2026-27/2026-09.md` plus `docs/results/2026-27.md` written. There are no journal entries yet, so no journal file appears until Jeff writes one.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add backend docs
+git commit -m "rails docs:export, so the repo stays the memory
+
+Replaces tools/pull.py. Journals, results and plans all land in docs/ as
+prose before a planning session, which is what CLAUDE.md means by this
+repo being the complete memory of the project.
+
+It does more than pull.py did: the program itself goes back as text a
+person can read rather than only as YAML a seeder can read, with each
+week's high-intent effort spend printed beside its budget.
+
+An athlete entry Teddy has not shared is left out, exactly as it is left
+out of the API. Enforcing the toggle in one place and leaking it in
+another would make it worthless.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
+```
+
+---
+
+### Task 16: Deploy to Fly, and report what it actually costs
+
+**Files:**
+- Create: `backend/Dockerfile`, `backend/.dockerignore`, `backend/fly.toml`, `backend/config/initializers/okcomputer.rb`
+- Modify: `backend/config/puma.rb`, `backend/config/environments/production.rb`
+
+**Interfaces:**
+- Consumes: the whole app.
+- Produces: one Fly app that sleeps at zero machines, the measured cold start, and the verified monthly cost for the gate report.
+
+One app. No staging. Correctness comes from the suite, not from a second paid environment.
+
+- [ ] **Step 1: Tune Puma small**
+
+`backend/config/puma.rb`:
+
+```ruby
+# One worker, few threads. There is one coach, one athlete and one viewer.
+# Sizing this for concurrency that will never arrive costs memory on a 512MB
+# machine that has to boot fast after sleeping.
+threads_count = ENV.fetch("RAILS_MAX_THREADS", 3).to_i
+threads threads_count, threads_count
+
+port ENV.fetch("PORT", 3000)
+environment ENV.fetch("RAILS_ENV", "development")
+
+workers ENV.fetch("WEB_CONCURRENCY", 1).to_i
+preload_app!
+
+plugin :tmp_restart
+```
+
+- [ ] **Step 2: Write the Dockerfile**
+
+`backend/Dockerfile`:
+
+```dockerfile
+# syntax = docker/dockerfile:1
+ARG RUBY_VERSION=3.3.5
+FROM registry.docker.com/library/ruby:$RUBY_VERSION-slim AS base
+
+WORKDIR /rails
+ENV RAILS_ENV=production \
+    BUNDLE_DEPLOYMENT=1 \
+    BUNDLE_PATH=/usr/local/bundle \
+    BUNDLE_WITHOUT=development:test
+
+FROM base AS build
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y build-essential git libpq-dev pkg-config && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY Gemfile Gemfile.lock ./
+RUN bundle install && rm -rf ~/.bundle "${BUNDLE_PATH}"/ruby/*/cache
+
+COPY . .
+RUN bundle exec bootsnap precompile app/ lib/
+
+FROM base
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y curl libpq5 && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /usr/local/bundle /usr/local/bundle
+COPY --from=build /rails /rails
+
+RUN useradd rails --create-home --shell /bin/bash && chown -R rails:rails /rails db log tmp
+USER rails:rails
+
+EXPOSE 3000
+CMD ["./bin/rails", "server", "-b", "0.0.0.0"]
+```
+
+`backend/.dockerignore`:
+
+```
+.git
+.gitignore
+spec
+tmp
+log
+coverage
+script
+```
+
+- [ ] **Step 3: Write fly.toml**
+
+`backend/fly.toml`:
+
+```toml
+# One app. No staging: correctness comes from the test suite, not from a
+# second paid environment.
+app = "teddy-pe-api"
+primary_region = "ewr"
+
+[build]
+
+[env]
+  RAILS_ENV = "production"
+  RAILS_LOG_TO_STDOUT = "true"
+  RAILS_MAX_THREADS = "3"
+  WEB_CONCURRENCY = "1"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  # Sleeps when nobody is using it, wakes on the next request. A site opened a
+  # few times a day costs close to nothing this way. The clients are built for
+  # the wake-up: a real loading state on first paint and a 15 second timeout.
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.http_options]
+    h2_backend = true
+
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "5s"
+  grace_period = "20s"
+  method = "GET"
+  path = "/healthz"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  # 256MB thrashes or OOMs on a Rails boot. 512 plus swap is the floor that
+  # boots reliably.
+  memory = "512mb"
+
+[experimental]
+  swap_size_mb = 512
+```
+
+- [ ] **Step 4: Guard the health check**
+
+`backend/config/initializers/okcomputer.rb`:
+
+```ruby
+# Fly polls this on a sleeping machine, so keep it to a connection check and
+# nothing that wakes Neon harder than it has to.
+OkComputer::Registry.register "database", OkComputer::ActiveRecordCheck.new
+OkComputer.make_optional %w[database] if Rails.env.development?
+```
+
+- [ ] **Step 5: Deploy**
+
+```bash
+fly launch --no-deploy --name teddy-pe-api --region ewr
+fly secrets set DATABASE_URL="<the Neon connection string>"
+fly secrets set SECRET_KEY_BASE="$(bundle exec rails secret)"
+fly secrets set WEB_ORIGIN="https://<the Vercel domain>"
+fly deploy
+fly logs
+```
+
+Then create the accounts against production:
+
+```bash
+fly ssh console -C "bin/rails content:seed"
+fly ssh console -C "EMAIL=frey.maxim@gmail.com NAME='Jeff Maxim' ROLE=coach bin/rails users:create"
+fly ssh console -C "EMAIL=teddymaxim225@gmail.com NAME='Teddy Maxim' ROLE=athlete bin/rails users:create"
+fly ssh console -C "EMAIL=emmabark22@gmail.com NAME='Emily Barker' ROLE=viewer bin/rails users:create"
+fly ssh console -C "EMAIL=teddymaxim225@gmail.com bin/rails users:link_athlete"
+```
+
+Capture the three generated passwords and hand them to Jeff directly. Do not write them into the repo, a commit message, or the gate report.
+
+- [ ] **Step 6: Measure the cold start**
+
+Let the machine sleep, then:
+
+```bash
+fly machine stop --app teddy-pe-api $(fly machines list --app teddy-pe-api --json | ruby -rjson -e 'puts JSON.parse(STDIN.read).first["id"]')
+for i in 1 2 3; do
+  curl -s -o /dev/null -w "cold $i: %{time_total}s\n" https://teddy-pe-api.fly.dev/healthz
+  sleep 2
+done
+curl -s -o /dev/null -w "warm: %{time_total}s\n" https://teddy-pe-api.fly.dev/healthz
+```
+
+Record the numbers. If the first request runs past 15 seconds, the apiClient's timeout is too tight and that has to be raised before Phase 2 rather than discovered on a tennis court.
+
+- [ ] **Step 7: Verify the cost, do not assume it**
+
+Prices change, and the ones in the brief may already be stale. Check what Fly, Neon and Vercel publish **today** and write the actual expected monthly total into the gate report:
+
+- Fly: the shared-cpu-1x 512MB rate, times the hours a machine that sleeps actually runs, plus the reserved IP if one is charged.
+- Neon: confirm the free tier still covers this storage and compute with autosuspend on.
+- Vercel: confirm Hobby still covers a static Vite bundle on a personal project.
+
+Flag anything that pushes this past a few dollars a month **before** it is running.
+
+- [ ] **Step 8: Prove the API is closed to strangers**
+
+```bash
+for path in /api/v1/program_years /api/v1/drills /api/v1/progression; do
+  echo "--- $path"
+  curl -s https://teddy-pe-api.fly.dev$path | head -c 200
+  echo
+done
+```
+
+Expected on all three: `{"error":{"code":"unauthorized","message":"Invalid or missing token."}}` and not one word of program content.
+
+- [ ] **Step 9: Commit**
+
+```bash
+git add backend
+git commit -m "Deploy to Fly on one scale-to-zero machine
+
+One app, no staging. shared-cpu-1x with 512MB and 512MB of swap, because
+256MB thrashes or OOMs on a Rails boot. min_machines_running = 0 with
+auto start and stop, so it sleeps when nobody is using it.
+
+Puma runs one worker and three threads. There is one coach, one athlete
+and one viewer, and sizing for concurrency that will never arrive costs
+memory on a machine that has to boot fast after sleeping.
+
+No Redis, no worker, no Sidekiq, no second environment.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
+```
+
+---
+
+## Phase 1 gate report
+
+Bring Jeff all of this before starting Phase 2:
+
+1. **Branch and diff.** `git log --oneline main..HEAD` and `git diff --stat main..HEAD`.
+2. **Test output.** The full `bundle exec rspec` run, pasted, not summarized.
+3. **The `hie` table** from Task 4, step 5, for his correction.
+4. **Measured cold start** from Task 16, step 6, with the warm number beside it.
+5. **Verified monthly cost** from Task 16, step 7, with today's published prices and the source for each.
+6. **The unauthenticated curl output** from Task 16, step 8.
+7. **`docs:export` output**, so he can see what the repo now remembers.
+8. **What you would change**, in a sentence or two. The three worth flagging as written:
+   - The tokenizer moved from `core/` to the seeder. Worth confirming he agrees before Phase 2 builds on it.
+   - A coach sees all athletes rather than a coaching join table, which is YAGNI for one family but is the thing to revisit if a second child gets a program year.
+   - `Week.current` falls back to the first week when the date sits outside the plan, which is right during a gap between months and would be wrong if a year ever had two plans covering one date.
