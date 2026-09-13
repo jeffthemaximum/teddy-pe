@@ -995,12 +995,21 @@ Add to `spec/content_spec.rb`, inside `describe "every month plan"`:
     end
 
     it "never runs two high-impact home days back to back" do
-      each_week do |w, label|
-        home = w["days"].reject { |d| d["dow"] == "sat" }.sort_by { |d| d["date"].to_s }
-        home.each_cons(2) do |a, b|
-          both_high = a["intensity"].to_i >= 3 && b["intensity"].to_i >= 3
-          expect(both_high).to be(false), "#{label}: #{a['dow']} and #{b['dow']} are both high impact"
-        end
+      # Walks the whole plan in date order rather than resetting each week.
+      # Sunday and Monday sit on either side of a week boundary, so a rule
+      # scoped to one week would never compare them, and the same goes for the
+      # last day of one month against the first of the next.
+      #
+      # Saturday is dropped because the home program is off that day, which
+      # makes Friday and Sunday the adjacent pair the rule cares about.
+      home = PLANS.flat_map { |p| p["weeks"].flat_map { |w| w["days"] } }
+                  .reject { |d| d["dow"] == "sat" }
+                  .sort_by { |d| d["date"].to_s }
+
+      home.each_cons(2) do |a, b|
+        both_high = a["intensity"].to_i >= 3 && b["intensity"].to_i >= 3
+        expect(both_high).to be(false),
+          "#{a['date']} (#{a['dow']}) and #{b['date']} (#{b['dow']}) are both high impact"
       end
     end
 
