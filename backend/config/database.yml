@@ -1,0 +1,23 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+
+development:
+  <<: *default
+  url: <%= ENV.fetch("DATABASE_URL", "postgresql://localhost/teddy_pe_development") %>
+
+# Tests run against a local Postgres so the suite is fast and needs no network.
+# If there is no local Postgres, set TEST_DATABASE_URL to a Neon branch.
+test:
+  <<: *default
+  url: <%= ENV.fetch("TEST_DATABASE_URL", "postgresql://localhost/teddy_pe_test") %>
+
+production:
+  <<: *default
+  # Bracket form rather than ENV.fetch. Rails renders this whole file's ERB as
+  # one document before it picks an environment, so a fetch with no default
+  # here raises KeyError in development and test as well, and db:create and
+  # rspec both die before reaching Postgres. Fly sets this secret at deploy,
+  # and a missing one fails loudly at connect time where it belongs.
+  url: <%= ENV["DATABASE_URL"] %>

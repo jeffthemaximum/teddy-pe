@@ -1,0 +1,41 @@
+source "https://rubygems.org"
+
+ruby "3.3.5"
+
+gem "rails", "~> 8.0.0"
+gem "puma", "~> 6.4"
+gem "pg", "~> 1.5"
+
+# JSON API
+gem "active_model_serializers", "~> 0.10"
+
+# Auth
+gem "jwt", "~> 2.8"
+gem "bcrypt", "~> 3.1"
+
+# Authorization
+gem "pundit", "~> 2.4"
+
+# CORS for the web app origin
+gem "rack-cors", "~> 2.0"
+
+# Boot speed
+gem "bootsnap", ">= 1.18", require: false
+
+# Health check for Fly
+gem "okcomputer", "~> 1.18"
+
+group :development, :test do
+  gem "rspec-rails", "~> 7.0"
+  gem "factory_bot_rails", "~> 6.4"
+  gem "faker", "~> 3.4"
+  gem "debug", platforms: %i[mri], require: "debug/prelude"
+  gem "rubocop-rails-omakase", require: false
+  gem "brakeman", require: false
+end
+
+group :test do
+  gem "shoulda-matchers", "~> 6.4"
+  gem "database_cleaner-active_record", "~> 2.2"
+  gem "simplecov", require: false
+end
