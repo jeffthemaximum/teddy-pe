@@ -36,6 +36,7 @@ weeks:
       today. The basketball block is volume, not intensity: 200 dribbles is the target,
       and losing the ball is fine, looking down is the thing to correct. Watch the
       knees on landing: if they cave inward, lower the step.'
+    hie: 0
     blocks:
     - minutes: '8'
       name: Wake Up
@@ -89,6 +90,7 @@ weeks:
       are max efforts. Cheer the effort, record the number without commentary. The
       non-dominant arm and the left foot will look bad. That is the point: they are
       what will move most this year. Swim class after is recovery, add nothing.'
+    hie: 6
     blocks:
     - minutes: '10'
       name: Wake Up
@@ -147,6 +149,7 @@ weeks:
       3 challenge jumps, about 15. That is the week''s load spike, by design. The
       soccer passing is technical volume and does not count. If he is flat on the
       third sprint, take the best of two and move on.'
+    hie: 15
     blocks:
     - minutes: '12'
       name: Wake Up
@@ -216,6 +219,7 @@ weeks:
     dad_note: Form over volume on the tennis. If the finish starts dropping, stop
       the set at 10, not 20. The basketball cone weave will be slow with the left
       hand; record it without comment. High-intent efforts stay near zero today.
+    hie: 2
     blocks:
     - minutes: '10'
       name: Wake Up
@@ -279,6 +283,7 @@ weeks:
       skill, high-intent efforts 5 or fewer. Keeper work is catching only this block;
       diving starts from kneeling in the Fox block once the safe-fall habit is in.
       Early bed, big dinner, water bottle ready for tomorrow.
+    hie: 5
     blocks:
     - minutes: '10'
       name: Wake Up
@@ -332,6 +337,7 @@ weeks:
     dad_note: Highest-load day of the week. Watch for heel or knee complaints Sunday
       morning. If there are any, Sunday's card becomes stretching only and you tell
       me.
+    hie: 0
     blocks:
     - minutes: "—"
       name: Home program
@@ -355,6 +361,7 @@ weeks:
     - 'Draw the Cub card: 9 empty patch slots'
     dad_note: This is the ceremony moment. The numbers are his, the card is his. Next
       week's theme is Stick It.
+    hie: 0
     blocks:
     - minutes: '5'
       name: Before tennis
@@ -402,6 +409,7 @@ weeks:
     - Cartwheel step 2 ×8 each side
     - 'Basketball: crossovers eyes up, figure 8, 200 dribbles'
     - 'Challenge: Broad Jump & Stick (Mon)'
+    hie: 0
   - dow: tue
     date: '2026-09-22'
     name: Rings & Rope
@@ -414,6 +422,7 @@ weeks:
     - 'Soccer: wall passes streak each foot, toe taps, sole rolls'
     - Med ball chest pass ×10
     - Jump rope 2×2 min
+    hie: 6
   - dow: wed
     date: '2026-09-23'
     name: Starts & Sticks
@@ -426,6 +435,7 @@ weeks:
     - Single-leg stick ×5 each
     - 'Soccer: dribble through gates, both feet, then chase game'
     - Soccer play
+    hie: 20
   - dow: thu
     date: '2026-09-24'
     name: Rally to 15
@@ -438,6 +448,7 @@ weeks:
     - 'Tennis: drop feeds FH/BH ×20, rally target 15'
     - 'Basketball: jump stop + pivot both feet, bounce pass target, form shooting
       1m'
+    hie: 8
   - dow: fri
     date: '2026-09-25'
     name: Skate & Statue
@@ -450,6 +461,7 @@ weeks:
     - 'Keeper: scoop, W-catch, shuffle to the ball'
     - Jump rope
     - 'Challenge: Broad Jump & Stick (Fri)'
+    hie: 5
   - dow: sat
     date: '2026-09-26'
     name: Game Day
@@ -459,6 +471,7 @@ weeks:
     summary_lines:
     - Home program off
     - Evening shake-out
+    hie: 0
   - dow: sun
     date: '2026-09-27'
     name: Quick Card
@@ -470,6 +483,7 @@ weeks:
     - Bunny hops
     - 'Soccer: 15 min wall touch'
     - 'Patch check: Power & Landing'
+    hie: 0
 - number: 3
   position_in_block: 3
   theme: Brake
@@ -496,6 +510,7 @@ weeks:
     - Jog-to-3-step-stop ×6
     - 'Basketball: dribble-jog to jump stop, both feet; figure 8'
     - 'Challenge: Red Light (Mon)'
+    hie: 0
   - dow: tue
     date: '2026-09-29'
     name: Rings & Balance
@@ -508,6 +523,7 @@ weeks:
     - Bear + crab walks
     - 'Soccer: touch-then-pass rhythm at the wall, both feet'
     - Single-leg balance 30s each
+    hie: 6
   - dow: wed
     date: '2026-09-30'
     name: Red Light Green Light
@@ -521,6 +537,7 @@ weeks:
     - 'Soccer: dribble at speed and stop the ball dead on ''red'''
     - Broad jump ×3
     - Soccer game
+    hie: 20
   - dow: thu
     date: '2026-10-01'
     name: Split & Shuffle
@@ -532,6 +549,7 @@ weeks:
     - Step-and-throw both arms 10/10 target
     - 'Tennis: split step + shuffle before every drop feed; FH/BH ×20; rally 15–20'
     - 'Basketball: defensive slides, jump stop, chest and bounce pass on the move'
+    hie: 8
   - dow: fri
     date: '2026-10-02'
     name: Skate & Brake
@@ -544,6 +562,7 @@ weeks:
     - 'Keeper: set position on cue, shuffle and catch, 20 hand feeds'
     - Jump rope
     - 'Challenge: Red Light (Fri)'
+    hie: 5
   - dow: sat
     date: '2026-10-03'
     name: Game Day
@@ -553,6 +572,7 @@ weeks:
     summary_lines:
     - Home program off
     - Evening shake-out
+    hie: 0
   - dow: sun
     date: '2026-10-04'
     name: Quick Card
@@ -564,3 +584,4 @@ weeks:
     - 'Basketball: 15 min handling'
     - 'Patch check: Speed (3-step stop)'
     - 'Preview Week 4: Upside Down'
+    hie: 0

@@ -189,6 +189,36 @@ RSpec.describe "content integrity" do
       end
     end
 
+    it "stays inside the weekly high-intent effort budget" do
+      each_week do |w, label|
+        cap = w["trials"] ? 20 : 40
+        total = w["days"].sum { |d| d["hie"].to_i }
+        expect(total).to be <= cap, "#{label} spends #{total} high-intent efforts against a cap of #{cap}"
+      end
+    end
+
+    it "spends nothing on Sunday or Monday and at most 5 on Friday" do
+      each_day do |d, label|
+        ceiling = { "sun" => 0, "mon" => 0, "fri" => 5 }[d["dow"]]
+        next if ceiling.nil?
+        expect(d["hie"].to_i).to be <= ceiling, "#{label} spends #{d['hie']}, ceiling is #{ceiling}"
+      end
+    end
+
+    it "never runs two high-impact home days back to back" do
+      each_week do |w, label|
+        home = w["days"].reject { |d| d["dow"] == "sat" }.sort_by { |d| d["date"].to_s }
+        home.each_cons(2) do |a, b|
+          both_high = a["intensity"].to_i >= 3 && b["intensity"].to_i >= 3
+          expect(both_high).to be(false), "#{label}: #{a['dow']} and #{b['dow']} are both high impact"
+        end
+      end
+    end
+
+    it "gives every day card a high-intent effort count" do
+      each_day { |d, label| expect(d["hie"]).to be_an(Integer), "#{label} has no hie" }
+    end
+
     it "counts ball skills in touches rather than minutes" do
       # This one genuinely needs full cards. A week whose cards are not written
       # yet carries its volume in those cards when they arrive, so there is

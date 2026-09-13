@@ -64,6 +64,22 @@ MEASURE_TEST = {
   "t11r" => nil, "t11l" => nil, "h" => nil
 }.freeze
 
+# High-intent efforts per day card, read out of the dad notes on each card.
+# Week 1 totals 28 against a budget of 40.
+HIE = {
+  "2026-09-14" => 0,   # "Zero sprinting and zero jumping for distance today."
+  "2026-09-15" => 6,   # 3 max throws each arm, "these are max efforts"
+  "2026-09-16" => 15,  # "3 sprints, 3 jumps, 4 hops, 2 shuttles, 3 challenge jumps, about 15"
+  "2026-09-17" => 2,   # "High-intent efforts stay near zero today"
+  "2026-09-18" => 5,   # "high-intent efforts 5 or fewer"
+  "2026-09-19" => 0,   # Game Day, home program off
+  "2026-09-20" => 0    # Court Day, quick card and ball skills
+}.freeze
+
+# Ceilings for a day that has no full card yet. Wednesday carries most of the
+# home budget, Thursday a little, Friday at most 5, Sunday and Monday zero.
+ROLE_HIE = { "mon" => 0, "tue" => 6, "wed" => 20, "thu" => 8, "fri" => 5, "sat" => 0, "sun" => 0 }.freeze
+
 def die(message)
   warn "convert: #{message}"
   exit 1
@@ -204,11 +220,15 @@ weeks = plan["weeks"].map do |w|
       day["minutes"]  = card["mins"]
       day["intensity"] = card["level"]
       day["dad_note"] = card["dad"]
+      # Counted from Jeff's own dad notes, which state the number in prose.
+      # See docs/superpowers/plans/2026-09-13-phase-1-rails-api.md, Task 4.
+      day["hie"] = HIE.fetch(date) { die("no hie recorded for #{date}") }
       day["blocks"] = card["blocks"].map do |(mins, bname, body, tag)|
         { "minutes" => mins, "name" => bname, "body" => body,
           "tag" => { "test" => "test", "ch" => "challenge" }[tag] }
       end
     end
+    day["hie"] ||= ROLE_HIE.fetch(day["dow"])
     day
   end
 
