@@ -58,3 +58,15 @@ The first two are the same change. The id is now derived on the server from the 
 The gate needed care. A password screen in the page would have been theatre, since the HTML would still be sent to anyone who asked. Checking the Vercel docs settled the design: the filesystem takes precedence over rewrites, and there is a known trap where rewriting `/` to a function silently fails if the output directory contains an `index.html`. So the output directory now points at `public/`, which holds only a robots.txt, and `/` is rewritten to `api/page.js`, which returns `site/index.html` only to a signed-in visitor. The cookie holds a signed, expiring token rather than the passphrase.
 
 Testing found one bug: after a failed load the Save button stayed disabled forever, so a transient network blip would have left the form permanently dead until a refresh. A test asserts the recovery now. The suite covers token forgery and expiry, a cookie signed with a different secret, the login page not leaking any site markup, and a simulated two-device edit against one shared fake database.
+
+## Third pass: the test sheet had the same hole
+
+Jeff asked whether the Baseline test sheet data synced anywhere. It did not. It was `localStorage` under `teddy-pe-sheet-v1`, per browser, exactly the storage that had just broken the diary across devices.
+
+It was the worse of the two. A diary entry can be re-typed from memory; a sprint time from the baseline window cannot be measured again, and the whole battery exists to be compared against it four times across the year. The sheet's own status line gave it away ("read the numbers back to me and I will chart them"): it was always a scratchpad, with `data/results.json` as the intended record, and that file had never been created. Baseline testing was two days out.
+
+He asked for the database treatment plus the Year-view chart that had been open since the first session.
+
+Three things came out of building it that were not in the ask. The sheet only had Baseline and December columns, so three of the five retests had nowhere to go; it now has a window selector and shows the baseline beside the input as a reference. Single-leg balance was one box holding two numbers, which nothing could chart, so it was split into left and right like the other paired tests. And a chart of fifteen tests in different units needed to know which direction counts as progress, so each row now carries one: a faster sprint and a longer jump both read as improvement, a shorter dead hang does not, and height reports a cm/year pace that surfaces the growth-load protocol the architecture already specifies.
+
+A test caught the one real bug: `api/results.js` connected to the database before validating, so a mistyped number would have looked like an outage. The same mistake had been fixed in `api/diary.js` days earlier, which is the argument for the tests existing at all.

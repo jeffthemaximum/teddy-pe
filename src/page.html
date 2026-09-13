@@ -277,6 +277,21 @@ table.plain{border-collapse:collapse;width:100%;font-size:13.5px}
 .btn.ghost:hover{color:var(--ink)}
 .dkey{margin-top:14px;font-size:12.5px;color:var(--ink-3)}
 .dkey a{color:var(--ink-3)}
+/* ---- test results and progress ---- */
+.prog{display:grid;grid-template-columns:repeat(auto-fill,minmax(186px,1fr));gap:12px}
+.pcard{border:1px solid var(--line);border-radius:5px;padding:10px 12px;background:var(--surface-2)}
+.pcard .pname{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:15.5px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;line-height:1.12}
+.pcard .pval{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:21px;font-weight:500;margin-top:5px;line-height:1}
+.pcard .pval small{font-size:11.5px;color:var(--ink-3);margin-left:4px;font-family:"IBM Plex Sans",sans-serif}
+.pcard .pdelta{font-size:12px;margin-top:4px;color:var(--ink-3)}
+.pcard .pdelta.better{color:var(--court);font-weight:600}
+.pcard .pdelta.worse{color:var(--clay);font-weight:600}
+.pcard .pflag{margin-top:6px;font-size:11.5px;color:var(--clay);line-height:1.35}
+.spark{display:block;width:100%;height:32px;margin-top:9px}
+.spark .line{fill:none;stroke:var(--i3);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.spark .dot{fill:var(--i4)}
+.spark .dot.last{fill:var(--court)}
+.spark .base{stroke:var(--line-strong);stroke-width:1;stroke-dasharray:2 3}
 </style>
 
 <div class="wrap">
@@ -327,6 +342,11 @@ table.plain{border-collapse:collapse;width:100%;font-size:13.5px}
   </div>
 
   <div class="card">
+    <div class="section-head" style="margin-bottom:8px"><h3>Progress</h3><span class="small muted" id="progstatus"></span></div>
+    <div id="progress"></div>
+  </div>
+
+  <div class="card">
     <div class="section-head" style="margin-bottom:8px"><h3>Test battery</h3><span class="small muted">Baseline Sep 15–17 · Retest Dec 7–11 · Mar 1–5 · Jun 14–18 · Aug 9–13</span></div>
     <div style="overflow-x:auto"><table class="plain" id="battery"></table></div>
     <p class="small muted" style="margin-top:12px"><b style="font-weight:600;color:var(--ink)">Skill unlocks</b> (pass/fail, checked in Trials): cartwheel over a line · cartwheel both sides · forward roll to standing · wall handstand 10s · 30s single-leg balance eyes closed · 20m backward run · 5 traveling-rings passes ·split step on 10 of 10 signals · serve in 6 of 10 · basketball layup both hands · keeper collapse dive both sides · 20 soccer juggles.</p>
@@ -347,9 +367,12 @@ table.plain{border-collapse:collapse;width:100%;font-size:13.5px}
 <section class="view" id="view-week" role="tabpanel" aria-labelledby="tab-week" hidden>
   <div id="weekhead"></div>
   <div class="card sheet">
-    <div class="section-head" style="margin-bottom:8px"><h3>Baseline test sheet</h3><span class="small muted">Type the numbers in; they save on this device</span></div>
+    <div class="section-head" style="margin-bottom:8px"><h3>Test sheet</h3><span class="small muted" id="sheetcount"></span></div>
+    <p class="small muted" style="margin:0 0 14px;max-width:66ch">Each number saves to the database as you leave the box, so it is on every device and cannot go down with a browser. Best-of numbers only, and rest fully between max efforts. Clearing a box deletes that result.</p>
+    <label class="dfield" style="display:block;max-width:300px;margin-bottom:16px"><span class="eyebrow">Recording</span>
+      <select id="sheetwindow"></select></label>
     <div class="sheet-wrap"><table class="plain" id="sheet"></table></div>
-    <div class="status" id="sheetstatus">Best-of numbers only. Rest fully between max efforts.</div>
+    <div class="status" id="sheetstatus"></div>
   </div>
   <div class="card diary" id="diary">
     <div class="section-head" style="margin-bottom:8px">
@@ -418,7 +441,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 
 /* ---------- DATA (injected by build.py from data/*.json) ---------- */
 const DATA=__DATA__;
-const {BLOCKS,AREAS,CELLS,PATCHES,GATES,BATTERY,ROLES,ORG,LEVEL,LEVELNAME,WEEKS,CARDS,DRILLS,MONTH,WEEKNO,SHEETROWS,RANKRULE}=DATA;
+const {BLOCKS,AREAS,CELLS,PATCHES,GATES,BATTERY,ROLES,ORG,LEVEL,LEVELNAME,WEEKS,CARDS,DRILLS,MONTH,WEEKNO,SHEETROWS,TESTDATES,RANKRULE}=DATA;
 
 /* ---------- RENDER ---------- */
 const fmt = d => { const [y,m,dd]=d.split('-'); return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+' '+(+dd); };
@@ -493,10 +516,6 @@ $('#weeks').innerHTML = WEEKS.map(w => `
     <div class="targets"><b>Sub-targets</b>${w.targets.map(t=>esc(t)).join(' · ')}</div>
     <div class="challenge"><b>Challenge of the week</b>${esc(w.challenge)}</div></div></div>`;
 
-  const rows = SHEETROWS;
-  $('#sheet').innerHTML = '<thead><tr><th>#</th><th>Test</th><th>Unit</th><th style="width:130px">Baseline, Sep 2026</th><th style="width:130px">Retest, Dec 2026</th></tr></thead><tbody>' +
-    rows.map((r,i)=>`<tr><td class="n mono">${i+1}</td><td>${r[0]}</td><td class="mono muted">${r[1]}</td><td><input id="base-${r[2]}" inputmode="decimal" aria-label="${r[0]} baseline"></td><td><input id="dec-${r[2]}" inputmode="decimal" aria-label="${r[0]} December retest"></td></tr>`).join('') + '</tbody>';
-
   $('#cards').innerHTML = CARDS.map(c => `
     <article class="dc${c.off?' off':''}">
       <div class="dc-head">
@@ -510,13 +529,6 @@ $('#weeks').innerHTML = WEEKS.map(w => `
       </div>
     </article>`).join('');
 
-  // persist sheet
-  const KEY='teddy-pe-sheet-v1';
-  let saved={}; try{ saved=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
-  document.querySelectorAll('.sheet input').forEach(inp=>{
-    if(saved[inp.id]!=null) inp.value=saved[inp.id];
-    inp.addEventListener('input',()=>{ saved[inp.id]=inp.value; try{ localStorage.setItem(KEY,JSON.stringify(saved)); $('#sheetstatus').textContent='Saved on this device. Read the numbers back to me and I will chart them.'; }catch(e){ $('#sheetstatus').textContent='This browser is not saving; write the numbers down.'; } });
-  });
 })();
 
 /* ---------- DRILL GLOSSARY ---------- */
@@ -755,6 +767,174 @@ $('#weeks').innerHTML = WEEKS.map(w => `
   window.addEventListener('online',()=>{ if(!dirty) loadWeek(); });
 
   loadWeek();
+})();
+
+/* ---------- TEST RESULTS: the sheet, and the progress chart ---------- */
+// Most of these numbers can never be measured again, so they live in the
+// database and nowhere else. One module feeds both surfaces: the sheet on This
+// Week where they are typed, and the small-multiples chart on the Year view.
+(function(){
+  const WINDOWS=TESTDATES;                   // [key, label, dates]
+  const ROWS=SHEETROWS;                      // [label, unit, id, direction]
+  const BASE=WINDOWS[0][0];
+  const sel=$('#sheetwindow'), table=$('#sheet'), statusEl=$('#sheetstatus'),
+        prog=$('#progress'), progStatus=$('#progstatus'), countEl=$('#sheetcount');
+
+  const device=(()=>{ const u=navigator.userAgent||'';
+    return /iPhone/.test(u)?'iPhone':/iPad/.test(u)?'iPad':/Android/.test(u)?'Android'
+      :/Macintosh/.test(u)?'Mac':/Windows/.test(u)?'Windows':'other'; })();
+
+  let data=new Map();                        // "window:test" -> value string
+  const key=(w,t)=>w+':'+t;
+  const val=(w,t)=>data.get(key(w,t))||'';
+  const num=v=>{ const m=/-?\d+(?:\.\d+)?/.exec(String(v||'')); return m?parseFloat(m[0]):null; };
+  const say=(msg,tone)=>{ statusEl.textContent=msg; statusEl.dataset.tone=tone||''; };
+
+  // Which window to show first: the last one that already has numbers, else the
+  // first empty one, so during test week it opens on the column being filled.
+  function defaultWindow(){
+    for(let i=WINDOWS.length-1;i>=0;i--){
+      if(ROWS.some(r=>val(WINDOWS[i][0],r[2]))) return WINDOWS[i][0];
+    }
+    return BASE;
+  }
+
+  sel.innerHTML=WINDOWS.map(([k,label,dates])=>`<option value="${esc(k)}">${esc(label)} · ${esc(dates)}</option>`).join('');
+
+  function renderSheet(){
+    const win=sel.value||BASE;
+    const meta=WINDOWS.find(w=>w[0]===win)||WINDOWS[0];
+    const isBase=win===BASE;
+    const head='<thead><tr><th>#</th><th>Test</th><th>Unit</th>'
+      +(isBase?'':`<th style="width:104px">${esc(WINDOWS[0][1])}</th>`)
+      +`<th style="width:132px">${esc(meta[1])}</th></tr></thead>`;
+    const body=ROWS.map((r,i)=>`<tr>
+      <td class="n mono">${i+1}</td>
+      <td>${esc(r[0])}</td>
+      <td class="mono muted">${esc(r[1])}</td>
+      ${isBase?'':`<td class="mono muted">${esc(val(BASE,r[2])||'—')}</td>`}
+      <td><input id="res-${esc(r[2])}" data-test="${esc(r[2])}" inputmode="decimal" autocomplete="off"
+           aria-label="${esc(r[0])}, ${esc(meta[1])}" value="${esc(val(win,r[2]))}"></td>
+    </tr>`).join('');
+    table.innerHTML=head+'<tbody>'+body+'</tbody>';
+    countEl.textContent=data.size?data.size+' recorded':'';
+  }
+
+  function spark(series,dir){
+    const pts=series.map((p,i)=>({i,n:p.n})).filter(p=>p.n!==null);
+    if(!pts.length) return '';
+    const n=WINDOWS.length-1||1;
+    const xs=i=>4+(i/n)*92;
+    let lo=Math.min(...pts.map(p=>p.n)), hi=Math.max(...pts.map(p=>p.n));
+    if(hi===lo){ hi=lo+1; lo=lo-1; }
+    const ys=v=>28-((v-lo)/(hi-lo))*24;
+    const line=pts.length>1
+      ? `<polyline class="line" points="${pts.map(p=>xs(p.i).toFixed(1)+','+ys(p.n).toFixed(1)).join(' ')}"/>` : '';
+    const baseY=pts[0]!==undefined?ys(pts[0].n).toFixed(1):null;
+    const baseline=pts.length>1?`<line class="base" x1="4" y1="${baseY}" x2="96" y2="${baseY}"/>`:'';
+    const dots=pts.map((p,k)=>`<circle class="dot${k===pts.length-1?' last':''}" cx="${xs(p.i).toFixed(1)}" cy="${ys(p.n).toFixed(1)}" r="${k===pts.length-1?2.8:2}"/>`).join('');
+    return `<svg class="spark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true">${baseline}${line}${dots}</svg>`;
+  }
+
+  function panel(r){
+    const [label,unit,id,dir]=r;
+    const series=WINDOWS.map(w=>({w,raw:val(w[0],id),n:num(val(w[0],id))}));
+    const got=series.filter(p=>p.n!==null);
+    if(!got.length){
+      return `<div class="pcard"><div class="pname">${esc(label)}</div><div class="pnone pdelta">Not recorded</div></div>`;
+    }
+    const last=got[got.length-1], first=got[0];
+    let delta='', cls='', flag='';
+    if(got.length>1){
+      const diff=last.n-first.n;
+      const pct=first.n?Math.abs(diff/first.n*100):0;
+      const sign=diff>0?'+':'−';
+      const shown=Math.abs(diff)>=10?Math.abs(diff).toFixed(0):Math.abs(diff).toFixed(1);
+      if(dir==='growth'){
+        // Growth rate is the trigger for the load protocol, so show the pace.
+        const months=monthsBetween(first.w[0],last.w[0]);
+        const perYear=months?(diff/months*12):0;
+        delta=`${sign}${shown} ${esc(unit)} since ${esc(first.w[1])} · ${perYear.toFixed(1)} cm/yr`;
+        if(perYear>=8) flag='Growth is running fast. Check the growth-load protocol: halve jumping and sprinting for 8 to 12 weeks.';
+      }else{
+        const better=dir==='lower'?diff<0:diff>0;
+        cls=diff===0?'':(better?'better':'worse');
+        delta=`${sign}${shown} ${esc(unit)} (${pct.toFixed(0)}%) since ${esc(first.w[1])}`;
+      }
+    }else{
+      delta=`${esc(first.w[1])} only`;
+    }
+    return `<div class="pcard">
+      <div class="pname">${esc(label)}</div>
+      <div class="pval">${esc(last.raw)}<small>${esc(unit)}</small></div>
+      <div class="pdelta ${cls}">${delta}</div>
+      ${spark(series,dir)}
+      ${flag?`<div class="pflag">${esc(flag)}</div>`:''}
+    </div>`;
+  }
+
+  function monthsBetween(a,b){
+    const [ay,am]=a.split('-').map(Number), [by,bm]=b.split('-').map(Number);
+    return (by-ay)*12+(bm-am);
+  }
+
+  function renderChart(){
+    if(!data.size){
+      prog.innerHTML=`<p class="small muted" style="margin:0">No numbers yet. Record the baseline on the <b style="font-weight:600;color:var(--ink)">This Week</b> tab during ${esc(WINDOWS[0][2])} and each test will show its progress here.</p>`;
+      progStatus.textContent='';
+      return;
+    }
+    prog.innerHTML='<div class="prog">'+ROWS.map(panel).join('')+'</div>';
+    const done=WINDOWS.filter(w=>ROWS.some(r=>val(w[0],r[2]))).map(w=>w[1]);
+    progStatus.textContent=done.join(' · ');
+  }
+
+  async function load(){
+    try{
+      const r=await fetch('/api/results',{credentials:'same-origin'});
+      if(r.status===401){ location.reload(); return; }
+      const body=await r.json().catch(()=>({}));
+      if(!r.ok){ say(body.error||('The database said '+r.status+'.'),'warn'); return; }
+      data=new Map((body.results||[]).map(x=>[key(x.test_window,x.test_id),String(x.value)]));
+      sel.value=defaultWindow();
+      renderSheet(); renderChart();
+      say('Loaded from the database.');
+    }catch(e){
+      table.querySelectorAll('input').forEach(i=>i.disabled=true);
+      say('The database cannot be reached from this copy of the page. Open the site on Vercel to record numbers.','warn');
+      progStatus.textContent='';
+    }
+  }
+
+  async function put(testId,value){
+    const win=sel.value;
+    say('Saving...');
+    try{
+      const r=await fetch('/api/results',{method:'POST',credentials:'same-origin',
+        headers:{'content-type':'application/json'},
+        body:JSON.stringify({window:win,test_id:testId,value,device})});
+      if(r.status===401){ location.reload(); return; }
+      const body=await r.json().catch(()=>({}));
+      if(!r.ok){ say(body.error||('The database said '+r.status+'. Nothing was saved.'),'warn'); return; }
+      if(value) data.set(key(win,testId),value); else data.delete(key(win,testId));
+      countEl.textContent=data.size?data.size+' recorded':'';
+      renderChart();
+      say('Saved.');
+    }catch(e){
+      say('No connection, so that number was not saved. Type it again when you are back on.','warn');
+    }
+  }
+
+  sel.addEventListener('change',()=>{ renderSheet(); say(''); });
+  // change fires on blur or Enter, so one save per number rather than per keypress.
+  table.addEventListener('change',e=>{
+    const inp=e.target.closest('input[data-test]');
+    if(inp) put(inp.dataset.test,inp.value.trim());
+  });
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) load(); });
+
+  renderSheet(); renderChart();
+  load();
 })();
 
 // tabs
