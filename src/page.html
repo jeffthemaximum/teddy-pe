@@ -220,6 +220,36 @@ table.plain{border-collapse:collapse;width:100%;font-size:13.5px}
 
 @media (prefers-reduced-motion:no-preference){.tab{transition:color .15s}}
 @media print{.tabs{display:none}.wrap{padding:0}}
+/* ---- drill glossary ---- */
+.term{appearance:none;background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;line-height:inherit;text-align:left;cursor:pointer;border-bottom:1.5px dotted var(--court);border-radius:2px}
+.term:hover{background:var(--ball-soft);border-bottom-style:solid}
+.term:focus-visible{outline:2px solid var(--court);outline-offset:2px}
+.blk .name .term{border-bottom-color:var(--line-strong)}
+.scrim{position:fixed;inset:0;background:rgba(11,20,15,.5);z-index:40}
+.drawer{position:fixed;z-index:50;left:0;right:0;bottom:0;max-height:85vh;overflow-y:auto;background:var(--surface);border-top:3px solid var(--ball);border-radius:12px 12px 0 0;box-shadow:var(--shadow);padding:16px 18px 24px;-webkit-overflow-scrolling:touch}
+@media (min-width:760px){.drawer{left:auto;right:24px;bottom:24px;width:420px;border-radius:8px;border:1px solid var(--line);border-top:3px solid var(--ball);max-height:min(80vh,620px)}}
+.drawer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.drawer-head h3{font-size:26px;text-transform:uppercase;line-height:1}
+.drawer-x{appearance:none;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2);border-radius:4px;width:32px;height:32px;font-size:19px;line-height:1;cursor:pointer;flex:none}
+.drawer-x:hover{color:var(--ink);background:var(--surface-3)}
+.drawer-x:focus-visible{outline:2px solid var(--court);outline-offset:2px}
+.drawer .lead{margin:0 0 14px;font-size:14.5px;color:var(--ink)}
+.dsec{margin-bottom:14px}
+.dsec .eyebrow{margin-bottom:5px;display:block}
+.dsec ol{margin:0;padding-left:18px;font-size:13.5px;color:var(--ink-2);line-height:1.5}
+.dsec ol li{margin-bottom:3px}
+.dsec p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.dcue{background:var(--ball-soft);border-radius:4px;padding:9px 11px}
+.dcue .eyebrow{margin-bottom:3px;display:block}
+.dcue q{font-style:italic;font-size:14.5px;color:var(--ink)}
+.watchlink{display:inline-block;margin-top:14px;font-size:13px;color:var(--court);font-weight:600}
+.gl-area{margin-bottom:26px}
+.gl-row{display:grid;grid-template-columns:190px 1fr;gap:6px 14px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px;color:var(--ink-2)}
+.gl-row:first-of-type{border-top:0}
+.gl-name{font-family:"Barlow Condensed",sans-serif;font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:var(--ink);border-bottom-color:var(--line-strong)}
+@media (max-width:560px){.gl-row{grid-template-columns:1fr;gap:2px}}
+.gl-search{width:100%;max-width:280px;font:inherit;font-size:14px;padding:7px 10px;border:1px solid var(--line-strong);border-radius:4px;background:var(--bg);color:var(--ink)}
+.gl-search:focus-visible{outline:2px solid var(--court);outline-offset:1px}
 </style>
 
 <div class="wrap">
@@ -238,6 +268,7 @@ table.plain{border-collapse:collapse;width:100%;font-size:13.5px}
   <button class="tab" role="tab" id="tab-year" aria-controls="view-year" aria-selected="true">The Year</button>
   <button class="tab" role="tab" id="tab-month" aria-controls="view-month" aria-selected="false">September</button>
   <button class="tab" role="tab" id="tab-week" aria-controls="view-week" aria-selected="false">This Week</button>
+  <button class="tab" role="tab" id="tab-glossary" aria-controls="view-glossary" aria-selected="false">Glossary</button>
 </div>
 
 <!-- ============ YEAR ============ -->
@@ -295,7 +326,31 @@ table.plain{border-collapse:collapse;width:100%;font-size:13.5px}
   </div>
   <div class="cards" id="cards"></div>
 </section>
+
+<!-- ============ GLOSSARY ============ -->
+<section class="view" id="view-glossary" role="tabpanel" aria-labelledby="tab-glossary" hidden>
+  <div class="section-head">
+    <h2>Drill glossary</h2>
+    <span class="small muted" id="gl-count"></span>
+  </div>
+  <p class="small muted" style="max-width:62ch;margin:0 0 16px">Every named drill in the program: what it is, how to do it, what to watch for, and the cue in Teddy's language. Tap any underlined drill on a daily card to open the same thing without leaving the card.</p>
+  <label for="gl-search" class="eyebrow" style="display:block;margin-bottom:6px">Find a drill</label>
+  <input id="gl-search" class="gl-search" type="search" placeholder="tick-tocks, hollow hold, split step" autocomplete="off">
+  <div id="glossary" style="margin-top:22px"></div>
+</section>
 </div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-name" hidden>
+  <div class="drawer-head">
+    <div>
+      <span class="eyebrow" id="drawer-area"></span>
+      <h3 id="drawer-name"></h3>
+    </div>
+    <button type="button" class="drawer-x" id="drawer-close" aria-label="Close">&times;</button>
+  </div>
+  <div id="drawer-body"></div>
+</aside>
 
 <script>
 (function(){
@@ -305,7 +360,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 
 /* ---------- DATA (injected by build.py from data/*.json) ---------- */
 const DATA=__DATA__;
-const {BLOCKS,AREAS,CELLS,PATCHES,GATES,BATTERY,ROLES,ORG,LEVEL,LEVELNAME,WEEKS,CARDS,SHEETROWS,RANKRULE}=DATA;
+const {BLOCKS,AREAS,CELLS,PATCHES,GATES,BATTERY,ROLES,ORG,LEVEL,LEVELNAME,WEEKS,CARDS,DRILLS,SHEETROWS,RANKRULE}=DATA;
 
 /* ---------- RENDER ---------- */
 const fmt = d => { const [y,m,dd]=d.split('-'); return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+' '+(+dd); };
@@ -392,7 +447,7 @@ $('#weeks').innerHTML = WEEKS.map(w => `
         ${ORG[c.dow].length?`<div class="chips">${ORG[c.dow].map(o=>`<span class="chip org">${o}</span>`).join('')}</div>`:''}
       </div>
       <div class="dc-body">
-        ${c.blocks.map(([m,n,cue,tag]) => `<div class="blk${tag==='ch'?' challenge':''}"><div class="min"><b>${m}</b>${m==='—'?'':'min'}</div><div><div class="name">${esc(n)}${tag==='test'?'<span class="tag">BATTERY</span>':''}</div>${cue?`<div class="cue">${cue}</div>`:''}</div></div>`).join('')}
+        ${c.blocks.map(([m,n,cue,tag]) => `<div class="blk${tag==='ch'?' challenge':''}"><div class="min"><b>${m}</b>${m==='—'?'':'min'}</div><div><div class="name">${n}${tag==='test'?'<span class="tag">BATTERY</span>':''}</div>${cue?`<div class="cue">${cue}</div>`:''}</div></div>`).join('')}
         <div class="dadnote"><b>Dad notes</b>${esc(c.dad)}</div>
       </div>
     </article>`).join('');
@@ -404,6 +459,81 @@ $('#weeks').innerHTML = WEEKS.map(w => `
     if(saved[inp.id]!=null) inp.value=saved[inp.id];
     inp.addEventListener('input',()=>{ saved[inp.id]=inp.value; try{ localStorage.setItem(KEY,JSON.stringify(saved)); $('#sheetstatus').textContent='Saved on this device. Read the numbers back to me and I will chart them.'; }catch(e){ $('#sheetstatus').textContent='This browser is not saving; write the numbers down.'; } });
   });
+})();
+
+/* ---------- DRILL GLOSSARY ---------- */
+// One drill registry, two surfaces: the tap-to-open sheet on a card, and the
+// Glossary tab. build.py links the terms inside card prose, so anything tappable
+// is guaranteed to have an entry here.
+(function(){
+  const drawer=$('#drawer'), scrim=$('#scrim'), body=$('#drawer-body');
+  let opener=null;
+
+  function render(d){
+    const how=(d.how||[]).map(h=>`<li>${esc(h)}</li>`).join('');
+    const safeVideo = typeof d.video==='string' && /^https:\/\//.test(d.video) ? d.video : null;
+    return `<p class="lead">${esc(d.short)}</p>`
+      + (how?`<div class="dsec"><span class="eyebrow">How</span><ol>${how}</ol></div>`:'')
+      + (d.watch?`<div class="dsec"><span class="eyebrow">Watch for</span><p>${esc(d.watch)}</p></div>`:'')
+      + (d.cue?`<div class="dcue"><span class="eyebrow">Cue</span><q>${esc(d.cue)}</q></div>`:'')
+      + (safeVideo?`<a class="watchlink" href="${esc(safeVideo)}" target="_blank" rel="noopener noreferrer">Watch a clip &rarr;</a>`:'');
+  }
+
+  function open(slug, from){
+    const d=DRILLS[slug];
+    if(!d) return;
+    opener=from||null;
+    $('#drawer-area').textContent=d.area;
+    $('#drawer-name').textContent=d.name;
+    body.innerHTML=render(d);
+    drawer.hidden=false; scrim.hidden=false;
+    $('#drawer-close').focus();
+  }
+  function close(){
+    if(drawer.hidden) return;
+    drawer.hidden=true; scrim.hidden=true;
+    if(opener && document.contains(opener)) opener.focus();
+    opener=null;
+  }
+
+  // Delegated, so it covers daily cards and the Glossary tab with one listener.
+  document.addEventListener('click',e=>{
+    const t=e.target.closest('[data-drill]');
+    if(t){ e.preventDefault(); open(t.getAttribute('data-drill'), t); }
+  });
+  scrim.addEventListener('click',close);
+  $('#drawer-close').addEventListener('click',close);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') close(); });
+
+  // Keep focus inside the sheet while it is open.
+  drawer.addEventListener('keydown',e=>{
+    if(e.key!=='Tab') return;
+    const f=[...drawer.querySelectorAll('button,a[href]')].filter(el=>el.offsetParent!==null);
+    if(!f.length) return;
+    const first=f[0], last=f[f.length-1];
+    if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+  });
+
+  const slugs=Object.keys(DRILLS);
+  $('#gl-count').textContent = slugs.length + ' drills';
+  function renderList(q){
+    const term=(q||'').trim().toLowerCase();
+    const hit=d=> !term || d.name.toLowerCase().includes(term) || d.short.toLowerCase().includes(term)
+      || (d.aliases||[]).some(a=>a.toLowerCase().includes(term)) || d.area.toLowerCase().includes(term);
+    const html=AREAS.map(a=>a.n).map(area=>{
+      const rows=slugs.filter(s=>DRILLS[s].area===area && hit(DRILLS[s]))
+        .sort((x,y)=>DRILLS[x].name.localeCompare(DRILLS[y].name));
+      if(!rows.length) return '';
+      return `<div class="gl-area"><div class="section-head" style="margin-bottom:8px"><h3>${esc(area)}</h3>`
+        + `<span class="small muted">${rows.length}</span></div>`
+        + rows.map(s=>`<div class="gl-row"><button type="button" class="term gl-name" data-drill="${esc(s)}">${esc(DRILLS[s].name)}</button><span>${esc(DRILLS[s].short)}</span></div>`).join('')
+        + `</div>`;
+    }).join('');
+    $('#glossary').innerHTML = html || '<p class="muted">No drill matches that. Try a sport name, or part of the word.</p>';
+  }
+  renderList('');
+  $('#gl-search').addEventListener('input',e=>renderList(e.target.value));
 })();
 
 // tabs
