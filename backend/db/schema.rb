@@ -10,10 +10,33 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_13_175803) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_13_184649) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "area_cells", force: :cascade do |t|
+    t.bigint "area_id", null: false
+    t.bigint "block_id", null: false
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["area_id", "block_id"], name: "index_area_cells_on_area_id_and_block_id", unique: true
+    t.index ["area_id"], name: "index_area_cells_on_area_id"
+    t.index ["block_id"], name: "index_area_cells_on_block_id"
+  end
+
+  create_table "areas", force: :cascade do |t|
+    t.bigint "program_year_id", null: false
+    t.string "slug", null: false
+    t.integer "position", null: false
+    t.string "name", null: false
+    t.text "summary"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["program_year_id", "slug"], name: "index_areas_on_program_year_id_and_slug", unique: true
+    t.index ["program_year_id"], name: "index_areas_on_program_year_id"
+  end
 
   create_table "athletes", force: :cascade do |t|
     t.string "name", null: false
@@ -24,9 +47,89 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_175803) do
     t.index ["user_id"], name: "index_athletes_on_user_id", unique: true
   end
 
-  create_table "program_years", force: :cascade do |t|
+  create_table "ball_gates", force: :cascade do |t|
+    t.bigint "program_year_id", null: false
+    t.integer "position", null: false
+    t.string "from_ball", null: false
+    t.string "to_ball", null: false
+    t.string "label", null: false
+    t.text "requirement", null: false
+    t.string "status", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["program_year_id", "position"], name: "index_ball_gates_on_program_year_id_and_position", unique: true
+    t.index ["program_year_id"], name: "index_ball_gates_on_program_year_id"
+  end
+
+  create_table "blocks", force: :cascade do |t|
+    t.bigint "program_year_id", null: false
+    t.string "key", null: false
+    t.string "name", null: false
+    t.integer "position", null: false
+    t.date "starts_on", null: false
+    t.date "ends_on", null: false
+    t.text "focus"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["program_year_id", "key"], name: "index_blocks_on_program_year_id_and_key", unique: true
+    t.index ["program_year_id", "position"], name: "index_blocks_on_program_year_id_and_position", unique: true
+    t.index ["program_year_id"], name: "index_blocks_on_program_year_id"
+  end
+
+  create_table "day_roles", force: :cascade do |t|
+    t.bigint "program_year_id", null: false
+    t.string "dow", null: false
+    t.integer "position", null: false
+    t.string "name", null: false
+    t.string "organized", default: [], null: false, array: true
+    t.string "minutes", null: false
+    t.integer "intensity", null: false
+    t.text "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["program_year_id", "dow"], name: "index_day_roles_on_program_year_id_and_dow", unique: true
+    t.index ["program_year_id"], name: "index_day_roles_on_program_year_id"
+  end
+
+  create_table "patches", force: :cascade do |t|
+    t.bigint "program_year_id", null: false
+    t.bigint "block_id", null: false
+    t.bigint "area_id", null: false
+    t.string "name", null: false
+    t.text "requirement", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["area_id"], name: "index_patches_on_area_id"
+    t.index ["block_id", "area_id"], name: "index_patches_on_block_id_and_area_id", unique: true
+    t.index ["block_id"], name: "index_patches_on_block_id"
+    t.index ["program_year_id"], name: "index_patches_on_program_year_id"
+  end
+
+  create_table "program_years", force: :cascade do |t|
+    t.bigint "athlete_id", null: false
+    t.string "label", null: false
+    t.date "starts_on", null: false
+    t.date "ends_on", null: false
+    t.string "status", default: "draft", null: false
+    t.string "ball_now", null: false
+    t.text "rank_rule"
+    t.text "north_star"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["athlete_id", "label"], name: "index_program_years_on_athlete_id_and_label", unique: true
+    t.index ["athlete_id"], name: "index_program_years_on_athlete_id"
+  end
+
+  create_table "test_dates", force: :cascade do |t|
+    t.bigint "program_year_id", null: false
+    t.string "window", null: false
+    t.string "label", null: false
+    t.string "display", null: false
+    t.integer "position", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["program_year_id", "window"], name: "index_test_dates_on_program_year_id_and_window", unique: true
+    t.index ["program_year_id"], name: "index_test_dates_on_program_year_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -41,5 +144,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_175803) do
     t.check_constraint "role::text = ANY (ARRAY['coach'::character varying, 'athlete'::character varying, 'viewer'::character varying]::text[])", name: "users_role_check"
   end
 
+  add_foreign_key "area_cells", "areas"
+  add_foreign_key "area_cells", "blocks"
+  add_foreign_key "areas", "program_years"
   add_foreign_key "athletes", "users"
+  add_foreign_key "ball_gates", "program_years"
+  add_foreign_key "blocks", "program_years"
+  add_foreign_key "day_roles", "program_years"
+  add_foreign_key "patches", "areas"
+  add_foreign_key "patches", "blocks"
+  add_foreign_key "patches", "program_years"
+  add_foreign_key "program_years", "athletes"
+  add_foreign_key "test_dates", "program_years"
 end
