@@ -250,7 +250,7 @@ Rank card with nine patch slots per rank. Patches earned in Trials weeks (early 
 
 ## The coach's diary
 
-Jeff writes one entry per session on the This Week tab: how it went, Teddy's energy, a pain flag, a free line, and a rating for each drill that was on that day's card (not yet, getting there, owns it). Entries sync to Neon so they follow him between devices, and `tools/diary_pull.py` brings them into `data/diary.json` so the repo stays the memory of the project.
+Jeff writes one entry per session on the This Week tab: how it went, Teddy's energy, a pain flag, a free line, and a rating for each drill that was on that day's card (not yet, getting there, owns it). There is one entry per session date and the database is the only copy, so the entry he starts on a laptop is the one his phone opens and edits. `tools/diary_pull.py` brings them into `data/diary.json` so the repo stays the memory of the project.
 
 The diary proposes; it never edits. Before generating a week or a month, pull the entries and read them, then bring Jeff proposals:
 

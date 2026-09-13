@@ -223,6 +223,8 @@ table.plain{border-collapse:collapse;width:100%;font-size:13.5px}
 .sheet input:focus-visible{outline:2px solid var(--court);outline-offset:1px}
 .sheet td.n{width:34px;color:var(--ink-3)}
 .sheet .status{font-size:12.5px;color:var(--ink-3);margin-top:8px}
+.diary .status{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+.diary .status[data-tone="warn"]{color:var(--clay)}
 @media (max-width:640px){.sheet-wrap{overflow-x:auto}.sheet table{min-width:560px}}
 
 @media (prefers-reduced-motion:no-preference){.tab{transition:color .15s}}
@@ -280,9 +282,8 @@ table.plain{border-collapse:collapse;width:100%;font-size:13.5px}
 .btn.ghost{background:none;color:var(--ink-2);border-color:var(--line-strong)}
 .btn:hover{filter:brightness(1.08)}
 .btn.ghost:hover{color:var(--ink)}
-.dkey{margin-top:14px;font-size:13px;color:var(--ink-2)}
-.dkey summary{cursor:pointer;color:var(--ink-3);font-size:12.5px}
-.dkey input{margin-top:8px;max-width:300px}
+.dkey{margin-top:14px;font-size:12.5px;color:var(--ink-3)}
+.dkey a{color:var(--ink-3)}
 </style>
 </head>
 <body>
@@ -363,7 +364,7 @@ table.plain{border-collapse:collapse;width:100%;font-size:13.5px}
       <h3>Coach's diary</h3>
       <span class="small muted" id="d-count"></span>
     </div>
-    <p class="small muted" style="margin:0 0 16px;max-width:66ch">One entry after a session, however short. The drill list comes from that day's card, and drill names open the glossary. Entries feed the next week's plan as proposals; nothing in the program changes on its own.</p>
+    <p class="small muted" style="margin:0 0 16px;max-width:66ch">One entry per session, shared by every device you sign in on. The drill list comes from that day's card, and drill names open the glossary. Entries live in the database only, so whatever you write here is what you will see on your phone. They feed the next week's plan as proposals; nothing in the program changes on its own.</p>
     <div class="dform">
       <label class="dfield"><span class="eyebrow">Session</span>
         <select id="d-session"></select></label>
@@ -383,15 +384,10 @@ table.plain{border-collapse:collapse;width:100%;font-size:13.5px}
     </div>
     <div class="drow">
       <button type="button" class="btn" id="d-save">Save entry</button>
-      <button type="button" class="btn ghost" id="d-sync">Sync now</button>
-      <button type="button" class="btn ghost" id="d-export">Copy all entries</button>
+      <button type="button" class="btn ghost" id="d-reload">Reload from database</button>
     </div>
     <div class="status" id="d-status"></div>
-    <details class="dkey">
-      <summary>Passphrase</summary>
-      <p style="margin:8px 0 0">Needed once per device to sync. Entries save on this device either way.</p>
-      <input type="password" id="d-key" autocomplete="current-password" placeholder="Diary passphrase">
-    </details>
+    <p class="dkey"><a href="/api/login?logout=1">Sign out of this device</a></p>
   </div>
 
   <div class="cards" id="cards"></div>
@@ -607,34 +603,45 @@ $('#weeks').innerHTML = WEEKS.map(w => `
 })();
 
 /* ---------- COACH'S DIARY ---------- */
-// Entries save to this device first and sync after, because the place Jeff fills
-// this in is a field with one bar of signal. The claude.ai artifact copy cannot
-// reach the API at all (its CSP blocks fetch), so there it stays local and says so.
+// The database is the only record. There is no local copy, so an entry written
+// on the laptop is the same row the phone opens and edits: the id is derived
+// from the session date on the server, not from the device.
+//
+// The cost of that choice, stated plainly in the UI: with no connection, saving
+// fails and the text stays in the form until it succeeds. Unsaved edits are kept
+// in memory while the page is open so switching sessions does not lose them, but
+// nothing is written to this device.
 (function(){
-  const KEY_LOG='teddy-pe-diary-log-v1', KEY_PEND='teddy-pe-diary-pending-v1',
-        KEY_PASS='teddy-pe-diary-key-v1', KEY_DEV='teddy-pe-device-v1';
   const OVERALL=['Rough','Off','Fine','Good','Great'];
   const ENERGY=['Flat','Low','OK','Up','Buzzing'];
   const RATE=[['not_yet','Not yet'],['getting','Getting there'],['owns','Owns it']];
 
-  const read=(k,f)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):f; }catch(e){ return f; } };
-  const write=(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch(e){ return false; } };
-
-  let log=read(KEY_LOG,[]), pending=read(KEY_PEND,[]), device=read(KEY_DEV,null);
-  if(!device){ device=Math.random().toString(36).slice(2,8); write(KEY_DEV,device); }
-
   const sel=$('#d-session'), drillsBox=$('#d-drills'), drillsWrap=$('#d-drills-wrap'),
-        painBox=$('#d-pain'), painWrap=$('#d-painwrap'), statusEl=$('#d-status'), keyInput=$('#d-key');
-  let idx=0, cur={overall:null,energy:null,ratings:{},pain:false};
+        painBox=$('#d-pain'), painWrap=$('#d-painwrap'), statusEl=$('#d-status'),
+        saveBtn=$('#d-save'), reloadBtn=$('#d-reload'), noteEl=$('#d-note'),
+        chalEl=$('#d-challenge'), painNoteEl=$('#d-painnote');
 
-  const entryId=iso=>'e-'+iso+'-'+device;
+  const device=(()=>{ const u=navigator.userAgent||'';
+    if(/iPhone/.test(u)) return 'iPhone';
+    if(/iPad/.test(u)) return 'iPad';
+    if(/Android/.test(u)) return 'Android';
+    if(/Macintosh/.test(u)) return 'Mac';
+    if(/Windows/.test(u)) return 'Windows';
+    return 'other'; })();
+
+  let idx=0, cur={overall:null,energy:null,ratings:{},pain:false};
+  let entries=new Map();      // session_date -> saved row
+  let drafts=new Map();       // session_date -> unsaved edits, memory only
+  let dirty=false, reachable=true;
 
   sel.innerHTML=CARDS.map((c,i)=>`<option value="${i}">${esc(c.dow)} ${esc(c.date)} · ${esc(c.name)}</option>`).join('');
-  // Default to today if this week contains it, otherwise the most recent day.
   const today=new Date().toISOString().slice(0,10);
   let best=0;
-  CARDS.forEach((c,i)=>{ if(c.iso<=today) best=i; if(c.iso===today) best=i; });
+  CARDS.forEach((c,i)=>{ if(c.iso<=today) best=i; });
   idx=best; sel.value=String(idx);
+
+  const iso=()=>CARDS[idx].iso;
+  const say=(msg,tone)=>{ statusEl.textContent=msg; statusEl.dataset.tone=tone||''; };
 
   function scaleHtml(labels,chosen){
     return labels.map((l,i)=>`<button type="button" class="opt" data-v="${i+1}" aria-pressed="${chosen===i+1}">${esc(l)}</button>`).join('');
@@ -642,116 +649,120 @@ $('#weeks').innerHTML = WEEKS.map(w => `
   function paint(){
     $('#d-overall').innerHTML=scaleHtml(OVERALL,cur.overall);
     $('#d-energy').innerHTML=scaleHtml(ENERGY,cur.energy);
-    const slugs=(CARDS[idx].drills||[]).filter(s=>DRILLS[s]);
+    const slugs=(CARDS[idx].drills||[]).filter(x=>DRILLS[x]);
     drillsWrap.hidden=!slugs.length;
-    drillsBox.innerHTML=slugs.map(s=>`<div class="drill-row">
-      <button type="button" class="term" data-drill="${esc(s)}">${esc(DRILLS[s].name)}</button>
-      <div class="opts">${RATE.map(([v,l])=>`<button type="button" class="opt mini" data-slug="${esc(s)}" data-rate="${v}" aria-pressed="${cur.ratings[s]===v}">${esc(l)}</button>`).join('')}</div>
+    drillsBox.innerHTML=slugs.map(x=>`<div class="drill-row">
+      <button type="button" class="term" data-drill="${esc(x)}">${esc(DRILLS[x].name)}</button>
+      <div class="opts">${RATE.map(([v,l])=>`<button type="button" class="opt mini" data-slug="${esc(x)}" data-rate="${v}" aria-pressed="${cur.ratings[x]===v}">${esc(l)}</button>`).join('')}</div>
     </div>`).join('');
     painWrap.hidden=!cur.pain;
     painBox.checked=cur.pain;
   }
-  function loadSession(){
-    const existing=log.find(e=>e.id===entryId(CARDS[idx].iso));
-    cur={overall:existing?.overall??null, energy:existing?.energy??null,
-         ratings:Object.assign({},existing?.ratings||{}), pain:!!existing?.flag_pain};
-    $('#d-note').value=existing?.note||'';
-    $('#d-challenge').value=existing?.challenge_num||'';
-    $('#d-painnote').value=existing?.pain_note||'';
+  const snapshot=()=>({overall:cur.overall,energy:cur.energy,ratings:Object.assign({},cur.ratings),
+    pain:cur.pain,note:noteEl.value,challenge:chalEl.value,painNote:painNoteEl.value});
+  function apply(src){
+    cur={overall:src?.overall??null, energy:src?.energy??null,
+         ratings:Object.assign({},src?.ratings||{}), pain:!!(src?.pain??src?.flag_pain)};
+    noteEl.value=src?.note||'';
+    chalEl.value=src?.challenge??src?.challenge_num??'';
+    painNoteEl.value=src?.painNote??src?.pain_note??'';
     paint();
-    status(existing?'Editing the entry already saved for this session.':'');
+  }
+  function loadSession(){
+    const key=iso();
+    const draft=drafts.get(key);
+    apply(draft||entries.get(key)||null);
+    dirty=!!draft;
+    if(!reachable) return;
+    if(draft) say('Unsaved changes for this session. Press Save entry.','warn');
+    else if(entries.has(key)) say('Loaded from the database. Editing this entry updates it.');
+    else say('No entry for this session yet.');
+  }
+  function touched(){
+    dirty=true;
+    drafts.set(iso(),snapshot());
   }
 
-  function status(msg,err){
-    const waiting=pending.length;
-    const bits=[];
-    if(msg) bits.push(msg);
-    bits.push(log.length===1?'1 entry on this device':log.length+' entries on this device');
-    if(waiting) bits.push(waiting===1?'1 waiting to sync':waiting+' waiting to sync');
-    statusEl.textContent=bits.join(' · ')+(err?' · '+err:'');
+  async function call(path,opts){
+    const r=await fetch(path,Object.assign({credentials:'same-origin'},opts));
+    if(r.status===401){ location.reload(); throw new Error('signed out'); }
+    return r;
   }
-  $('#d-count').textContent=log.length?log.length+' saved':'';
 
-  sel.addEventListener('change',()=>{ idx=+sel.value; loadSession(); });
-  // Repaint only the group that changed. Re-rendering the whole form on every
-  // tap would throw away focus halfway through filling it in.
-  const press=(box,on)=>box.querySelectorAll('.opt').forEach(b=>b.setAttribute('aria-pressed',on(b)?'true':'false'));
-  $('#d-overall').addEventListener('click',e=>{ const b=e.target.closest('.opt'); if(!b)return;
-    const v=+b.dataset.v; cur.overall=cur.overall===v?null:v;
-    press($('#d-overall'),x=>+x.dataset.v===cur.overall); });
-  $('#d-energy').addEventListener('click',e=>{ const b=e.target.closest('.opt'); if(!b)return;
-    const v=+b.dataset.v; cur.energy=cur.energy===v?null:v;
-    press($('#d-energy'),x=>+x.dataset.v===cur.energy); });
-  drillsBox.addEventListener('click',e=>{ const b=e.target.closest('[data-rate]'); if(!b)return;
-    const slug=b.dataset.slug, v=b.dataset.rate;
-    if(cur.ratings[slug]===v) delete cur.ratings[slug]; else cur.ratings[slug]=v;
-    press(b.closest('.drill-row'),x=>x.dataset.rate===cur.ratings[slug]); });
-  painBox.addEventListener('change',()=>{ cur.pain=painBox.checked; painWrap.hidden=!cur.pain; });
-  keyInput.value=(()=>{ try{ return localStorage.getItem(KEY_PASS)||''; }catch(e){ return ''; } })();
-  keyInput.addEventListener('input',()=>{ try{ localStorage.setItem(KEY_PASS,keyInput.value); }catch(e){} });
+  async function loadWeek(){
+    reloadBtn.disabled=true;
+    say('Loading from the database...');
+    try{
+      const r=await call('/api/diary?since='+encodeURIComponent(CARDS[0].iso));
+      const body=await r.json().catch(()=>({}));
+      if(!r.ok){ reachable=false; say(body.error||('The database said '+r.status+'.'),'warn'); return; }
+      entries=new Map((body.entries||[]).map(e=>[String(e.session_date).slice(0,10),e]));
+      reachable=true;
+      saveBtn.disabled=false;        // an earlier failure must not disable saving forever
+      $('#d-count').textContent=entries.size?entries.size+' saved':'';
+      loadSession();
+    }catch(e){
+      if(e.message==='signed out') return;
+      reachable=false;
+      saveBtn.disabled=true;
+      say('The diary cannot be reached from this copy of the page. Open the site on Vercel to write entries.','warn');
+    }finally{ reloadBtn.disabled=false; }
+  }
 
   function build(){
     const c=CARDS[idx];
-    return { id:entryId(c.iso), session_date:c.iso, dow:c.dow, plan_month:MONTH, week:WEEKNO,
+    return { session_date:c.iso, dow:c.dow, plan_month:MONTH, week:WEEKNO,
       overall:cur.overall, energy:cur.energy, flag_pain:cur.pain,
-      pain_note:cur.pain?($('#d-painnote').value.trim()||null):null,
-      note:$('#d-note').value.trim()||null, ratings:cur.ratings,
-      challenge_num:$('#d-challenge').value.trim()||null, device:device,
-      saved_at:new Date().toISOString() };
+      pain_note:cur.pain?(painNoteEl.value.trim()||null):null,
+      note:noteEl.value.trim()||null, ratings:cur.ratings,
+      challenge_num:chalEl.value.trim()||null, device:device };
   }
 
-  $('#d-save').addEventListener('click',()=>{
+  async function save(){
+    saveBtn.disabled=true;
+    say('Saving...');
     const entry=build();
-    const at=log.findIndex(e=>e.id===entry.id);
-    if(at>=0) log[at]=entry; else log.push(entry);
-    if(!pending.includes(entry.id)) pending.push(entry.id);
-    const stored=write(KEY_LOG,log)&&write(KEY_PEND,pending);
-    $('#d-count').textContent=log.length+' saved';
-    if(!stored){ status('This browser is not saving. Copy the entry out before you close the page.'); return; }
-    status('Saved.');
-    sync();
-  });
-
-  async function sync(){
-    if(!pending.length){ status(); return; }
-    let key=''; try{ key=localStorage.getItem(KEY_PASS)||''; }catch(e){}
-    if(!key){ status('','add the passphrase below to sync'); return; }
-    let done=0, err='';
-    for(const id of [...pending]){
-      const entry=log.find(e=>e.id===id);
-      if(!entry){ pending=pending.filter(p=>p!==id); continue; }
-      try{
-        const r=await fetch('/api/diary',{method:'POST',
-          headers:{'content-type':'application/json','x-diary-key':key},
-          body:JSON.stringify(entry)});
-        if(r.ok){ pending=pending.filter(p=>p!==id); done++; }
-        else{
-          const j=await r.json().catch(()=>({}));
-          err=j.error||('the server said '+r.status);
-          if(r.status===401||r.status===503||r.status===400) break;
-        }
-      }catch(e){ err='no connection, they will sync later'; break; }
-    }
-    write(KEY_PEND,pending);
-    status(done?('Synced '+done+'.'):'',err);
+    try{
+      const r=await call('/api/diary',{method:'POST',
+        headers:{'content-type':'application/json'}, body:JSON.stringify(entry)});
+      const body=await r.json().catch(()=>({}));
+      if(!r.ok){ say(body.error||('The database said '+r.status+'. Nothing was saved.'),'warn'); return; }
+      entries.set(entry.session_date, body.entry||entry);
+      drafts.delete(entry.session_date);
+      dirty=false;
+      $('#d-count').textContent=entries.size+' saved';
+      say('Saved. This is what your other devices will see.');
+    }catch(e){
+      if(e.message==='signed out') return;
+      say('No connection, so nothing was saved. Leave this page open and press Save entry again.','warn');
+    }finally{ saveBtn.disabled=false; }
   }
 
-  $('#d-sync').addEventListener('click',sync);
-  $('#d-export').addEventListener('click',async()=>{
-    const text=JSON.stringify(log,null,2);
-    try{ await navigator.clipboard.writeText(text); status('Copied. Paste it to me and I will fold it into the repo.'); }
-    catch(e){
-      const ta=document.createElement('textarea');
-      ta.value=text; ta.style.cssText='position:fixed;top:8px;left:8px;width:92vw;height:50vh;z-index:60';
-      document.body.appendChild(ta); ta.select();
-      status('Clipboard blocked here. Copy the text in the box, then tap Save entry to dismiss it.');
-      ta.addEventListener('blur',()=>ta.remove());
-    }
-  });
-  window.addEventListener('online',sync);
+  // Repaint only the group that changed. Re-rendering the whole form on every
+  // tap would throw away focus halfway through filling it in.
+  const press=(box,on)=>box.querySelectorAll('.opt').forEach(b=>b.setAttribute('aria-pressed',on(b)?'true':'false'));
+  sel.addEventListener('change',()=>{ if(dirty) drafts.set(iso(),snapshot()); idx=+sel.value; loadSession(); });
+  $('#d-overall').addEventListener('click',e=>{ const b=e.target.closest('.opt'); if(!b)return;
+    const v=+b.dataset.v; cur.overall=cur.overall===v?null:v;
+    press($('#d-overall'),x=>+x.dataset.v===cur.overall); touched(); });
+  $('#d-energy').addEventListener('click',e=>{ const b=e.target.closest('.opt'); if(!b)return;
+    const v=+b.dataset.v; cur.energy=cur.energy===v?null:v;
+    press($('#d-energy'),x=>+x.dataset.v===cur.energy); touched(); });
+  drillsBox.addEventListener('click',e=>{ const b=e.target.closest('[data-rate]'); if(!b)return;
+    const slug=b.dataset.slug, v=b.dataset.rate;
+    if(cur.ratings[slug]===v) delete cur.ratings[slug]; else cur.ratings[slug]=v;
+    press(b.closest('.drill-row'),x=>x.dataset.rate===cur.ratings[slug]); touched(); });
+  painBox.addEventListener('change',()=>{ cur.pain=painBox.checked; painWrap.hidden=!cur.pain; touched(); });
+  [noteEl,chalEl,painNoteEl].forEach(el=>el.addEventListener('input',touched));
 
-  loadSession();
-  sync();
+  saveBtn.addEventListener('click',save);
+  reloadBtn.addEventListener('click',()=>{ drafts.delete(iso()); dirty=false; loadWeek(); });
+  // Coming back to the tab picks up anything written on another device, but only
+  // when there is nothing unsaved here to clobber.
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden && !dirty && reachable) loadWeek(); });
+  window.addEventListener('online',()=>{ if(!dirty) loadWeek(); });
+
+  loadWeek();
 })();
 
 // tabs
