@@ -1,6 +1,9 @@
 # syntax = docker/dockerfile:1
 ARG RUBY_VERSION=3.3.5
-FROM registry.docker.com/library/ruby:$RUBY_VERSION-slim AS base
+# docker.io is what Rails 8's own generator picked for this app. The older
+# registry.docker.com host works too, but matching the generator means one
+# less thing to wonder about when a build fails.
+FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
 WORKDIR /rails
 ENV RAILS_ENV=production \
