@@ -129,7 +129,7 @@ ul.tight li{padding-left:2px}
 .patch:first-of-type{border-top:0}
 .patch .display{font-size:17px;font-weight:700}
 @media (max-width:520px){.patch{grid-template-columns:1fr}}
-.gate{display:grid;grid-template-columns:auto 1fr;gap:10px 14px;align-items:start;padding:10px 0;border-top:1px solid var(--line);font-size:13.5px}
+.gate{display:grid;grid-template-columns:1fr;gap:5px;padding:10px 0;border-top:1px solid var(--line);font-size:13.5px}
 .gate:first-of-type{border-top:0}
 .gate .from{display:flex;align-items:center;gap:6px;font-family:"Barlow Condensed",sans-serif;font-size:17px;font-weight:700;white-space:nowrap;flex-wrap:wrap}
 .gate.active{background:var(--ball-soft);margin-inline:-18px;padding-inline:18px;border-radius:4px}
@@ -229,7 +229,7 @@ table.plain{border-collapse:collapse;width:100%;font-size:13.5px}
       <div class="eyebrow">Sep 14, 2026 – Aug 15, 2027 · Homeschool PE · Cub block</div>
       <h1>Teddy's Training Year</h1>
     </div>
-    <p class="lede">General athleticism with a tennis tilt, aimed at a 20-year-old who competes at the top, not an 8-year-old who looks precocious. Seven areas, six ranks, one cartwheel. Built around gymnastics Monday, swim Tuesday, triple Saturday and tennis Sunday, so every home minute fills a gap nobody else is coaching.</p>
+    <p class="lede">Built for a future champion, most likely in tennis, possibly basketball or in goal, and built the way champions are actually made: wide athletic base, thousands of technical touches, protected intensity, a mind trained alongside the body. Nine areas, six ranks, one cartwheel. Built around gymnastics Monday, swim Tuesday, triple Saturday and tennis Sunday, so every home minute fills a gap nobody else is coaching.</p>
   </div>
   <div class="ladder" id="ladder"></div>
 </header>
@@ -255,7 +255,7 @@ table.plain{border-collapse:collapse;width:100%;font-size:13.5px}
 
   <div class="grid2">
     <div class="card">
-      <div class="section-head" style="margin-bottom:6px"><h3>Cub patches</h3><span class="small muted">Earn 5 of 7 to become a Fox</span></div>
+      <div class="section-head" style="margin-bottom:6px"><h3>Cub patches</h3><span class="small muted" id="rankrule"></span></div>
       <div id="patches"></div>
     </div>
     <div style="display:grid;gap:20px;align-content:start">
@@ -271,7 +271,7 @@ table.plain{border-collapse:collapse;width:100%;font-size:13.5px}
   <div class="card">
     <div class="section-head" style="margin-bottom:8px"><h3>Test battery</h3><span class="small muted">Baseline Sep 15–17 · Retest Dec 7–11 · Mar 1–5 · Jun 14–18 · Aug 9–13</span></div>
     <div style="overflow-x:auto"><table class="plain" id="battery"></table></div>
-    <p class="small muted" style="margin-top:12px"><b style="font-weight:600;color:var(--ink)">Skill unlocks</b> (pass/fail, checked in Trials): cartwheel over a line · cartwheel both sides · forward roll to standing · wall handstand 10s · 30s single-leg balance eyes closed · 20m backward run · 5 traveling-rings passes ·split step on 10 of 10 signals · serve in 6 of 10.</p>
+    <p class="small muted" style="margin-top:12px"><b style="font-weight:600;color:var(--ink)">Skill unlocks</b> (pass/fail, checked in Trials): cartwheel over a line · cartwheel both sides · forward roll to standing · wall handstand 10s · 30s single-leg balance eyes closed · 20m backward run · 5 traveling-rings passes ·split step on 10 of 10 signals · serve in 6 of 10 · basketball layup both hands · keeper collapse dive both sides · 20 soccer juggles.</p>
   </div>
 </section>
 
@@ -305,7 +305,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 
 /* ---------- DATA (injected by build.py from data/*.json) ---------- */
 const DATA=__DATA__;
-const {BLOCKS,AREAS,CELLS,PATCHES,GATES,BATTERY,ROLES,ORG,LEVEL,LEVELNAME,WEEKS,CARDS}=DATA;
+const {BLOCKS,AREAS,CELLS,PATCHES,GATES,BATTERY,ROLES,ORG,LEVEL,LEVELNAME,WEEKS,CARDS,SHEETROWS,RANKRULE}=DATA;
 
 /* ---------- RENDER ---------- */
 const fmt = d => { const [y,m,dd]=d.split('-'); return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+' '+(+dd); };
@@ -344,6 +344,7 @@ $('#ladder').innerHTML = BLOCKS.map(b => `<div class="rung${b.now?' now':''}"><d
     AREAS.map((a,i) => `<div class="ys-row${a.priority?' priority':''}"><b class="area">${a.n}</b>${CELLS[i][j]}</div>`).join('') + '</div>').join('');
 })();
 
+$('#rankrule').textContent = RANKRULE;
 $('#patches').innerHTML = PATCHES.map(([n,c]) => `<div class="patch"><span class="display">${n}</span><span>${c}</span></div>`).join('');
 $('#gates').innerHTML = GATES.map(([a,b,n,c,st]) => `<div class="gate${st?' '+st:''}"><span class="from"><span class="dot ${a}"></span>${a===b?'':'→<span class="dot '+b+'"></span>'} ${n}${st==='active'?'<span class="chip ball" style="margin-left:8px">ACTIVE GATE</span>':st==='cleared'?'<span class="chip court" style="margin-left:8px">CLEARED</span>':st==='held'?'<span class="chip clay" style="margin-left:8px">HELD</span>':''}</span><span>${c}</span></div>`).join('');
 $('#battery').innerHTML = '<thead><tr><th>#</th><th>Test</th><th>Protocol</th><th>Feeds</th><th>Unit</th></tr></thead><tbody>' +
@@ -379,11 +380,7 @@ $('#weeks').innerHTML = WEEKS.map(w => `
     <div class="targets"><b>Sub-targets</b>${w.targets.map(t=>esc(t)).join(' · ')}</div>
     <div class="challenge"><b>Challenge of the week</b>${esc(w.challenge)}</div></div></div>`;
 
-  const rows = [
-    ['20m sprint','s','t1'],['Standing broad jump','cm','t2'],['Single-leg hop, right','cm','t3r'],['Single-leg hop, left','cm','t3l'],
-    ['Overhand throw, right','m','t4r'],['Overhand throw, left','m','t4l'],['Dead hang','s','t5'],['Line-touch agility','s','t6'],
-    ['Jump rope singles','reps','t7'],['Tennis rally count','balls','t8'],['Single-leg balance R / L','s','t9'],
-  ];
+  const rows = SHEETROWS;
   $('#sheet').innerHTML = '<thead><tr><th>#</th><th>Test</th><th>Unit</th><th style="width:130px">Baseline, Sep 2026</th><th style="width:130px">Retest, Dec 2026</th></tr></thead><tbody>' +
     rows.map((r,i)=>`<tr><td class="n mono">${i+1}</td><td>${r[0]}</td><td class="mono muted">${r[1]}</td><td><input id="base-${r[2]}" inputmode="decimal" aria-label="${r[0]} baseline"></td><td><input id="dec-${r[2]}" inputmode="decimal" aria-label="${r[0]} December retest"></td></tr>`).join('') + '</tbody>';
 

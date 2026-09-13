@@ -23,6 +23,7 @@ data = {
     "PATCHES": program["patches"], "GATES": program["gates"], "BATTERY": program["battery"],
     "ROLES": program["roles"], "ORG": program["org"], "LEVEL": program["level"], "LEVELNAME": program["levelName"],
     "WEEKS": plan["weeks"], "CARDS": plan["cards"]["days"],
+    "SHEETROWS": program["sheetRows"], "RANKRULE": program["rankRule"],
 }
 template = (ROOT / "src/page.html").read_text()
 page = template.replace("__DATA__", json.dumps(data, ensure_ascii=False))

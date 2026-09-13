@@ -71,8 +71,16 @@
       "priority": true
     },
     {
-      "n": "Play & Compete",
-      "s": "Games, handicaps vs Dad, tournaments"
+      "n": "Basketball",
+      "s": "Handle · Footwork · Pass · Shoot"
+    },
+    {
+      "n": "Soccer",
+      "s": "Touch · Pass · Keeper"
+    },
+    {
+      "n": "Compete & Mindset",
+      "s": "Games vs Dad, routines, losing well, pressure"
     }
   ],
   "cells": [
@@ -125,12 +133,28 @@
       "<span class=\"strand\"><i>Form</i> Maintain.</span><span class=\"strand\"><i>Ball</i> Whatever the gates allow.</span><span class=\"strand\"><i>Match</i> Fun matches, local kids, retest rally counts.</span>"
     ],
     [
-      "<b>Dad stationary.</b> Wall ball, HORSE, roll-out sharks and minnows, tag with a base.",
-      "<b>Indoor games.</b> Rings and skate park stay in the rotation through the move. Holiday weeks light.",
-      "<b>Winter games.</b> Basketball, indoor tennis, first chase games with Dad.",
-      "<b>Races.</b> Timed challenges. Handicap vs Dad narrows.",
-      "<b>Tournaments.</b> Head-to-head vs Dad. Tennis matches.",
-      "<b>Free play.</b> Bike adventures, pool, minimal structure."
+      "<span class=\"strand\"><i>Handle</i> Stationary: pound, crossover, figure 8, both hands equal, eyes up. 200 dribbles a session.</span><span class=\"strand\"><i>Footwork</i> Jump stop and pivot on both feet. Triple-threat stance.</span><span class=\"strand\"><i>Pass</i> Chest and bounce pass to a wall target at 3m, both sides.</span><span class=\"strand\"><i>Shoot</i> Form shooting from 1m: elbow under, follow through, hold the finish.</span>",
+      "<span class=\"strand\"><i>Handle</i> Moving: walk then jog with the ball, weak hand emphasis, retreat dribble. Hallway friendly.</span><span class=\"strand\"><i>Footwork</i> Defensive slides, close-outs, drop step. Indoor footwork patterns.</span><span class=\"strand\"><i>Pass</i> Passing on the move, give-and-go with Dad stationary.</span><span class=\"strand\"><i>Shoot</i> Form from 2m, BEEF cues, 50 makes a session.</span>",
+      "<span class=\"strand\"><i>Handle</i> Combo moves: cross, between the legs, behind the back. Two-ball dribbling.</span><span class=\"strand\"><i>Footwork</i> Change of direction with the ball, inside-outside, hesitation.</span><span class=\"strand\"><i>Pass</i> One-hand push pass off the dribble, both hands. Pass-and-cut.</span><span class=\"strand\"><i>Shoot</i> Layup footwork: two steps, both sides. Free-throw routine begins.</span>",
+      "<span class=\"strand\"><i>Handle</i> Speed dribble, change of pace, pull-up into a jump stop.</span><span class=\"strand\"><i>Footwork</i> Rip-through and first step. Rebound and outlet footwork.</span><span class=\"strand\"><i>Pass</i> Passing under pressure: Dad shadows with a noodle or pad.</span><span class=\"strand\"><i>Shoot</i> Shooting off the dribble from 3m. Layups at speed.</span>",
+      "<span class=\"strand\"><i>Handle</i> Live 1v1 vs Dad (limited defense). Reads: drive or pass.</span><span class=\"strand\"><i>Footwork</i> Cutting, sealing, boxing out. Small-sided footwork.</span><span class=\"strand\"><i>Pass</i> 2v1 decisions with a friend or sibling when available.</span><span class=\"strand\"><i>Shoot</i> Game shots: catch-and-shoot, layups both hands. HORSE tournaments.</span>",
+      "<span class=\"strand\"><i>Handle</i> Pickup and driveway games. Trick dribbling for fun.</span><span class=\"strand\"><i>Pass</i> Wall passing games, alley-oop tosses.</span><span class=\"strand\"><i>Shoot</i> Shooting games, halfcourt with friends.</span>"
+    ],
+    [
+      "<span class=\"strand\"><i>Touch</i> First touch off the wall, both feet. Toe taps, tick-tocks, sole rolls: 300 touches a session.</span><span class=\"strand\"><i>Pass</i> Inside-foot passing at 3m, both feet, to a target.</span><span class=\"strand\"><i>Keeper</i> Ready position, W-catch and scoop from Dad's hand feeds, no diving yet.</span>",
+      "<span class=\"strand\"><i>Touch</i> Dribbling patterns: inside, outside, sole. Weak-foot volume. Cone gates, hallway friendly.</span><span class=\"strand\"><i>Pass</i> Laces passing, receiving across the body.</span><span class=\"strand\"><i>Keeper</i> Shuffle footwork, set position, chest catch, collapse dive from kneeling on a mat.</span>",
+      "<span class=\"strand\"><i>Touch</i> Turns: inside hook, outside hook, Cruyff. Receiving under light pressure.</span><span class=\"strand\"><i>Pass</i> Passing over 5 to 10m, weight of pass, one-touch back to Dad.</span><span class=\"strand\"><i>Keeper</i> Collapse dive from sitting and squatting, both sides. Distribution: roll and overarm throw.</span>",
+      "<span class=\"strand\"><i>Touch</i> Dribbling at speed, 1v1 moves: scissors, step-over, body feint.</span><span class=\"strand\"><i>Pass</i> Driven passes, first-time passes on the move.</span><span class=\"strand\"><i>Keeper</i> Dives from standing on grass, angles and positioning, moving to the ball, high catches.</span>",
+      "<span class=\"strand\"><i>Touch</i> Small-sided decisions, 1v1 vs Dad, shooting after a move.</span><span class=\"strand\"><i>Pass</i> Combination play with a friend, wall passes.</span><span class=\"strand\"><i>Keeper</i> 1v1 with a shooter, low and high shots, saving then distributing.</span>",
+      "<span class=\"strand\"><i>Touch</i> Juggling streaks, backyard goals, beach soccer.</span><span class=\"strand\"><i>Keeper</i> Fun save sessions, throw-and-catch games.</span>"
+    ],
+    [
+      "<b>Effort language.</b> \"The number is information.\" Between-point reset introduced in tennis: breathe, bounce, look at the strings. Games with Dad stationary. Champion's Log: one line a day.",
+      "<b>Losing well.</b> Handicap games designed so he loses about a third of the time. Post-game question: what would you do differently? Indoor games in the new house.",
+      "<b>Routines.</b> Pre-session routine he runs himself. One cue word per skill. First chase games with Dad.",
+      "<b>Pressure games.</b> \"Make 3 in a row to finish.\" Timed challenges. Handicap vs Dad narrows.",
+      "<b>Match mind.</b> Scoring, tiebreak nerves, resetting after an error, opponent scouting in one sentence. Tournaments vs Dad and friends.",
+      "<b>Reflection.</b> Watch the year's test chart together. \"Best thing this year.\" Free play, bike, pool."
     ]
   ],
   "patches": [
@@ -159,8 +183,16 @@
       "15-ball cooperative rally. Forehand and backhand from a drop feed with unit turn and finish over the shoulder, 8 of 10."
     ],
     [
-      "Play & Compete",
-      "Complete 6 of 8 Challenge-of-the-Week checks and show up to Trials."
+      "Basketball",
+      "20 stationary crossovers eyes up without losing the ball. Jump stop and pivot on either foot, 5 of 5. 10 chest passes hit the 3m target."
+    ],
+    [
+      "Soccer",
+      "10 inside-foot wall passes in a row with each foot. First touch controlled on 8 of 10. Keeper W-catch 10 of 10 hand feeds."
+    ],
+    [
+      "Compete & Mindset",
+      "Runs the between-point reset without a reminder in one full tennis session. Champion's Log filled 5 days in a week."
     ]
   ],
   "gates": [
@@ -234,6 +266,18 @@
       "Cooperative rally with Dad, current ball. Best of 3.",
       "Tennis",
       "balls"
+    ],
+    [
+      "Basketball cone weave",
+      "5 cones 2m apart. Dribble down with the right hand, back with the left, ball never above the waist. 2 trials. Best.",
+      "Basketball",
+      "s"
+    ],
+    [
+      "Soccer wall passes",
+      "3m from the wall, 30 seconds, alternating feet, inside of the foot. Count controlled returns.",
+      "Soccer",
+      "in 30 s"
     ]
   ],
   "roles": [
@@ -241,17 +285,17 @@
       "Mon",
       "Floor Day",
       "Gymnastics",
-      "45–60",
+      "60–90",
       1,
-      "Tumbling homework, landing, throwing. Low impact after gym."
+      "Tumbling homework, landing, basketball handling. Low impact after gym."
     ],
     [
       "Tue",
       "Rings Day",
       "Swim (recovery)",
-      "60–75",
+      "75–90",
       2,
-      "Rings, hangs, strength, coordination, med ball."
+      "Rings, hangs, strength, soccer touch and passing at the wall."
     ],
     [
       "Wed",
@@ -259,7 +303,7 @@
       "—",
       "100–120",
       3,
-      "The one high-impact home day. Speed, power, games."
+      "The one high-impact home day. Speed, power, soccer at speed, games."
     ],
     [
       "Thu",
@@ -267,7 +311,7 @@
       "—",
       "100–120",
       2,
-      "Tennis wall and court, throwing, skill, ball games."
+      "Tennis wall and court, throwing, basketball skill block."
     ],
     [
       "Fri",
@@ -275,7 +319,7 @@
       "—",
       "90–120",
       1,
-      "Skate park, balance, weekly challenge, free play. Low impact before Saturday."
+      "Skate park, balance, keeper work on grass, weekly challenge. Low impact before Saturday."
     ],
     [
       "Sat",
@@ -289,9 +333,9 @@
       "Sun",
       "Court Day",
       "Tennis 2h",
-      "20–30",
+      "30–45",
       1,
-      "Quick card, patch check, week review."
+      "Quick card, 15 min of ball skills, patch check, week review."
     ]
   ],
   "org": {
@@ -330,5 +374,78 @@
     "organized"
   ],
   "ballNow": "green",
-  "northStar": "Compete at the highest levels of tennis at 20. Not precocious at 8."
+  "northStar": "A future champion, most likely in tennis, possibly basketball or soccer goalkeeping. Built on athleticism and enjoyment. Not precocious at 8.",
+  "rankRule": "Earn 7 of 9 to become a Fox",
+  "sheetRows": [
+    [
+      "20m sprint",
+      "s",
+      "t1"
+    ],
+    [
+      "Standing broad jump",
+      "cm",
+      "t2"
+    ],
+    [
+      "Single-leg hop, right",
+      "cm",
+      "t3r"
+    ],
+    [
+      "Single-leg hop, left",
+      "cm",
+      "t3l"
+    ],
+    [
+      "Overhand throw, right",
+      "m",
+      "t4r"
+    ],
+    [
+      "Overhand throw, left",
+      "m",
+      "t4l"
+    ],
+    [
+      "Dead hang",
+      "s",
+      "t5"
+    ],
+    [
+      "Line-touch agility",
+      "s",
+      "t6"
+    ],
+    [
+      "Jump rope singles",
+      "reps",
+      "t7"
+    ],
+    [
+      "Tennis rally count",
+      "balls",
+      "t8"
+    ],
+    [
+      "Basketball cone weave",
+      "s",
+      "t9"
+    ],
+    [
+      "Soccer wall passes",
+      "in 30 s",
+      "t10"
+    ],
+    [
+      "Single-leg balance R / L",
+      "s",
+      "t11"
+    ],
+    [
+      "Height",
+      "cm",
+      "h"
+    ]
+  ]
 }

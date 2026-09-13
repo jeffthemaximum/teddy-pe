@@ -13,9 +13,13 @@ This is the source document for the year. Monthly views and weekly daily cards a
 
 ## North star
 
-Compete at the highest levels of tennis at 20. Not precocious at 8.
+Teddy is a future champion, most likely in tennis, possibly a very high level basketball player or soccer goalkeeper. He will get there through athleticism and enjoyment. The program prepares him for that now, physically and mentally. Not precocious at 8.
+
+This is the evidence-based way to plan for a champion, and it is worth being explicit because it runs against instinct. The research on world-class adult athletes compared with national-level peers (Güllich and colleagues, 2022 meta-analysis of 6,000+ athletes) finds the eventual world-class group did *more* multi-sport play and *less* specialized volume in childhood, started focused training later, and reached junior milestones later. Precocious 8 year olds are mostly kids who were trained like adults early; they win at 10 and are gone at 16. So "plan for a champion" at 7 means wider, not narrower; more technical volume, not more intensity; and a mind trained on purpose.
 
 What that implies for a 7 year old, and what this program does about it:
+- Three ball sports developed deliberately and in parallel (tennis, basketball, soccer including goalkeeping), each with its own skill strands, patches and battery item, so a real choice exists at 12 to 13 instead of a default.
+- Technical volume is the lever for "a lot of volume": hundreds of dribbles, touches and swings per session. It costs little recovery and is where champions separate. Intensity (sprints, jumps, max throws) stays budgeted.
 - Broad sampling until roughly 12 (the current five-sport roster is an asset here), with tennis hours growing gradually rather than front-loaded.
 - Stroke and footwork form protected over results. Ball progression gated on skill, never on age or calendar.
 - The coordination window (roughly 6 to 12) spent on the widest possible movement vocabulary: tumbling, rings, skateboard, throwing both arms, rhythm.
@@ -23,17 +27,36 @@ What that implies for a 7 year old, and what this program does about it:
 - Competition framed as a skill to practice (point construction, scoring, resetting after errors), not a verdict. Handicapped matches vs Dad are the main vehicle.
 - Recovery treated as training: Saturday is enormous, so Sunday and Monday home work is skill only, and every 8th week is Trials at half volume.
 
+### The tall frame
+
+Both parents and the wider family are very tall and very athletic. Plan for a big adolescent growth spurt (peak height velocity typically 12 to 14 in boys, sometimes earlier in tall families). What that means now:
+- Record height at every test date. When the growth rate jumps, expect a clumsy phase: coordination dips, timing goes, heels and knees complain. That is the signal to cut jumping and sprinting volume by half for 8 to 12 weeks and double down on skill and mobility. Write it into the decision log when it happens.
+- Landing mechanics, hanging, and daily mobility are the long-term insurance policy for a tall frame. They never leave the program.
+- Tall kids get pushed toward the basket, the goal and the baseline early because they win there. Keep him handling the ball, keeping goal and moving his feet; height will do its own work later.
+
+### Mental skills
+
+Trained deliberately, like a stroke, one thing per block:
+- Cub: effort language ("the number is information"); the between-point reset in tennis (breathe, bounce, look at the strings); the Champion's Log, one line a day in his own writing.
+- Fox: losing well. Handicap games designed so he loses about a third of the time; one post-game question: what would you do differently?
+- Coyote: routines he runs himself (pre-session, pre-serve, free throw); one cue word per skill.
+- Wolf: pressure games ("make 3 in a row to finish"); timed challenges with a visible clock.
+- Puma: match mind: scoring, tiebreak nerves, resetting after an error, describing an opponent in one sentence.
+- Cheetah: reflection. Read the year's test chart together. What was the best thing this year?
+
 ## Organized schedule (assumed constant all year)
 
 | Day | Organized | Home program role | Home minutes |
 |---|---|---|---|
-| Mon | Gymnastics | **Floor Day**: tumbling homework, landing, throwing. Low impact. | 45-60 |
-| Tue | Swim (recovery) | **Rings Day**: hanging, climbing, strength, coordination, med ball. Moderate. | 60-75 |
-| Wed | none | **Fast Day**: the one high-impact home day. Speed, power, games. | 100-120 |
-| Thu | none | **Wall Day**: tennis wall and court, throwing, skill, ball games. Moderate. | 100-120 |
-| Fri | none | **Skate Day**: skate park, balance, weekly challenge, free play. Low impact before Saturday. | 90-120 |
+| Mon | Gymnastics | **Floor Day**: tumbling homework, landing, basketball handling block. Low impact. | 60-90 |
+| Tue | Swim (recovery) | **Rings Day**: hanging, climbing, strength, soccer touch and passing at the wall. Moderate. | 75-90 |
+| Wed | none | **Fast Day**: the one high-impact home day. Speed, power, soccer at speed, games. | 100-120 |
+| Thu | none | **Wall Day**: tennis wall and court, throwing, basketball skill block. Moderate. | 100-120 |
+| Fri | none | **Skate Day**: skate park, balance, keeper work on grass, weekly challenge. Low impact before Saturday. | 90-120 |
 | Sat | Soccer + Lacrosse + Tennis (2h) | **Game Day**: home program OFF. Evening 5-min shake-out only. | 0-10 |
-| Sun | Tennis (2h) | **Court Day**: 20-30 min quick card, patch check, week review. | 20-30 |
+| Sun | Tennis (2h) | **Court Day**: 30-45 min quick card with 15 min of ball skills, patch check, week review. | 30-45 |
+
+Basketball gets dedicated blocks Mon, Thu and alternate Sundays; soccer gets Tue, Wed, Fri (keeper) and alternate Sundays. Each sport lands 45 to 75 minutes of deliberate technical work a week on top of Saturday's organized play. This is technical volume: it adds minutes without adding high-intent efforts.
 
 Every day lands at 90-120+ total minutes of activity. Saturday is by far the highest-load day of the week, so Friday stays low-impact and Sunday/Monday home work is skill and mobility, never sprinting or jumping.
 
@@ -49,19 +72,21 @@ Hours are a poor proxy for load at this age. The program budgets **high-intent e
 
 Jeff has chosen to treat soccer, lacrosse and swim as play rather than training load. The program design does not rely on that assumption: the intensity waving above protects Teddy either way.
 
-## Seven key areas (rows of the year visual)
+## Nine key areas (rows of the year visual)
 
 1. **Speed & Acceleration**: posture, braking, first step, acceleration, max velocity, speed under chaos.
 2. **Power & Landing**: landing mechanics first, then hops, jumps, bounds, plyos, reactive power.
 3. **Coordination & Balance**: tumbling (cartwheel is the year's headline skill), rhythm, footwork, jump rope, skateboard, balance.
 4. **Strength & Resilience**: hanging, climbing, pulling, crawling, carrying, rotational strength, durability.
 5. **Throw & Catch**: overhand rotation (both arms), catching under pressure, throwing accuracy and distance.
-6. **Tennis**: four strands running all year: **Form** (forehand/backhand), **Footwork**, **Ball progression** (gated, see below), **Match play**.
-7. **Play & Compete**: games, head-to-head vs Dad with shrinking handicaps, tournaments, free play.
+6. **Tennis**: four strands running all year: **Form** (forehand/backhand), **Footwork**, **Ball progression** (gated, see below), **Match play**. Priority row.
+7. **Basketball**: **Handle** (dribbling, both hands, eyes up), **Footwork** (jump stop, pivot, slides, cuts), **Pass** (chest, bounce, push, on the move), **Shoot** (form, layups both hands).
+8. **Soccer**: **Touch** (first touch, ball mastery, dribbling both feet), **Pass** (inside foot, laces, weight, both feet), **Keeper** (ready position, catching, footwork, diving progression, distribution).
+9. **Compete & Mindset**: games and handicaps vs Dad, routines, losing well, pressure games, the Champion's Log.
 
 ## Six blocks, six ranks
 
-Each block is 8 weeks. Week 8 of every block is **Trials**: volume drops by half, Teddy attempts the patches he has not yet earned, and he ranks up. Ranking up requires **five of seven patches** (so one weak area never blocks progress, but he can't skip two).
+Each block is 8 weeks. Week 8 of every block is **Trials**: volume drops by half, Teddy attempts the patches he has not yet earned, and he ranks up. Ranking up requires **seven of nine patches** (so two lagging areas never block progress, but he can't skip three).
 
 | Rank | Dates | Focus | Why here |
 |---|---|---|---|
@@ -124,13 +149,29 @@ Aug 16 – Sep 12: transition. No program. Next year's architecture written in t
 - Puma: *Form*: form under pace, Dad hits harder feeds. *Footwork*: recovery under match tempo. *Ball*: gate check; controlled yellow exposure if gates are met. *Match*: point construction, scoring, tiebreaks, tournament vs Dad, patterns (cross-court default, attack short, serve + 1).
 - Cheetah: *Form*: maintain. *Ball*: whatever the gates allow. *Match*: fun matches, local kids, retest rally counts.
 
-**Play & Compete**
-- Cub: Games with Dad stationary: wall ball, HORSE, roll-out sharks and minnows, tag with a "base".
-- Fox: Indoor games. Rings and skate park stay in the rotation through the move. Holiday weeks light.
-- Coyote: Winter games, basketball, indoor tennis, first chase games with Dad.
-- Wolf: Races and timed challenges. Handicap vs Dad narrows.
-- Puma: Tournaments and head-to-head vs Dad. Tennis matches.
-- Cheetah: Free play, bike adventures, pool, minimal structure.
+**Basketball**
+- Cub: *Handle*: stationary pound, crossover, figure 8, both hands equal, eyes up, 200 dribbles a session. *Footwork*: jump stop and pivot on both feet, triple threat. *Pass*: chest and bounce to a 3m wall target. *Shoot*: form shooting from 1m, hold the finish.
+- Fox: *Handle*: moving (walk to jog), weak hand, retreat dribble, hallway friendly. *Footwork*: defensive slides, close-outs, drop step. *Pass*: on the move, give-and-go. *Shoot*: form from 2m, 50 makes a session.
+- Coyote: *Handle*: combo moves, two-ball dribbling. *Footwork*: inside-outside, hesitation. *Pass*: one-hand push pass off the dribble, pass-and-cut. *Shoot*: layup footwork both sides, free-throw routine begins.
+- Wolf: *Handle*: speed dribble, change of pace, pull-up jump stop. *Footwork*: rip-through, first step, rebound and outlet. *Pass*: under pressure (Dad shadows). *Shoot*: off the dribble from 3m, layups at speed.
+- Puma: live 1v1 vs Dad, reads (drive or pass), 2v1 when a friend is available, cutting and boxing out, game shots, HORSE tournaments.
+- Cheetah: pickup, driveway games, trick dribbling, shooting games with friends.
+
+**Soccer**
+- Cub: *Touch*: first touch off the wall both feet, toe taps, tick-tocks, sole rolls, 300 touches a session. *Pass*: inside foot at 3m, both feet. *Keeper*: ready position, W-catch and scoop from hand feeds, no diving.
+- Fox: *Touch*: dribbling patterns (inside, outside, sole), weak-foot volume, cone gates indoors. *Pass*: laces, receiving across the body. *Keeper*: shuffle footwork, set position, chest catch, collapse dive from kneeling on a mat.
+- Coyote: *Touch*: turns (inside hook, outside hook, Cruyff), receiving under light pressure. *Pass*: 5 to 10m, weight, one-touch. *Keeper*: collapse dive from sitting and squatting both sides, roll and overarm distribution.
+- Wolf: *Touch*: at speed, 1v1 moves (scissors, step-over, feint). *Pass*: driven, first-time on the move. *Keeper*: dives from standing on grass, angles, moving to the ball, high catches.
+- Puma: small-sided decisions, 1v1 vs Dad, shooting after a move, combination play; keeper 1v1 with a shooter, save then distribute.
+- Cheetah: juggling streaks, backyard goals, beach soccer, fun save sessions.
+
+**Compete & Mindset**
+- Cub: Games with Dad stationary: wall ball, HORSE, roll-out sharks and minnows, tag with a base. Effort language, the between-point reset, the Champion's Log.
+- Fox: Indoor games, losing well by design. Rings and skate park stay in the rotation through the move. Holiday weeks light.
+- Coyote: Winter games, indoor tennis, first chase games with Dad. Routines and cue words.
+- Wolf: Races, timed challenges, pressure games. Handicap vs Dad narrows.
+- Puma: Tournaments and head-to-head vs Dad. Tennis matches. Match mind.
+- Cheetah: Free play, bike adventures, pool, minimal structure. Reflection on the year.
 
 ## Tennis ball progression: gates, not dates
 
@@ -154,27 +195,30 @@ Gate checks happen in Trials weeks.
 | 6 | Line-touch agility | 5m out, touch, 5m back, touch, 5m out. 2 trials. Best. | Speed / Coordination |
 | 7 | Jump rope singles | Consecutive, best of 3. | Coordination |
 | 8 | Tennis rally count | Cooperative rally with Dad, current ball, best of 3. | Tennis |
+| 9 | Basketball cone weave | 5 cones 2m apart, right hand down, left hand back, ball below the waist. 2 trials. Best. | Basketball |
+| 10 | Soccer wall passes | 3m from the wall, 30 s, alternating feet, inside foot. Count controlled returns. | Soccer |
+| + | Height | Shoes off, against a wall. Recorded at every test date to track growth rate. | Growth |
 
-Skill unlocks (pass/fail, checked in Trials): cartwheel over a line; cartwheel both sides; forward roll to standing; wall handstand 10s; 30s single-leg balance eyes closed; 20m backward run; 5 traveling-rings passes; split step on 10 of 10 signals; serve in 6 of 10.
+Skill unlocks (pass/fail, checked in Trials): cartwheel over a line; cartwheel both sides; forward roll to standing; wall handstand 10s; 30s single-leg balance eyes closed; 20m backward run; 5 traveling-rings passes; split step on 10 of 10 signals; serve in 6 of 10; basketball layup both hands; keeper collapse dive both sides; 20 soccer juggles.
 
 ## Weekly structure
 
-Every week has **one theme** and **three or four sub-targets** across areas, always including one tennis sub-target. Every week has a **Challenge of the Week** that is a playful, scaled version of one battery test, attempted Monday (or Tuesday) and again Friday so Teddy sees a number move inside a single week.
+Every week has **one theme** and **five or six sub-targets** across areas, always including one tennis, one basketball and one soccer sub-target. Every week has a **Challenge of the Week** that is a playful, scaled version of one battery test, attempted Monday (or Tuesday) and again Friday so Teddy sees a number move inside a single week.
 
 ### Cub block weekly themes (Sep 14 – Nov 8)
 
 | Wk | Dates | Theme | Sub-targets | Challenge of the week |
 |---|---|---|---|---|
-| 1 | Sep 14-20 | **Baseline & Land** | Full test battery; athletic stance and stick landing from the ground; cartwheel step 1 (bunny hops); split step on Dad's clap | Silent Landings: 10 jumps off a step, count the silent ones |
-| 2 | Sep 21-27 | **Stick It** | 10/10 quiet landings from 30cm; single-leg stick 3s hold; cartwheel step 2 (hand-hand-foot-foot); 15-ball rally | Broad Jump & Stick: longest jump that you also stick |
-| 3 | Sep 28 – Oct 4 | **Brake** | Sprint-to-stop in 3 steps; split step 10/10 into a shuffle; cartwheel step 3 (lunge entry, hands on the line); step-and-throw 10/10 both arms | Red Light: sprint on "green", stop in 3 steps on "red", score quiet stops |
-| 4 | Oct 5-11 | **Upside Down** | Wall handstand 5s; cartwheel with straighter legs; rings inversion with spot; forehand finish over the shoulder 10/10 | Hang Time: dead hang PR |
-| 5 | Oct 12-18 | **Skip & Bound** | A-skip and gallop rhythm; jump rope 20 singles; low bounds; backhand unit turn 10/10 | Rope Streak: consecutive singles |
-| 6 | Oct 19-25 | **Turn** | Med ball hip throw both sides; cartwheel other side intro; throwing with hip turn; forehand and backhand from drop feed with rotation | Throw Far: overhand distance, each arm |
-| 7 | Oct 26 – Nov 1 | **Reactor** | Reaction starts on sound and sight; split step to first step; catch games under pressure; 20-ball rally | Reaction Race: 10m from Dad's clap, best time |
+| 1 | Sep 14-20 | **Baseline & Land** | Full battery plus height; athletic stance and stick landing; cartwheel step 1 (bunny hops); split step on Dad's clap; basketball 200 stationary dribbles eyes up; soccer wall touch both feet and keeper W-catch | Silent Landings: 10 jumps off a step, count the silent ones |
+| 2 | Sep 21-27 | **Stick It** | 10/10 quiet landings from 30cm; single-leg stick 3s; cartwheel step 2; 15-ball rally; basketball crossover eyes up ×20 and bounce pass target; soccer 10 wall passes in a row each foot, keeper scoop | Broad Jump & Stick: longest jump that you also stick |
+| 3 | Sep 28 – Oct 4 | **Brake** | Sprint-to-stop in 3 steps; split step 10/10 into a shuffle; cartwheel step 3 (lunge entry); step-and-throw 10/10 both arms; basketball jump stop off a jog 5/5 both feet; soccer touch-then-pass rhythm, keeper set position on cue | Red Light: sprint on "green", stop in 3 steps on "red", score quiet stops |
+| 4 | Oct 5-11 | **Upside Down** | Wall handstand 5s; cartwheel with straighter legs; rings inversion with spot; forehand finish over the shoulder 10/10; basketball figure 8 eyes up 10 each way; soccer sole rolls and pull-backs | Hang Time: dead hang PR |
+| 5 | Oct 12-18 | **Skip & Bound** | A-skip and gallop rhythm; jump rope 20 singles; low bounds; backhand unit turn 10/10; basketball form shooting 20 makes from 1m; soccer laces pass intro | Rope Streak: consecutive singles |
+| 6 | Oct 19-25 | **Turn** | Med ball hip throw both sides; cartwheel other side intro; throwing with hip turn; FH and BH from drop feed with rotation; basketball pivot into a pass; soccer inside hook turn | Throw Far: overhand distance, each arm |
+| 7 | Oct 26 – Nov 1 | **Reactor** | Reaction starts on sound and sight; split step to first step; catch games under pressure; 20-ball rally; basketball dribble on Dad's hand signals; keeper reacts to thrown balls left/right (catch only) | Reaction Race: 10m from Dad's clap, best time |
 | 8 | Nov 2-8 | **Cub Trials** | Half volume. Patch attempts. Rank-up ceremony Sunday. Pack for the move. | Beat any Week 1 number |
 
-### Cub patches (need 5 of 7 to become a Fox)
+### Cub patches (need 7 of 9 to become a Fox)
 
 - **Speed**: quiet 3-step stop from a jog, 5 in a row; split step on 10 of 10 signals.
 - **Power & Landing**: 10 silent stick landings in a row from a 30cm box; stuck broad jump.
@@ -182,7 +226,9 @@ Every week has **one theme** and **three or four sub-targets** across areas, alw
 - **Strength**: 20s dead hang; 5 traveling-rings passes with spot, or bear walk 20m without knees touching.
 - **Throw & Catch**: step-and-throw with the opposite foot, 10 of 10, both arms.
 - **Tennis**: 15-ball cooperative rally; forehand and backhand from drop feed with unit turn and finish over the shoulder, 8 of 10.
-- **Play & Compete**: complete 6 of 8 Challenge-of-the-Week checks and show up to Trials.
+- **Basketball**: 20 stationary crossovers eyes up without losing the ball; jump stop and pivot on either foot 5 of 5; 10 chest passes hit the 3m target.
+- **Soccer**: 10 inside-foot wall passes in a row with each foot; first touch controlled on 8 of 10; keeper W-catch 10 of 10 hand feeds.
+- **Compete & Mindset**: runs the between-point reset without a reminder in one full tennis session; Champion's Log filled 5 days in a week.
 
 ## Daily card template
 
@@ -191,15 +237,16 @@ Full session (Wed/Thu/Fri, and shorter Tue):
 2. **New Thing** (15-20): the week's skill unlock. Highest attention, lowest fatigue, so it goes early.
 3. **Fast or Strong** (12-15): speed/power on Wed, strength on Tue/Thu. Low volume, full rest, disguised as a game.
 4. **Tennis or Throw** (15-30): heaviest on Thu.
-5. **Challenge of the Day** (5-8): one scored thing, vs a PR or vs Dad with a handicap.
-6. **Play** (20-40): a game Teddy picks or a sport on the field/court.
-7. **Shake Out** (5): walk, calves, breathing, one thing he did well today.
+5. **Ball Skills** (15-25): basketball (Mon, Thu) or soccer (Tue, Wed, Fri keeper). Counted in touches, not minutes: 200 dribbles, 300 touches, 40 passes.
+6. **Challenge of the Day** (5-8): one scored thing, vs a PR or vs Dad with a handicap.
+7. **Play** (20-40): a game Teddy picks or a sport on the field/court.
+8. **Shake Out** (5): walk, calves, breathing, Champion's Log line.
 
-Quick card (Sun, and Mon after gym): Wake Up (5) → New Thing (10) → Challenge (5) → Review (5).
+Quick card (Sun): Wake Up (5) → New Thing (10) → Ball Skills (15) → Patch check and review (10).
 
 ## Motivation system
 
-Rank card with seven patch slots per rank. Patches earned in Trials weeks (early earning allowed if he clearly has it). Rank-up ceremony every 8th Sunday after tennis. Challenge of the Week gets a Monday number and a Friday number on a visible chart. Head-to-head vs Dad uses explicit handicaps that shrink each block as Jeff's running returns.
+Rank card with nine patch slots per rank. Patches earned in Trials weeks (early earning allowed if he clearly has it). Rank-up ceremony every 8th Sunday after tennis. Challenge of the Week gets a Monday number and a Friday number on a visible chart. Head-to-head vs Dad uses explicit handicaps that shrink each block as Jeff's running returns. The Champion's Log is a notebook Teddy writes in himself, one line a day: what was best, or what he wants tomorrow. It is his; Dad reads it only when invited.
 
 ## Regeneration instructions (for future sessions)
 

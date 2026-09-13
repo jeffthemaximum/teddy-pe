@@ -32,3 +32,23 @@ A record of the planning conversation, the pushbacks, and what Jeff decided. New
 - Baseline test numbers (Sep 15 to 17) to be charted once recorded.
 - Teddy's exact birthday, for the age-in-hours guideline and next year's plan.
 - One-hand vs two-hand backhand to be settled in the Fox block with his coach.
+
+## 2026-09-13 (later): future champion framing, basketball and soccer, more volume
+
+**What Jeff asked for.** Dedicated year-round basketball skill development (dribbling, footwork, passing) and dedicated soccer skill development. More volume ("Teddy can have a lot of volume"; Monday can be longer than 45 minutes). Plan for a future champion, most likely in tennis, possibly a very high level basketball player or soccer goalkeeper; prepare him physically and mentally now. Very tall, very athletic parents and family. Delivered as a branch for review.
+
+**Pushback and resolution.**
+- *"Future champion" does not mean train him like one now.* The evidence on world-class adults (Güllich et al. 2022) is that they sampled more, specialized later and hit junior milestones later than national-level peers. Planning for a champion at 7 means wider, not narrower. Jeff's request for three deliberate ball sports is exactly that, so this is agreement with a sharper rationale, written into the north star.
+- *More volume, yes, as technical volume.* Hundreds of dribbles, touches and swings cost little recovery and are where champions separate. Sprints, jumps and max throws stay on the high-intent budget. Monday goes to 60 to 90 minutes, Tuesday to 75 to 90, Sunday to 30 to 45, all of the added time technical.
+- *Tall frame.* Height recorded at every test date. A growth-rate jump is the trigger to halve jumping and sprinting for 8 to 12 weeks. Written into the architecture so it is not forgotten in 2029.
+
+**Changes.**
+- Two new areas: Basketball (Handle, Footwork, Pass, Shoot) and Soccer (Touch, Pass, Keeper). Play & Compete renamed Compete & Mindset with a deliberate mental-skills progression per block and a daily Champion's Log.
+- Nine areas, nine Cub patches, 7 of 9 to rank up.
+- Battery grows to 10 tests plus height: basketball cone weave and soccer wall passes added.
+- Day roles updated with ball-skill blocks; weekly sub-targets now always include tennis, basketball and soccer.
+- September weeks 1 to 3 and Week 1 daily cards regenerated with the new blocks and tests.
+
+**Open.**
+- Whether the November move changes any facility access (currently assumed: none).
+- Youth basketball size (27.5 in) and a mat for keeper dive progressions in the Fox block.
