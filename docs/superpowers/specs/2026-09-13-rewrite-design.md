@@ -271,7 +271,7 @@ Given by Jeff on 2026-09-13. Nothing is outstanding.
 
 | Name | Email | Role |
 |---|---|---|
-| Jeff Maxim | jmaxim@trxtraining.com | coach |
+| Jeff Maxim | frey.maxim@gmail.com | coach |
 | Teddy Maxim | teddymaxim225@gmail.com | athlete |
 | Emily Barker (mom) | emmabark22@gmail.com | viewer |
 

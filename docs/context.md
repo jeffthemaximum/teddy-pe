@@ -20,7 +20,7 @@ From the Rails rewrite onward, each person signs in with their own email and pas
 
 | Name | Email | Role | Can do |
 |---|---|---|---|
-| Jeff Maxim | jmaxim@trxtraining.com | coach | Everything, except an athlete entry Teddy has not shared |
+| Jeff Maxim | frey.maxim@gmail.com | coach | Everything, except an athlete entry Teddy has not shared |
 | Teddy Maxim | teddymaxim225@gmail.com | athlete | Reads his program and results, writes his own journal, chooses what to show Dad |
 | Emily Barker (mom) | emmabark22@gmail.com | viewer | Reads the program, the plans and the drills. Writes nothing, sees no journal |
 
