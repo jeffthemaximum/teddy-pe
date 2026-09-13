@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_13_192420) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_13_193707) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -88,7 +88,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_192420) do
     t.string "unit", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["program_year_id", "name"], name: "index_battery_tests_on_year_and_name", unique: true
+    t.string "key", null: false
+    t.index ["program_year_id", "key"], name: "index_battery_tests_on_year_and_key", unique: true
     t.index ["program_year_id"], name: "index_battery_tests_on_program_year_id"
   end
 

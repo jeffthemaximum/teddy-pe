@@ -312,52 +312,62 @@ ball_gates:
 battery_tests:
 - position: 1
   name: 20m sprint
+  key: sprint_20m
   protocol: Standing start, 2–3 trials, full rest, phone timer. Best.
   area_name: Speed
   unit: s
 - position: 2
   name: Standing broad jump
+  key: broad_jump
   protocol: 3 trials. Must stick the landing to count. Measure to the back heel.
   area_name: Power & Landing
   unit: cm
 - position: 3
   name: Single-leg hop, each leg
+  key: single_leg_hop
   protocol: 2 trials each leg. Stick on the same leg. A gap over 15% is a flag.
   area_name: Power & Landing
   unit: cm R / cm L
 - position: 4
   name: Overhand throw, each arm
+  key: overhand_throw
   protocol: Tennis ball, 3 throws each arm. Best each.
   area_name: Throw & Catch
   unit: m R / m L
 - position: 5
   name: Dead hang
+  key: dead_hang
   protocol: Best of 2, 2 min rest between.
   area_name: Strength
   unit: s
 - position: 6
   name: Line-touch agility
+  key: line_touch
   protocol: 5m out, touch, back, touch, out. 2 trials. Best.
   area_name: Speed / Coordination
   unit: s
 - position: 7
   name: Jump rope singles
+  key: jump_rope
   protocol: Consecutive without a miss. Best of 3.
   area_name: Coordination
   unit: reps
 - position: 8
   name: Tennis rally count
+  key: rally_count
   protocol: Cooperative rally with Dad, current ball. Best of 3.
   area_name: Tennis
   unit: balls
 - position: 9
   name: Basketball cone weave
+  key: cone_weave
   protocol: 5 cones 2m apart. Dribble down with the right hand, back with the left,
     ball never above the waist. 2 trials. Best.
   area_name: Basketball
   unit: s
 - position: 10
   name: Soccer wall passes
+  key: wall_passes
   protocol: 3m from the wall, 30 seconds, alternating feet, inside of the foot. Count
     controlled returns.
   area_name: Soccer
@@ -368,91 +378,91 @@ battery_measures:
   label: 20m sprint
   unit: s
   direction: lower
-  battery_test_position: 1
+  battery_test_key: sprint_20m
 - test_id: t2
   position: 2
   label: Standing broad jump
   unit: cm
   direction: higher
-  battery_test_position: 2
+  battery_test_key: broad_jump
 - test_id: t3r
   position: 3
   label: Single-leg hop, right
   unit: cm
   direction: higher
-  battery_test_position: 3
+  battery_test_key: single_leg_hop
 - test_id: t3l
   position: 4
   label: Single-leg hop, left
   unit: cm
   direction: higher
-  battery_test_position: 3
+  battery_test_key: single_leg_hop
 - test_id: t4r
   position: 5
   label: Overhand throw, right
   unit: m
   direction: higher
-  battery_test_position: 4
+  battery_test_key: overhand_throw
 - test_id: t4l
   position: 6
   label: Overhand throw, left
   unit: m
   direction: higher
-  battery_test_position: 4
+  battery_test_key: overhand_throw
 - test_id: t5
   position: 7
   label: Dead hang
   unit: s
   direction: higher
-  battery_test_position: 5
+  battery_test_key: dead_hang
 - test_id: t6
   position: 8
   label: Line-touch agility
   unit: s
   direction: lower
-  battery_test_position: 6
+  battery_test_key: line_touch
 - test_id: t7
   position: 9
   label: Jump rope singles
   unit: reps
   direction: higher
-  battery_test_position: 7
+  battery_test_key: jump_rope
 - test_id: t8
   position: 10
   label: Tennis rally count
   unit: balls
   direction: higher
-  battery_test_position: 8
+  battery_test_key: rally_count
 - test_id: t9
   position: 11
   label: Basketball cone weave
   unit: s
   direction: lower
-  battery_test_position: 9
+  battery_test_key: cone_weave
 - test_id: t10
   position: 12
   label: Soccer wall passes
   unit: in 30 s
   direction: higher
-  battery_test_position: 10
+  battery_test_key: wall_passes
 - test_id: t11r
   position: 13
   label: Single-leg balance, right
   unit: s
   direction: higher
-  battery_test_position:
+  battery_test_key:
 - test_id: t11l
   position: 14
   label: Single-leg balance, left
   unit: s
   direction: higher
-  battery_test_position:
+  battery_test_key:
 - test_id: h
   position: 15
   label: Height
   unit: cm
   direction: growth
-  battery_test_position:
+  battery_test_key:
 test_dates:
 - window: 2026-09
   label: Baseline

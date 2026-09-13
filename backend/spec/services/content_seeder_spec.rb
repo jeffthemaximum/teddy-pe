@@ -115,6 +115,8 @@ RSpec.describe ContentSeeder do
       expect(jump.improvement_from(120, 131)).to eq(:better)
       expect(jump.improvement_from(120, 120)).to eq(:same)
       expect(jump.improvement_from(nil, 120)).to be_nil
+      expect(sprint.improvement_from(4.5, 4.5)).to eq(:same)
+      expect(jump.improvement_from(120, 110)).to eq(:worse)
     end
 
     it "reads height as neither better nor worse" do

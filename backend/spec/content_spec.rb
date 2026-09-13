@@ -111,11 +111,18 @@ RSpec.describe "content integrity" do
       end
     end
 
-    it "points every measure at a real battery test, or at none on purpose" do
-      positions = PROGRAM["battery_tests"].map { |t| t["position"] }
+    it "leaves exactly the measures that belong to no protocol without one" do
+      keys = PROGRAM["battery_tests"].map { |t| t["key"] }
+      unattached = PROGRAM["battery_measures"].select { |m| m["battery_test_key"].nil? }.map { |m| m["test_id"] }
+
+      # Height is not one of the ten, and single-leg balance is recorded on its
+      # own. Everything else must name a protocol, so a mistyped or missing key
+      # cannot quietly look like one of these three.
+      expect(unattached).to match_array(%w[h t11r t11l])
+
       PROGRAM["battery_measures"].each do |m|
-        next if m["battery_test_position"].nil?
-        expect(positions).to include(m["battery_test_position"]), "measure #{m['test_id']}"
+        next if m["battery_test_key"].nil?
+        expect(keys).to include(m["battery_test_key"]), "measure #{m['test_id']} names unknown battery test #{m['battery_test_key']}"
       end
     end
 

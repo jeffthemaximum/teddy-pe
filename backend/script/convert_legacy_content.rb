@@ -56,11 +56,28 @@ TENNIS_LABEL = {
 MONTH_ABBR = %w[Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec]
   .each_with_index.to_h { |m, i| [ m, i + 1 ] }.freeze
 
-# sheetRows is the 15 recordable rows. Map each to the battery test it belongs
-# to by position; height belongs to none.
+# Battery test names are prose and will be reworded. These keys are the
+# identity the seeder finds rows by, so they are written out once and never
+# derived from the name, which would defeat the point.
+BATTERY_KEYS = {
+  "20m sprint"               => "sprint_20m",
+  "Standing broad jump"      => "broad_jump",
+  "Single-leg hop, each leg" => "single_leg_hop",
+  "Overhand throw, each arm" => "overhand_throw",
+  "Dead hang"                => "dead_hang",
+  "Line-touch agility"       => "line_touch",
+  "Jump rope singles"        => "jump_rope",
+  "Tennis rally count"       => "rally_count",
+  "Basketball cone weave"    => "cone_weave",
+  "Soccer wall passes"       => "wall_passes"
+}.freeze
+
+# sheetRows is the 15 recordable rows. Map each to the battery test key it
+# belongs to; height and single-leg balance belong to none.
 MEASURE_TEST = {
-  "t1" => 1, "t2" => 2, "t3r" => 3, "t3l" => 3, "t4r" => 4, "t4l" => 4,
-  "t5" => 5, "t6" => 6, "t7" => 7, "t8" => 8, "t9" => 9, "t10" => 10,
+  "t1" => "sprint_20m", "t2" => "broad_jump", "t3r" => "single_leg_hop", "t3l" => "single_leg_hop",
+  "t4r" => "overhand_throw", "t4l" => "overhand_throw", "t5" => "dead_hang", "t6" => "line_touch",
+  "t7" => "jump_rope", "t8" => "rally_count", "t9" => "cone_weave", "t10" => "wall_passes",
   "t11r" => nil, "t11l" => nil, "h" => nil
 }.freeze
 
@@ -112,14 +129,15 @@ ball_gates = program["gates"].each_with_index.map do |(from, to, label, requirem
 end
 
 battery_tests = program["battery"].each_with_index.map do |(name, protocol, area_name, unit), i|
-  { "position" => i + 1, "name" => name, "protocol" => protocol,
-    "area_name" => area_name, "unit" => unit }
+  { "position" => i + 1, "name" => name,
+    "key" => BATTERY_KEYS.fetch(name) { die("no key for battery test #{name}") },
+    "protocol" => protocol, "area_name" => area_name, "unit" => unit }
 end
 
 measures = program["sheetRows"].each_with_index.map do |(label, unit, test_id, direction), i|
   die("sheetRow #{test_id} is not mapped") unless MEASURE_TEST.key?(test_id)
   { "test_id" => test_id, "position" => i + 1, "label" => label, "unit" => unit,
-    "direction" => direction, "battery_test_position" => MEASURE_TEST[test_id] }
+    "direction" => direction, "battery_test_key" => MEASURE_TEST[test_id] }
 end
 
 test_dates = program["testDates"].each_with_index.map do |(window, label, display), i|
