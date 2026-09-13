@@ -10,7 +10,10 @@ Rails.application.routes.draw do
       get   "drills",       to: "drills#index"
       get   "drills/:slug", to: "drills#show"
 
-      resources :program_years, only: %i[index show]
+      resources :program_years, only: %i[index show] do
+        get "plans/:month", to: "plans#show", as: :plan
+        get "weeks/current", to: "weeks#current", as: :current_week
+      end
     end
   end
 
