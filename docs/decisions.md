@@ -102,3 +102,24 @@ A record of the planning conversation, the pushbacks, and what Jeff decided. New
 
 - The claude.ai artifact copy is still ungated and cannot reach the API; its diary panel says so. If the program content should be private too, stop publishing the artifact.
 - Brute-force protection is a 500ms delay on a failed attempt and nothing more, so the passphrase should be a real one.
+
+## 2026-09-13 (late): test results into the database, progress chart on the Year view
+
+**What Jeff asked.** Whether the Baseline test sheet data synced anywhere. It did not: it was `localStorage` under `teddy-pe-sheet-v1`, the same per-browser storage that had just broken the diary across devices. He asked for the same fix, plus the Year-view chart that had been open since the first session.
+
+**Why this mattered more than the diary did.** A diary entry can be re-typed from memory. A 20m sprint time from the baseline window cannot be measured again, and the entire battery exists to be compared against it four times across the year. The sheet's own status line ("read the numbers back to me and I will chart them") showed it was built as a scratchpad, with `data/results.json` as the intended record, and that file had never been created. Baseline testing was two days away.
+
+**Decisions.**
+
+- `test_result` table, row id derived on the server as `<window>:<test_id>`, same passphrase, same reasoning as the diary. Each number saves on blur rather than per keystroke, and clearing a box deletes the row so a mistyped number can be taken back.
+- **Five test windows, not two columns.** The sheet previously had Baseline and December only, so the March, June and August retests had nowhere to go. There is now a window selector; non-baseline windows show the baseline value beside the input as a reference.
+- **`sheetRows` carries a direction** (`lower`, `higher`, `growth`). Without it a chart cannot tell that a faster sprint and a longer jump are both progress. Height is `growth`: it reports a cm/year pace and surfaces the growth-load protocol when that pace runs fast, which is the trigger the tall-frame section of the architecture already specifies.
+- **Single-leg balance was split into left and right rows**, matching the single-leg hop and the overhand throw. It had been one box holding two numbers, which nothing could chart. Safe to change now because no real numbers had been recorded yet.
+- **Small multiples rather than one chart.** Fifteen tests in different units on one axis would be meaningless. Each test gets a card: latest value, change since baseline with the direction applied, and a sparkline across the recorded windows.
+- `tools/diary_pull.py` became `tools/pull.py` and now pulls both, writing `data/results.json` keyed by window and test id.
+
+**Found while building.** `api/results.js` connected to the database before validating the body, so a mistyped value would have surfaced as a database error rather than a clear message. The same mistake had already been fixed in `api/diary.js`; a test caught it here.
+
+**Open.**
+
+- The test sheet is the last thing to leave `localStorage`. Only the remembered tab remains there, which is a per-viewer convenience and fine where it is.

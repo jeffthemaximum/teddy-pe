@@ -117,6 +117,29 @@ test('ignores prototype pollution attempts in ratings', () => {
   assert.equal({}.owns, undefined);
 });
 
+console.log('results: one row per test window and test');
+const results = await import('../api/results.js');
+test('the id comes from the window and the test', () =>
+  assert.equal(results.clean({ window: '2026-09', test_id: 't1', value: '4.9' }).entry.id, '2026-09:t1'));
+test('two devices recording the same test agree on the row', () =>
+  assert.equal(results.clean({ window: '2026-09', test_id: 't1', value: '4.9', device: 'Mac' }).entry.id,
+               results.clean({ window: '2026-09', test_id: 't1', value: '4.8', device: 'iPhone' }).entry.id));
+test('rejects a bad window', () =>
+  assert.ok(results.clean({ window: 'baseline', test_id: 't1', value: '4.9' }).errors.some(e => /YYYY-MM/.test(e))));
+test('rejects a bad test id', () =>
+  assert.ok(results.clean({ window: '2026-09', test_id: 'DROP TABLE', value: '4.9' }).errors.length > 0));
+test('rejects a value with no digit in it', () =>
+  assert.ok(results.clean({ window: '2026-09', test_id: 't1', value: 'good' }).errors.some(e => /digit/.test(e))));
+test('an empty value is allowed, and means delete', () => {
+  const { errors, entry } = results.clean({ window: '2026-09', test_id: 't1', value: '' });
+  assert.deepEqual(errors, []);
+  assert.equal(entry.value, '');
+});
+test('keeps a paired or annotated value as written', () =>
+  assert.equal(results.clean({ window: '2026-09', test_id: 't3r', value: '58.5' }).entry.value, '58.5'));
+test('truncates an absurd value', () =>
+  assert.equal(results.clean({ window: '2026-09', test_id: 't1', value: '9'.repeat(200) }).entry.value.length, 40));
+
 console.log('handler paths that need no database');
 const diary = (await import('../api/diary.js')).default;
 const login = (await import('../api/login.js')).default;
@@ -143,6 +166,18 @@ process.env.DATABASE_URL = 'postgres://u:p@example.neon.tech/db';
   const res = mockRes();
   await diary({ method: 'POST', headers: { 'x-diary-key': 'correct horse battery' }, body: { session_date: 'nope' } }, res);
   test('diary 400 on a bad date, before any database call', () => assert.equal(res.code, 400));
+}
+{
+  const resultsHandler = (await import('../api/results.js')).default;
+  const res = mockRes();
+  await resultsHandler({ method: 'GET', headers: {} }, res);
+  test('results 401 with no credentials', () => assert.equal(res.code, 401));
+  const res2 = mockRes();
+  await resultsHandler({ method: 'POST', headers: { 'x-diary-key': 'correct horse battery' }, body: { window: 'nope', test_id: 't1', value: '1' } }, res2);
+  test('results 400 on a bad window, before any database call', () => assert.equal(res2.code, 400));
+  const res3 = mockRes();
+  await resultsHandler({ method: 'DELETE', headers: { 'x-diary-key': 'correct horse battery' } }, res3);
+  test('results 405 on an unsupported method', () => assert.equal(res3.code, 405));
 }
 {
   const res = mockRes();
@@ -189,6 +224,8 @@ process.env.DATABASE_URL = 'postgres://u:p@example.neon.tech/db';
   test('page serves the real site once signed in', () => {
     assert.ok(res.sent.includes('id="yeargrid"'));
     assert.ok(res.sent.includes('id="d-session"'));
+    assert.ok(res.sent.includes('id="progress"'));
+    assert.ok(res.sent.includes('id="sheetwindow"'));
   });
 }
 {

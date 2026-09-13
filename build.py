@@ -104,6 +104,7 @@ data = {
     "WEEKS": plan["weeks"], "CARDS": plan["cards"]["days"], "DRILLS": drills,
     "MONTH": month, "WEEKNO": plan["cards"]["week"],
     "SHEETROWS": program["sheetRows"], "RANKRULE": program["rankRule"],
+    "TESTDATES": program["testDates"],
 }
 template = (ROOT / "src/page.html").read_text()
 page = template.replace("__DATA__", json.dumps(data, ensure_ascii=False))

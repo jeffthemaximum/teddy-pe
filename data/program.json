@@ -380,72 +380,119 @@
     [
       "20m sprint",
       "s",
-      "t1"
+      "t1",
+      "lower"
     ],
     [
       "Standing broad jump",
       "cm",
-      "t2"
+      "t2",
+      "higher"
     ],
     [
       "Single-leg hop, right",
       "cm",
-      "t3r"
+      "t3r",
+      "higher"
     ],
     [
       "Single-leg hop, left",
       "cm",
-      "t3l"
+      "t3l",
+      "higher"
     ],
     [
       "Overhand throw, right",
       "m",
-      "t4r"
+      "t4r",
+      "higher"
     ],
     [
       "Overhand throw, left",
       "m",
-      "t4l"
+      "t4l",
+      "higher"
     ],
     [
       "Dead hang",
       "s",
-      "t5"
+      "t5",
+      "higher"
     ],
     [
       "Line-touch agility",
       "s",
-      "t6"
+      "t6",
+      "lower"
     ],
     [
       "Jump rope singles",
       "reps",
-      "t7"
+      "t7",
+      "higher"
     ],
     [
       "Tennis rally count",
       "balls",
-      "t8"
+      "t8",
+      "higher"
     ],
     [
       "Basketball cone weave",
       "s",
-      "t9"
+      "t9",
+      "lower"
     ],
     [
       "Soccer wall passes",
       "in 30 s",
-      "t10"
+      "t10",
+      "higher"
     ],
     [
-      "Single-leg balance R / L",
+      "Single-leg balance, right",
       "s",
-      "t11"
+      "t11r",
+      "higher"
+    ],
+    [
+      "Single-leg balance, left",
+      "s",
+      "t11l",
+      "higher"
     ],
     [
       "Height",
       "cm",
-      "h"
+      "h",
+      "growth"
+    ]
+  ],
+  "testDates": [
+    [
+      "2026-09",
+      "Baseline",
+      "Sep 15–17"
+    ],
+    [
+      "2026-12",
+      "Retest 1",
+      "Dec 7–11"
+    ],
+    [
+      "2027-03",
+      "Retest 2",
+      "Mar 1–5"
+    ],
+    [
+      "2027-06",
+      "Retest 3",
+      "Jun 14–18"
+    ],
+    [
+      "2027-08",
+      "Final",
+      "Aug 9–13"
     ]
   ]
 }

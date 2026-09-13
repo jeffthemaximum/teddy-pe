@@ -199,6 +199,8 @@ Gate checks happen in Trials weeks.
 | 10 | Soccer wall passes | 3m from the wall, 30 s, alternating feet, inside foot. Count controlled returns. | Soccer |
 | + | Height | Shoes off, against a wall. Recorded at every test date to track growth rate. | Growth |
 
+Numbers are typed into the test sheet on the This Week tab and stored in the database, keyed by test window and test id, so every device shows the same sheet. The Progress panel on the Year tab charts them. Each row carries a direction in `data/program.json` (lower, higher, or growth) so the chart knows which way is an improvement; height reports a cm/year pace and raises the growth-load protocol when that pace runs fast.
+
 Skill unlocks (pass/fail, checked in Trials): cartwheel over a line; cartwheel both sides; forward roll to standing; wall handstand 10s; 30s single-leg balance eyes closed; 20m backward run; 5 traveling-rings passes; split step on 10 of 10 signals; serve in 6 of 10; basketball layup both hands; keeper collapse dive both sides; 20 soccer juggles.
 
 ## Weekly structure
@@ -250,7 +252,7 @@ Rank card with nine patch slots per rank. Patches earned in Trials weeks (early 
 
 ## The coach's diary
 
-Jeff writes one entry per session on the This Week tab: how it went, Teddy's energy, a pain flag, a free line, and a rating for each drill that was on that day's card (not yet, getting there, owns it). There is one entry per session date and the database is the only copy, so the entry he starts on a laptop is the one his phone opens and edits. `tools/diary_pull.py` brings them into `data/diary.json` so the repo stays the memory of the project.
+Jeff writes one entry per session on the This Week tab: how it went, Teddy's energy, a pain flag, a free line, and a rating for each drill that was on that day's card (not yet, getting there, owns it). There is one entry per session date and the database is the only copy, so the entry he starts on a laptop is the one his phone opens and edits. `tools/pull.py` brings them into `data/diary.json` so the repo stays the memory of the project.
 
 The diary proposes; it never edits. Before generating a week or a month, pull the entries and read them, then bring Jeff proposals:
 
@@ -269,4 +271,4 @@ When writing a new month, add entries for any drill the new block introduces. Th
 
 ## Regeneration instructions (for future sessions)
 
-Pull the diary first (`tools/diary_pull.py`) and read anything recorded since the last plan. To generate a month: take the block, list the week themes and sub-targets for that month, map to the fixed day roles, keep HIE budget, place Trials/deload and test weeks. To generate a week of daily cards: use the daily card template, place the week's New Thing in every full session, distribute the sub-targets across Wed/Thu/Fri with tennis heaviest Thursday, and write the Challenge of the Week into Monday/Tuesday and Friday.
+Pull the diary and the test results first (`tools/pull.py`) and read anything recorded since the last plan. To generate a month: take the block, list the week themes and sub-targets for that month, map to the fixed day roles, keep HIE budget, place Trials/deload and test weeks. To generate a week of daily cards: use the daily card template, place the week's New Thing in every full session, distribute the sub-targets across Wed/Thu/Fri with tennis heaviest Thursday, and write the Challenge of the Week into Monday/Tuesday and Friday.
