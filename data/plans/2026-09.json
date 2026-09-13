@@ -1,0 +1,578 @@
+{
+  "month": "2026-09",
+  "block": "cub",
+  "label": "Cub block · Weeks 1–3",
+  "range": "Sep 14 – Oct 4",
+  "weeks": [
+    {
+      "n": 1,
+      "theme": "Baseline & Land",
+      "dates": "Sep 14–20",
+      "targets": [
+        "Full test battery recorded",
+        "Athletic stance and stick landing from the ground",
+        "Cartwheel step 1: bunny hops over a line",
+        "Split step on Dad's clap"
+      ],
+      "challenge": "Silent Landings. 10 jumps off a step, count the silent ones. Monday number, Friday number.",
+      "days": [
+        [
+          "Mon",
+          14,
+          "Land Like a Cat",
+          [
+            "Stick landings, ground then curb",
+            "Cartwheel step 1: bunny hops ×10 each way",
+            "Challenge: Silent Landings (Mon)"
+          ]
+        ],
+        [
+          "Tue",
+          15,
+          "Test Day 1: Hands & Arms",
+          [
+            "Tests: dead hang, overhand throw R/L, jump rope, single-leg balance",
+            "Riverside rings intro, goal 3 passes",
+            "HORSE"
+          ]
+        ],
+        [
+          "Wed",
+          16,
+          "Test Day 2: Fast & Far",
+          [
+            "Tests: 20m sprint, broad jump, single-leg hop, line-touch",
+            "New: ready position + split step ×15",
+            "Roll-out sharks & minnows"
+          ]
+        ],
+        [
+          "Thu",
+          17,
+          "Wall & Ball",
+          [
+            "Cartwheel step 2: hand-hand-foot-foot",
+            "Step-and-throw at wall target 15 R / 10 L",
+            "Tennis: drop-feed FH/BH ×20, rally count test",
+            "Wall rally streak"
+          ]
+        ],
+        [
+          "Fri",
+          18,
+          "Skate & Stick",
+          [
+            "Skate park 30 + safe-fall lesson",
+            "Single-leg stick ×5 each",
+            "Jump rope 2×2 min",
+            "Challenge: Silent Landings (Fri)"
+          ]
+        ],
+        [
+          "Sat",
+          19,
+          "Game Day",
+          [
+            "Home program off",
+            "Evening 5-min shake-out"
+          ]
+        ],
+        [
+          "Sun",
+          20,
+          "Ceremony",
+          [
+            "Bunny hops ×10",
+            "Read every test number to Teddy",
+            "Draw the Cub card: 7 empty patch slots"
+          ]
+        ]
+      ]
+    },
+    {
+      "n": 2,
+      "theme": "Stick It",
+      "dates": "Sep 21–27",
+      "targets": [
+        "10 of 10 quiet landings from a 30cm box",
+        "Single-leg stick with a 3s statue hold",
+        "Cartwheel step 2 both sides",
+        "15-ball rally"
+      ],
+      "challenge": "Broad Jump & Stick. Longest jump you also stick. Monday number, Friday number.",
+      "days": [
+        [
+          "Mon",
+          21,
+          "Box Landings",
+          [
+            "Stick landings from 30cm ×10",
+            "Cartwheel step 2 ×8 each side",
+            "Challenge: Broad Jump & Stick (Mon)"
+          ]
+        ],
+        [
+          "Tue",
+          22,
+          "Rings & Rope",
+          [
+            "Rings: goal 5 passes",
+            "Hangs + hollow holds",
+            "Med ball chest pass ×10",
+            "Jump rope 2×2 min"
+          ]
+        ],
+        [
+          "Wed",
+          23,
+          "Starts & Sticks",
+          [
+            "Build-ups, then 6×10m starts from athletic stance",
+            "Broad jump & stick practice ×6",
+            "Single-leg stick ×5 each",
+            "Chase game, Dad stationary; soccer"
+          ]
+        ],
+        [
+          "Thu",
+          24,
+          "Rally to 15",
+          [
+            "Cartwheel step 2 both sides",
+            "Step-and-throw target 15 R / 10 L",
+            "Tennis: drop feeds FH/BH ×20, rally target 15",
+            "Basketball"
+          ]
+        ],
+        [
+          "Fri",
+          25,
+          "Skate & Statue",
+          [
+            "Skate park 30",
+            "Sideways single-leg sticks",
+            "Jump rope",
+            "Challenge: Broad Jump & Stick (Fri)",
+            "Field kickaround"
+          ]
+        ],
+        [
+          "Sat",
+          26,
+          "Game Day",
+          [
+            "Home program off",
+            "Evening shake-out"
+          ]
+        ],
+        [
+          "Sun",
+          27,
+          "Quick Card",
+          [
+            "Shadow swings ×20",
+            "Bunny hops",
+            "Patch check: Power & Landing"
+          ]
+        ]
+      ]
+    },
+    {
+      "n": 3,
+      "theme": "Brake",
+      "dates": "Sep 28 – Oct 4",
+      "targets": [
+        "Sprint-to-stop in 3 quiet steps",
+        "Split step into a shuffle, 10 of 10",
+        "Cartwheel step 3: lunge entry, hands on the line",
+        "Step-and-throw 10 of 10, both arms"
+      ],
+      "challenge": "Red Light. Sprint on \"green\", stop in 3 steps on \"red\". Score the quiet stops out of 10.",
+      "days": [
+        [
+          "Mon",
+          28,
+          "Three Steps",
+          [
+            "Cartwheel step 3: lunge entry ×10",
+            "Jog-to-3-step-stop ×6",
+            "Challenge: Red Light (Mon)"
+          ]
+        ],
+        [
+          "Tue",
+          29,
+          "Rings & Balance",
+          [
+            "Rings passes",
+            "Hanging knee tucks",
+            "Bear + crab walks",
+            "Med ball hip throws",
+            "Single-leg balance 30s each"
+          ]
+        ],
+        [
+          "Wed",
+          30,
+          "Red Light Green Light",
+          [
+            "Build-ups",
+            "Red Light sprints 8×10m, stop in 3 steps",
+            "Split step → shuffle 10/10",
+            "Broad jump ×3",
+            "Soccer game"
+          ]
+        ],
+        [
+          "Thu",
+          1,
+          "Split & Shuffle",
+          [
+            "Cartwheel step 3",
+            "Step-and-throw both arms 10/10 target",
+            "Tennis: split step + shuffle before every drop feed; FH/BH ×20; rally 15–20",
+            "Basketball"
+          ]
+        ],
+        [
+          "Fri",
+          2,
+          "Skate & Brake",
+          [
+            "Skate park 30",
+            "Balance games",
+            "Jump rope",
+            "Challenge: Red Light (Fri)",
+            "Field play, no races"
+          ]
+        ],
+        [
+          "Sat",
+          3,
+          "Game Day",
+          [
+            "Home program off",
+            "Evening shake-out"
+          ]
+        ],
+        [
+          "Sun",
+          4,
+          "Quick Card",
+          [
+            "Shadow swings",
+            "Patch check: Speed (3-step stop)",
+            "Preview Week 4: Upside Down"
+          ]
+        ]
+      ]
+    }
+  ],
+  "cards": {
+    "week": 1,
+    "theme": "Baseline & Land",
+    "dates": "Sep 14–20",
+    "days": [
+      {
+        "dow": "Mon",
+        "date": "Sep 14",
+        "role": "Floor Day",
+        "name": "Land Like a Cat",
+        "mins": "45",
+        "level": 1,
+        "blocks": [
+          [
+            "8",
+            "Wake Up",
+            "Animal walk medley: bear, crab, monkey, flamingo, giraffe, 10m each. Then 10 skips."
+          ],
+          [
+            "12",
+            "New Thing",
+            "Stick landing from the ground. Jump up, land in <q>cat position</q>: feet quiet, knees over toes, chest up, hands out front. Freeze 3 seconds. 10 reps, Dad scores each 1 to 3 for quiet. Then 10 from a curb or bottom step."
+          ],
+          [
+            "10",
+            "Cartwheel step 1",
+            "Bunny hops over a chalk line. Hands on the line, kick both feet over to the other side, land feet together. 10 each direction. <q>Arms straight, look at your hands.</q>"
+          ],
+          [
+            "7",
+            "Challenge",
+            "<b>Silent Landings.</b> 10 jumps off the step. Count how many make no sound. Write the number on the chart. Again Friday.",
+            "ch"
+          ],
+          [
+            "10",
+            "Play",
+            "Skateboard cruise or bike. Nothing timed."
+          ]
+        ],
+        "dad": "Gym already loaded him. Zero sprinting and zero jumping for distance today. Watch the knees on landing: if they cave inward, lower the step. Step no higher than his knee."
+      },
+      {
+        "dow": "Tue",
+        "date": "Sep 15",
+        "role": "Rings Day",
+        "name": "Test Day 1: Hands & Arms",
+        "mins": "60–75",
+        "level": 2,
+        "blocks": [
+          [
+            "10",
+            "Wake Up",
+            "Skips, big and small arm circles, bear crawl 2×10m, inchworms ×5."
+          ],
+          [
+            "5",
+            "Test: Dead hang",
+            "Best of 2, 2 min rest between. Straight arms, thumbs around the bar. Record seconds.",
+            "test"
+          ],
+          [
+            "10",
+            "Test: Overhand throw",
+            "Tennis ball, from a step. 3 throws right, 3 throws left. Mark the best with a cone, pace it. Record both arms.",
+            "test"
+          ],
+          [
+            "8",
+            "Test: Jump rope",
+            "Consecutive singles without a miss. Best of 3. Record.",
+            "test"
+          ],
+          [
+            "5",
+            "Single-leg balance",
+            "Each leg, eyes open, arms out, up to 60s. Record each leg (skill unlock, not a battery item)."
+          ],
+          [
+            "15",
+            "Rings",
+            "Riverside traveling rings. Hang and swing ×5. Then reach for the next ring with Dad spotting the hips. Goal: 3 passes. If he gets 3, try for 5."
+          ],
+          [
+            "15",
+            "Play",
+            "Basketball court. HORSE, Dad shoots from one spot."
+          ]
+        ],
+        "dad": "Tests before rings, while he is fresh. Full rest between throws; these are max efforts. Cheer the effort, record the number without commentary. The non-dominant arm will look bad. That is the point: it is the one that will move most this year. Swim class after is recovery, add nothing."
+      },
+      {
+        "dow": "Wed",
+        "date": "Sep 16",
+        "role": "Fast Day",
+        "name": "Test Day 2: Fast & Far",
+        "mins": "100–120",
+        "level": 3,
+        "blocks": [
+          [
+            "12",
+            "Wake Up",
+            "A-march 2×15m, skips 2×15m, gallops each lead 2×15m, high knees 2×10m. Then 3 build-up runs over 20m at 60, 70, 80%."
+          ],
+          [
+            "10",
+            "Test: 20m sprint",
+            "Standing start behind a line, Dad at 20m with the phone timer: <q>ready, set, go</q>. 3 trials, walk-back rest of 2 min. Record best.",
+            "test"
+          ],
+          [
+            "8",
+            "Test: Broad jump",
+            "Toes behind the line, arm swing, jump, must stick the landing to count. 3 trials. Measure to the back heel. Record best.",
+            "test"
+          ],
+          [
+            "8",
+            "Test: Single-leg hop",
+            "Each leg, 2 trials, stick the landing on the same leg. Record both.",
+            "test"
+          ],
+          [
+            "8",
+            "Test: Line-touch",
+            "Cones at 0 and 5m. Sprint out, touch, back, touch, out. 2 trials. Record best.",
+            "test"
+          ],
+          [
+            "12",
+            "New Thing",
+            "Ready position and split step. Feet wider than shoulders, knees soft, hands ready. Dad claps, Teddy does a tiny hop-and-land, then points where Dad points. 15 reps. <q>Land ready.</q>"
+          ],
+          [
+            "8",
+            "Strong",
+            "Bear walk 2×15m, crab walk 2×10m, 2 dead hangs."
+          ],
+          [
+            "8",
+            "Challenge",
+            "<b>Beat Dad's Broad Jump.</b> Dad jumps from kneeling. Teddy tries to beat the mark from standing. Best of 3.",
+            "ch"
+          ],
+          [
+            "30",
+            "Play",
+            "Soccer field. Roll-out sharks and minnows: Dad is the stationary shark, rolling balls to tag. Then free kicking."
+          ],
+          [
+            "5",
+            "Shake Out",
+            "Walk a lap, calves on the wall, one thing he did well."
+          ]
+        ],
+        "dad": "High-intent efforts today: 3 sprints, 3 jumps, 4 hops, 2 shuttles, 3 challenge jumps, about 15. That is the week's load spike, by design. If he is flat on the third sprint, take the best of two and move on."
+      },
+      {
+        "dow": "Thu",
+        "date": "Sep 17",
+        "role": "Wall Day",
+        "name": "Wall & Ball",
+        "mins": "100–120",
+        "level": 2,
+        "blocks": [
+          [
+            "10",
+            "Wake Up",
+            "Animal medley, skips, then 10 shadow forehands and 10 shadow backhands with a full unit turn."
+          ],
+          [
+            "15",
+            "New Thing",
+            "Cartwheel step 2: <q>hand, hand, foot, foot</q>. Chalk a line. Lunge, reach hand then hand onto the line, kick one foot over then the other, land on the line. 8 each side. Then 10 donkey kicks against the wall."
+          ],
+          [
+            "12",
+            "Throw",
+            "Step-and-throw at a big chalk square on the tennis wall. Opposite foot steps forward. 15 throws dominant, 10 non-dominant. Score the hits."
+          ],
+          [
+            "30",
+            "Tennis",
+            "Drop-feed forehands ×20: unit turn, contact in front, finish over the shoulder. Drop-feed backhands ×20. Wall rally: how many in a row? Then <b>Test: rally count</b> with Dad, cooperative, current ball, best of 3. Record.",
+            "test"
+          ],
+          [
+            "8",
+            "Strong",
+            "2 dead hangs, hollow hold 2×15s."
+          ],
+          [
+            "6",
+            "Challenge",
+            "<b>Wall Rally Streak.</b> Longest unbroken streak against the wall. Record.",
+            "ch"
+          ],
+          [
+            "25",
+            "Play",
+            "Basketball. Dribble tag with Dad stationary and a ball to roll, then HORSE."
+          ],
+          [
+            "5",
+            "Shake Out",
+            ""
+          ]
+        ],
+        "dad": "Form over volume. If the finish starts dropping, stop the set at 10, not 20. Tennis is cooperative today so high-intent efforts stay near zero. Keep them there."
+      },
+      {
+        "dow": "Fri",
+        "date": "Sep 18",
+        "role": "Skate Day",
+        "name": "Skate & Stick",
+        "mins": "90–120",
+        "level": 1,
+        "blocks": [
+          [
+            "10",
+            "Wake Up",
+            "Animal medley, skips, arm circles."
+          ],
+          [
+            "30",
+            "Skate park",
+            "Free skate. One 5-minute safe-fall lesson: bend the knees, roll onto the side and forearm, never straight arms. Practice from kneeling on grass ×5."
+          ],
+          [
+            "12",
+            "New Thing",
+            "Single-leg stick. Small hop forward, land on one leg, statue for 3 seconds. 5 each leg. Then hop sideways ×5 each."
+          ],
+          [
+            "8",
+            "Coordination",
+            "Jump rope, 2 rounds of 2 minutes. <q>Tiny hops, wrists not arms.</q>"
+          ],
+          [
+            "7",
+            "Challenge",
+            "<b>Silent Landings, round 2.</b> 10 jumps off Monday's step. Beat Monday's number.",
+            "ch"
+          ],
+          [
+            "30",
+            "Play",
+            "Soccer field kickaround and passing games. No sprint races today."
+          ],
+          [
+            "5",
+            "Shake Out",
+            "Calves, hamstrings. Ask: <q>what was your best thing this week?</q>"
+          ]
+        ],
+        "dad": "Saturday is roughly 5 hours of organized sport. Today is balance and skill, high-intent efforts 5 or fewer. Early bed, big dinner, water bottle ready for tomorrow."
+      },
+      {
+        "dow": "Sat",
+        "date": "Sep 19",
+        "role": "Game Day",
+        "name": "Soccer · Lacrosse · Tennis",
+        "mins": "off",
+        "level": 4,
+        "off": true,
+        "blocks": [
+          [
+            "—",
+            "Home program",
+            "Off. Add nothing."
+          ],
+          [
+            "5",
+            "Evening shake-out",
+            "Walk, calves against the wall, 3 slow breaths."
+          ]
+        ],
+        "dad": "Highest-load day of the week. Watch for heel or knee complaints Sunday morning. If there are any, Sunday's card becomes stretching only and you tell me."
+      },
+      {
+        "dow": "Sun",
+        "date": "Sep 20",
+        "role": "Court Day",
+        "name": "Ceremony",
+        "mins": "20",
+        "level": 1,
+        "blocks": [
+          [
+            "5",
+            "Before tennis",
+            "Skips, 10 shadow forehands, 10 shadow backhands."
+          ],
+          [
+            "8",
+            "After tennis",
+            "Cartwheel step 1 again: bunny hops over a line ×10. Compare with Monday."
+          ],
+          [
+            "7",
+            "Review",
+            "Sit down with the test sheet. Read every number to Teddy. Draw the Cub rank card with seven empty patch slots. Ask him which patch he wants first."
+          ]
+        ],
+        "dad": "This is the ceremony moment. The numbers are his, the card is his. Next week's theme is Stick It."
+      }
+    ]
+  }
+}
