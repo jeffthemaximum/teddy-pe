@@ -1,0 +1,41 @@
+# One app. No staging: correctness comes from the test suite, not from a
+# second paid environment.
+app = "teddy-pe-api"
+primary_region = "ewr"
+
+[build]
+
+[env]
+  RAILS_ENV = "production"
+  RAILS_LOG_TO_STDOUT = "true"
+  RAILS_MAX_THREADS = "3"
+  WEB_CONCURRENCY = "1"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  # Sleeps when nobody is using it, wakes on the next request. A site opened a
+  # few times a day costs close to nothing this way. The clients are built for
+  # the wake-up: a real loading state on first paint and a 15 second timeout.
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.http_options]
+    h2_backend = true
+
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "5s"
+  grace_period = "20s"
+  method = "GET"
+  path = "/healthz"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  # 256MB thrashes or OOMs on a Rails boot. 512 plus swap is the floor that
+  # boots reliably.
+  memory = "512mb"
+
+[experimental]
+  swap_size_mb = 512
