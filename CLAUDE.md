@@ -2,7 +2,9 @@
 
 This is Teddy's year-long PE and athletic development program. Jeff (Dad) is the coach. Teddy is 7, homeschooled, on green ball in tennis, and being prepared as a future champion: most likely tennis, possibly basketball or soccer goalkeeping. Plan for a champion the evidence-based way: wide base, high technical volume, protected intensity, mind trained on purpose.
 
-Read in this order before changing anything: `docs/context.md`, `docs/architecture.md`, `docs/decisions.md`.
+Read in this order before changing anything: `docs/context.md`, `docs/status.md`, `docs/architecture.md`, `docs/decisions.md`, then the newest file in `docs/history/`.
+
+This repo is the complete memory of the project. Any claude.ai Project doc or memory file about it is a cache; when they disagree, this repo is right and the cache gets updated from here.
 
 ## Rules of the program that code and plans must respect
 
@@ -26,4 +28,4 @@ Direct, warm, specific. Cues in Teddy's language ("land like a cat"). Dad notes 
 
 ## When something changes
 
-Append to `docs/decisions.md` with the date. Update `docs/context.md` if the facts about Teddy, Jeff, places or gear changed. Update `docs/architecture.md` if the program itself changed.
+Append to `docs/decisions.md` with the date. Update `docs/context.md` if the facts about Teddy, Jeff, places or gear changed. Update `docs/architecture.md` if the program itself changed. Update `docs/status.md` at the end of every working session, and add or extend a file in `docs/history/` recording what was asked and answered. Work on a branch; Jeff merges.
