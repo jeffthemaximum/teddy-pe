@@ -9,8 +9,13 @@ class JwtService
 
   class InvalidToken < StandardError; end
 
-  def self.encode(user_id:, ttl: DEFAULT_TTL)
-    JWT.encode({ sub: user_id, iat: Time.current.to_i, exp: (Time.current + ttl).to_i }, secret, ALG)
+  def self.encode(user_id:, password_digest: nil, ttl: DEFAULT_TTL)
+    payload = { sub: user_id, iat: Time.current.to_i, exp: (Time.current + ttl).to_i }
+    # Changing a password invalidates every token issued before it, which is
+    # the only revocation a stateless design gets. Sixteen hex characters of a
+    # digest hash, never the digest itself.
+    payload[:pwd] = fingerprint(password_digest) if password_digest
+    JWT.encode(payload, secret, ALG)
   end
 
   def self.decode(token)
@@ -18,6 +23,10 @@ class JwtService
     decoded.with_indifferent_access
   rescue JWT::DecodeError => e
     raise InvalidToken, e.message
+  end
+
+  def self.fingerprint(password_digest)
+    Digest::SHA256.hexdigest(password_digest.to_s)[0, 16]
   end
 
   def self.secret

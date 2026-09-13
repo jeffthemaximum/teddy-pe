@@ -40,5 +40,10 @@ module Backend
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    # Every failure answers in the same envelope, including the ones raised in
+    # middleware before a controller exists. The shared API client parses
+    # { error: { code, message } } and nothing else.
+    config.exceptions_app = routes
   end
 end

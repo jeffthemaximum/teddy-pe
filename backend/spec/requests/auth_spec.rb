@@ -57,6 +57,18 @@ RSpec.describe "auth", type: :request do
       get "/api/v1/me", headers: { "Authorization" => "Bearer #{forged}" }
       expect(response).to have_http_status(:unauthorized)
     end
+
+    it "says nothing rather than guessing which athlete, once there are two" do
+      create(:athlete, name: "Teddy Maxim")
+      create(:athlete, name: "A Second Child")
+
+      get "/api/v1/me", headers: { "Authorization" => "Bearer #{token}" }
+
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body)
+      expect(body["athlete"]).to be_nil
+      expect(body["current_program_year_id"]).to be_nil
+    end
   end
 
   describe "PATCH /api/v1/me" do
@@ -73,6 +85,81 @@ RSpec.describe "auth", type: :request do
         headers: { "Authorization" => "Bearer #{JwtService.encode(user_id: viewer.id)}" }
       expect(response).to have_http_status(:ok)
       expect(viewer.reload.role).to eq("viewer")
+    end
+
+    it "refuses a password change with no current password" do
+      patch "/api/v1/me", params: { user: { password: "a-new-long-password" } },
+        headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:unauthorized)
+      expect(JSON.parse(response.body)).to eq(
+        "error" => { "code" => "unauthorized", "message" => "That current password does not match." }
+      )
+    end
+
+    it "changes the password when the current password is correct" do
+      patch "/api/v1/me",
+        params: { user: { password: "a-new-long-password", current_password: "a-long-enough-password" } },
+        headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:ok)
+      expect(user.reload.authenticate("a-new-long-password")).to be_truthy
+    end
+  end
+
+  describe "a token issued before a password change" do
+    it "stops working once that user changes their password" do
+      old_token = JwtService.encode(user_id: user.id, password_digest: user.password_digest)
+      patch "/api/v1/me",
+        params: { user: { password: "a-new-long-password", current_password: "a-long-enough-password" } },
+        headers: { "Authorization" => "Bearer #{old_token}" }
+      expect(response).to have_http_status(:ok)
+
+      get "/api/v1/me", headers: { "Authorization" => "Bearer #{old_token}" }
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it "leaves a token for a different user unaffected" do
+      other = create(:user, password: "another-long-password")
+      other_token = JwtService.encode(user_id: other.id, password_digest: other.password_digest)
+
+      patch "/api/v1/me",
+        params: { user: { password: "a-new-long-password", current_password: "a-long-enough-password" } },
+        headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:ok)
+
+      get "/api/v1/me", headers: { "Authorization" => "Bearer #{other_token}" }
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
+  describe "the error envelope" do
+    it "renders a 422 as { error: { code, message } }" do
+      patch "/api/v1/me", params: { user: { name: "" } }, headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(422)
+      expect(JSON.parse(response.body)).to eq(
+        "error" => { "code" => "unprocessable", "message" => "Name can't be blank" }
+      )
+    end
+
+    it "renders a 400 as { error: { code, message } }" do
+      patch "/api/v1/me", params: {}, headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:bad_request)
+      body = JSON.parse(response.body)
+      expect(body.keys).to eq(["error"])
+      expect(body["error"]["code"]).to eq("bad_request")
+      expect(body["error"]["message"]).to be_present
+    end
+
+    it "renders a 404 as { error: { code, message } }" do
+      get "/api/v1/nope", headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:not_found)
+      expect(JSON.parse(response.body)).to eq(
+        "error" => { "code" => "not_found", "message" => "Not found." }
+      )
+    end
+
+    it "never puts a top-level errors key on any failure body" do
+      patch "/api/v1/me", params: { user: { name: "" } }, headers: { "Authorization" => "Bearer #{token}" }
+      expect(JSON.parse(response.body)).not_to have_key("errors")
     end
   end
 end

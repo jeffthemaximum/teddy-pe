@@ -25,7 +25,11 @@ module Api
 
         payload = JwtService.decode(token)
         @current_user = User.find_by(id: payload[:sub])
-        render_unauthorized unless @current_user
+        return render_unauthorized unless @current_user
+
+        if payload[:pwd].present? && payload[:pwd] != JwtService.fingerprint(@current_user.password_digest)
+          return render_unauthorized
+        end
       end
 
       def bearer_token

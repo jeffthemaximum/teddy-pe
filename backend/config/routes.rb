@@ -11,4 +11,11 @@ Rails.application.routes.draw do
   end
 
   root to: ->(_env) { [ 200, { "Content-Type" => "text/plain" }, [ "Teddy PE API" ] ] }
+
+  # Anything that reaches here is a routing miss or an exception the
+  # middleware raised, so it answers in the envelope rather than in Rails'
+  # default shape.
+  match "*unmatched", to: "api/v1/errors#show", via: :all
+  get "/404", to: "api/v1/errors#show"
+  get "/500", to: "api/v1/errors#show"
 end

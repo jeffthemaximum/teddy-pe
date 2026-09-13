@@ -13,7 +13,10 @@ module Api
           return render_error("unauthorized", "That email and password do not match.", :unauthorized)
         end
 
-        render json: { jwt: JwtService.encode(user_id: user.id), user: UserSerializer.new(user).as_json }
+        render json: {
+          jwt: JwtService.encode(user_id: user.id, password_digest: user.password_digest),
+          user: UserSerializer.new(user).as_json
+        }
       end
     end
   end
