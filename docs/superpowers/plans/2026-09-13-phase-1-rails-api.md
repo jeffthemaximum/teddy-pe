@@ -373,7 +373,9 @@ test_dates = program["testDates"].each_with_index.map do |(window, label, displa
 end
 
 day_roles = program["roles"].each_with_index.map do |(dow, name, _org, minutes, intensity, note), i|
-  { "dow" => dow.downcase, "position" => i, "name" => name,
+  # 1-based, like every other position in this file, so a person editing the
+  # YAML by hand does not have to remember which collection counts from zero.
+  { "dow" => dow.downcase, "position" => i + 1, "name" => name,
     "organized" => program["org"].fetch(dow), "minutes" => minutes,
     "intensity" => intensity, "note" => note }
 end
@@ -413,13 +415,49 @@ full_cards = plan["cards"]["days"].to_h do |d|
   [ Date.new(yyyy, mm, dnum.to_i).iso8601, d ]
 end
 
+# Day numbers in the legacy file carry no month, and a week can straddle one.
+# Week 3 is "Sep 28 - Oct 4", so its day numbers restart at 1 on the Thursday.
+# Walk the plan in order and roll the month forward whenever a day number goes
+# backwards.
+cursor_year, cursor_month, previous_dnum = plan_year, plan_month, 0
+
 weeks = plan["weeks"].map do |w|
   days = w["days"].map do |(dow, dnum, name, lines)|
-    date = Date.new(plan_year, plan_month, dnum).iso8601
+    if dnum < previous_dnum
+      cursor_month += 1
+      if cursor_month > 12
+        cursor_month = 1
+        cursor_year += 1
+      end
+    end
+    previous_dnum = dnum
+
+    date_obj = Date.new(cursor_year, cursor_month, dnum)
+    # The weekday is the check that catches bad date arithmetic on the first
+    # run. A day that lands on the wrong weekday means the conversion is wrong,
+    # never that the plan is.
+    unless date_obj.strftime("%a").downcase == dow.downcase
+      die("#{date_obj.iso8601} is a #{date_obj.strftime('%a')} but the plan calls it #{dow}")
+    end
+
+    date = date_obj.iso8601
     role = role_by_dow.fetch(dow.downcase)
     card = full_cards[date]
     if card && card["name"] != name
-      die("#{date} is named '#{name}' in the week list and '#{card['name']}' on the card")
+      # The legacy data disagrees with itself on exactly one day. Saturday's
+      # week-list entry reuses the day role's name ("Game Day") as a
+      # placeholder, because the home program is off, while the full card names
+      # the organized sport ("Soccer · Lacrosse · Tennis"). The full card wins:
+      # the role is already carried separately, so the week list was repeating
+      # it rather than naming the day.
+      #
+      # Any other disagreement is real drift between two copies of the same day
+      # and still stops the conversion.
+      unless name == role["name"]
+        die("#{date} is named '#{name}' in the week list and '#{card['name']}' on the card")
+      end
+      warn "note: #{date} takes its name from the card ('#{card['name']}') rather than the week list placeholder ('#{name}')"
+      name = card["name"]
     end
     day = { "dow" => dow.downcase, "date" => date, "name" => name,
             "role" => role["name"], "minutes" => role["minutes"],
@@ -463,10 +501,20 @@ bundle exec ruby script/convert_legacy_content.rb
 Expected output:
 
 ```
+note: 2026-09-19 takes its name from the card ('Soccer · Lacrosse · Tennis') rather than the week list placeholder ('Game Day')
 wrote program.yml (9 areas, 6 blocks, 15 measures)
 wrote drills.yml (84 drills)
 wrote plans/2026-09.yml (3 weeks, 21 days)
 ```
+
+Then check the dates, because the day numbers in the legacy file carry no month
+and week 3 crosses into October:
+
+```bash
+ruby -ryaml -rdate -e 'YAML.load_file("content/program_years/2026-27/plans/2026-09.yml")["weeks"].each { |w| w["days"].each { |d| got = Date.parse(d["date"].to_s).strftime("%a").downcase; puts "#{d["dow"]} #{d["date"]} #{got == d["dow"] ? "ok" : "WRONG WEEKDAY"}" } }'
+```
+
+Expected: 21 lines, all `ok`, with week 3 running `2026-09-28` through `2026-10-04`. The converter's own weekday guard should make a wrong date impossible to write, so a `WRONG WEEKDAY` line here means the guard is broken too.
 
 If it dies on a name disagreement or an unknown area, that is a real inconsistency in the legacy data. Report it to Jeff rather than loosening the check.
 
@@ -495,7 +543,12 @@ why the link is nullable.
 
 A day was written twice in the legacy file, compact in weeks[].days and
 full in cards.days. They are merged into one day, and the converter fails
-loudly if the two names disagree.
+loudly when the two names disagree.
+
+They already disagree once. Saturday's week-list entry reuses the day
+role's name as a placeholder while the card names the organized sport, so
+the card wins and the conversion says so. That is the drift this
+unification exists to end: one day, one name, written once.
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```
