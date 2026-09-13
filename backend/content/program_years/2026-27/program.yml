@@ -1,0 +1,532 @@
+---
+athlete:
+  name: Teddy Maxim
+  birthday: '2019-01-09'
+program_year:
+  label: 2026-27
+  starts_on: '2026-09-14'
+  ends_on: '2027-08-15'
+  status: active
+  ball_now: green
+  rank_rule: Earn 7 of 9 to become a Fox
+  north_star: A future champion, most likely in tennis, possibly basketball or soccer
+    goalkeeping. Built on athleticism and enjoyment. Not precocious at 8.
+blocks:
+- key: cub
+  name: Cub
+  position: 1
+  starts_on: '2026-09-14'
+  ends_on: '2026-11-08'
+  focus: Landing, braking, body control, cartwheel foundations, stroke form
+- key: fox
+  name: Fox
+  position: 2
+  starts_on: '2026-11-09'
+  ends_on: '2027-01-03'
+  focus: Tumbling, hanging, throwing rotation, jump rope, footwork without a ball
+- key: coyote
+  name: Coyote
+  position: 3
+  starts_on: '2027-01-04'
+  ends_on: '2027-02-28'
+  focus: Strength, rotational power, footwork patterns, rally consistency
+- key: wolf
+  name: Wolf
+  position: 4
+  starts_on: '2027-03-01'
+  ends_on: '2027-04-25'
+  focus: Sprint mechanics, acceleration, hills, plyos, serve
+- key: puma
+  name: Puma
+  position: 5
+  starts_on: '2027-04-26'
+  ends_on: '2027-06-20'
+  focus: Agility under decision, point construction, competition
+- key: cheetah
+  name: Cheetah
+  position: 6
+  starts_on: '2027-06-21'
+  ends_on: '2027-08-15'
+  focus: Adventure, water, bike, highest free play, final retest
+areas:
+- slug: speed
+  position: 1
+  name: Speed & Acceleration
+  summary: Posture, braking, first step, max velocity
+  cells:
+    cub: "<b>Stance & braking.</b> Athletic stance, quiet 3-step stops, split step,
+      reaction to Dad's signal. Chase games with Dad stationary."
+    fox: "<b>Posture indoors.</b> Wall drill (6–8 reps, never 20), fast feet, hallway
+      reaction starts."
+    coyote: "<b>Acceleration.</b> Falling starts, 5–10m bursts, band-resisted starts,
+      first-step games. Dad starts running."
+    wolf: "<b>Max velocity.</b> 20–30m flys, hill sprints (4–6), timed gates, PR chasing.
+      Peak speed block."
+    puma: "<b>Speed under chaos.</b> Tag variants, ball chase, sprint-then-hit, multi-directional
+      starts."
+    cheetah: "<b>Free speed.</b> Races on grass and sand, bike sprints, final retest."
+- slug: power
+  position: 2
+  name: Power & Landing
+  summary: Land first, then hop, jump, bound
+  cells:
+    cub: <b>Landing.</b> Stick landings from ground, curb, 30cm box. Single-leg stick.
+      "Silent landing" scoring.
+    fox: "<b>Rhythm hops.</b> Jump rope streaks, pogo hops, low hops. No max jumps
+      during the move window."
+    coyote: "<b>Bilateral power.</b> Broad jumps, low box jumps, med ball slams."
+    wolf: "<b>Plyo & hills.</b> Hill jumps and backpedals, bounding, mini-hurdle hops,
+      single-leg hops."
+    puma: "<b>Reactive power.</b> Jump-and-catch, rebound jumps, sport jumps (rebounds,
+      headers)."
+    cheetah: "<b>Play power.</b> Pool jumps, long-jump pit, trampoline if available."
+- slug: coordination
+  position: 3
+  name: Coordination & Balance
+  summary: Cartwheel is the headline skill
+  cells:
+    cub: "<b>Cartwheel steps 1–3.</b> Bunny hops over a line, hand-hand-foot-foot,
+      lunge entry. Donkey kicks. 30s single-leg balance. Skateboard."
+    fox: "<b>Cartwheel steps 4–5.</b> Straight legs, from standing. Forward and backward
+      rolls. Wall handstand holds. Rope singles to 30."
+    coyote: "<b>Footwork.</b> Agility ladder, crossover steps, jump rope tricks, cartwheel
+      both sides."
+    wolf: "<b>Rhythm & bounding.</b> Skips, gallops, carioca, A-skips, B-skips."
+    puma: "<b>Agility with decision.</b> Cone drills on Dad's call, mirror drills,
+      sport footwork."
+    cheetah: "<b>Adventure balance.</b> Skateboard, bike skills, log walks, slackline,
+      water."
+- slug: strength
+  position: 4
+  name: Strength & Resilience
+  summary: Hang, climb, crawl, carry, rotate
+  cells:
+    cub: "<b>Hang & crawl.</b> Dead hangs, Riverside traveling rings intro, animal
+      walk medleys."
+    fox: "<b>Pull & hold.</b> Rings passes to 5 and back, hanging knee raises, monkey
+      bars. Hollow holds, crab and bear walks."
+    coyote: "<b>Rotate & carry.</b> Med ball rotations, suitcase carries, push-up
+      progressions, climbing."
+    wolf: "<b>Elastic strength.</b> Hill backpedals, single-leg work, balance-board
+      squats and lunges with tennis ball."
+    puma: "<b>Durability.</b> Maintain. Circuits, partner pushing and pulling games."
+    cheetah: "<b>Climb & swim.</b> Playground, trees and rocks where safe, swimming
+      as strength."
+- slug: throw
+  position: 5
+  name: Throw & Catch
+  summary: Overhand rotation, both arms
+  cells:
+    cub: "<b>Step & throw.</b> Opposite foot forward, both arms, at a wall target."
+    fox: "<b>Hip turn.</b> Add trunk rotation, med ball hip throws, non-dominant volume."
+    coyote: "<b>Full sequence.</b> Step, hip, shoulder, arm. Distance and accuracy
+      games."
+    wolf: "<b>Overhead.</b> Overhead throwing into the serve pattern. Catching under
+      pressure: pop-ups, off the bounce."
+    puma: "<b>Accuracy.</b> Throwing competitions, lacrosse and basketball application,
+      one-hand catches."
+    cheetah: "<b>Sampling.</b> Baseball catch, frisbee, water tosses."
+- slug: tennis
+  position: 6
+  name: Tennis
+  summary: Form · Footwork · Ball · Match play
+  cells:
+    cub: <span class="strand"><i>Form</i> Unit turn, contact in front, finish over
+      the shoulder. Shadow swings, side feeds, drop feeds.</span><span class="strand"><i>Footwork</i>
+      Ready position, split step on Dad's clap, shuffle recovery.</span><span class="strand"><i>Ball</i>
+      Current ball. Wall rally.</span><span class="strand"><i>Match</i> Cooperative
+      rally counting.</span>
+    fox: <span class="strand"><i>Form</i> Both wings equal volume. Med ball FH/BH
+      rotation. One- vs two-hand backhand settled.</span><span class="strand"><i>Footwork</i>
+      Adjust steps and recovery shuffle without a ball; hallway patterns.</span><span
+      class="strand"><i>Ball</i> Wall rally with the next ball up.</span><span class="strand"><i>Match</i>
+      Mini-tennis points.</span>
+    coyote: '<span class="strand"><i>Form</i> Open-stance forehand. Consistent low-to-high
+      path.</span><span class="strand"><i>Footwork</i> Crossover recovery, first step
+      to the ball.</span><span class="strand"><i>Ball</i> Cooperative rally on the
+      next ball, depth targets, 20-ball rallies.</span><span class="strand"><i>Match</i>
+      Directional control: cross-court, down the line.</span>'
+    wolf: '<span class="strand"><i>Form</i> Serve from the overhead throw. Volley:
+      charge, split, catch.</span><span class="strand"><i>Footwork</i> Approach footwork,
+      split step before the volley.</span><span class="strand"><i>Ball</i> Gate check.</span><span
+      class="strand"><i>Match</i> Serve + 1. Attack the short ball.</span>'
+    puma: '<span class="strand"><i>Form</i> Form under pace: Dad feeds harder.</span><span
+      class="strand"><i>Footwork</i> Recovery at match tempo.</span><span class="strand"><i>Ball</i>
+      Gate check; controlled yellow exposure if cleared.</span><span class="strand"><i>Match</i>
+      Point construction, scoring, tiebreaks, tournament vs Dad. Cross-court default,
+      attack short, serve + 1.</span>'
+    cheetah: <span class="strand"><i>Form</i> Maintain.</span><span class="strand"><i>Ball</i>
+      Whatever the gates allow.</span><span class="strand"><i>Match</i> Fun matches,
+      local kids, retest rally counts.</span>
+- slug: basketball
+  position: 7
+  name: Basketball
+  summary: Handle · Footwork · Pass · Shoot
+  cells:
+    cub: '<span class="strand"><i>Handle</i> Stationary: pound, crossover, figure
+      8, both hands equal, eyes up. 200 dribbles a session.</span><span class="strand"><i>Footwork</i>
+      Jump stop and pivot on both feet. Triple-threat stance.</span><span class="strand"><i>Pass</i>
+      Chest and bounce pass to a wall target at 3m, both sides.</span><span class="strand"><i>Shoot</i>
+      Form shooting from 1m: elbow under, follow through, hold the finish.</span>'
+    fox: '<span class="strand"><i>Handle</i> Moving: walk then jog with the ball,
+      weak hand emphasis, retreat dribble. Hallway friendly.</span><span class="strand"><i>Footwork</i>
+      Defensive slides, close-outs, drop step. Indoor footwork patterns.</span><span
+      class="strand"><i>Pass</i> Passing on the move, give-and-go with Dad stationary.</span><span
+      class="strand"><i>Shoot</i> Form from 2m, BEEF cues, 50 makes a session.</span>'
+    coyote: '<span class="strand"><i>Handle</i> Combo moves: cross, between the legs,
+      behind the back. Two-ball dribbling.</span><span class="strand"><i>Footwork</i>
+      Change of direction with the ball, inside-outside, hesitation.</span><span class="strand"><i>Pass</i>
+      One-hand push pass off the dribble, both hands. Pass-and-cut.</span><span class="strand"><i>Shoot</i>
+      Layup footwork: two steps, both sides. Free-throw routine begins.</span>'
+    wolf: '<span class="strand"><i>Handle</i> Speed dribble, change of pace, pull-up
+      into a jump stop.</span><span class="strand"><i>Footwork</i> Rip-through and
+      first step. Rebound and outlet footwork.</span><span class="strand"><i>Pass</i>
+      Passing under pressure: Dad shadows with a noodle or pad.</span><span class="strand"><i>Shoot</i>
+      Shooting off the dribble from 3m. Layups at speed.</span>'
+    puma: '<span class="strand"><i>Handle</i> Live 1v1 vs Dad (limited defense). Reads:
+      drive or pass.</span><span class="strand"><i>Footwork</i> Cutting, sealing,
+      boxing out. Small-sided footwork.</span><span class="strand"><i>Pass</i> 2v1
+      decisions with a friend or sibling when available.</span><span class="strand"><i>Shoot</i>
+      Game shots: catch-and-shoot, layups both hands. HORSE tournaments.</span>'
+    cheetah: <span class="strand"><i>Handle</i> Pickup and driveway games. Trick dribbling
+      for fun.</span><span class="strand"><i>Pass</i> Wall passing games, alley-oop
+      tosses.</span><span class="strand"><i>Shoot</i> Shooting games, halfcourt with
+      friends.</span>
+- slug: soccer
+  position: 8
+  name: Soccer
+  summary: Touch · Pass · Keeper
+  cells:
+    cub: '<span class="strand"><i>Touch</i> First touch off the wall, both feet. Toe
+      taps, tick-tocks, sole rolls: 300 touches a session.</span><span class="strand"><i>Pass</i>
+      Inside-foot passing at 3m, both feet, to a target.</span><span class="strand"><i>Keeper</i>
+      Ready position, W-catch and scoop from Dad''s hand feeds, no diving yet.</span>'
+    fox: '<span class="strand"><i>Touch</i> Dribbling patterns: inside, outside, sole.
+      Weak-foot volume. Cone gates, hallway friendly.</span><span class="strand"><i>Pass</i>
+      Laces passing, receiving across the body.</span><span class="strand"><i>Keeper</i>
+      Shuffle footwork, set position, chest catch, collapse dive from kneeling on
+      a mat.</span>'
+    coyote: '<span class="strand"><i>Touch</i> Turns: inside hook, outside hook, Cruyff.
+      Receiving under light pressure.</span><span class="strand"><i>Pass</i> Passing
+      over 5 to 10m, weight of pass, one-touch back to Dad.</span><span class="strand"><i>Keeper</i>
+      Collapse dive from sitting and squatting, both sides. Distribution: roll and
+      overarm throw.</span>'
+    wolf: '<span class="strand"><i>Touch</i> Dribbling at speed, 1v1 moves: scissors,
+      step-over, body feint.</span><span class="strand"><i>Pass</i> Driven passes,
+      first-time passes on the move.</span><span class="strand"><i>Keeper</i> Dives
+      from standing on grass, angles and positioning, moving to the ball, high catches.</span>'
+    puma: <span class="strand"><i>Touch</i> Small-sided decisions, 1v1 vs Dad, shooting
+      after a move.</span><span class="strand"><i>Pass</i> Combination play with a
+      friend, wall passes.</span><span class="strand"><i>Keeper</i> 1v1 with a shooter,
+      low and high shots, saving then distributing.</span>
+    cheetah: <span class="strand"><i>Touch</i> Juggling streaks, backyard goals, beach
+      soccer.</span><span class="strand"><i>Keeper</i> Fun save sessions, throw-and-catch
+      games.</span>
+- slug: mindset
+  position: 9
+  name: Compete & Mindset
+  summary: Games vs Dad, routines, losing well, pressure
+  cells:
+    cub: '<b>Effort language.</b> "The number is information." Between-point reset
+      introduced in tennis: breathe, bounce, look at the strings. Games with Dad stationary.
+      Champion''s Log: one line a day.'
+    fox: "<b>Losing well.</b> Handicap games designed so he loses about a third of
+      the time. Post-game question: what would you do differently? Indoor games in
+      the new house."
+    coyote: "<b>Routines.</b> Pre-session routine he runs himself. One cue word per
+      skill. First chase games with Dad."
+    wolf: <b>Pressure games.</b> "Make 3 in a row to finish." Timed challenges. Handicap
+      vs Dad narrows.
+    puma: "<b>Match mind.</b> Scoring, tiebreak nerves, resetting after an error,
+      opponent scouting in one sentence. Tournaments vs Dad and friends."
+    cheetah: <b>Reflection.</b> Watch the year's test chart together. "Best thing
+      this year." Free play, bike, pool.
+patches:
+- block: cub
+  area: speed
+  name: Speed
+  requirement: Quiet 3-step stop from a jog, 5 in a row. Split step on 10 of 10 signals.
+- block: cub
+  area: power
+  name: Power & Landing
+  requirement: 10 silent stick landings in a row from a 30cm box. A broad jump you
+    also stick.
+- block: cub
+  area: coordination
+  name: Coordination
+  requirement: Cartwheel over a line, hands and feet on the line (form first, straight
+    legs later). 30s single-leg balance each leg.
+- block: cub
+  area: strength
+  name: Strength
+  requirement: 20s dead hang. 5 traveling-rings passes with a spot, or 20m bear walk
+    without knees touching.
+- block: cub
+  area: throw
+  name: Throw & Catch
+  requirement: Step-and-throw with the opposite foot, 10 of 10, both arms.
+- block: cub
+  area: tennis
+  name: Tennis
+  requirement: 15-ball cooperative rally. Forehand and backhand from a drop feed with
+    unit turn and finish over the shoulder, 8 of 10.
+- block: cub
+  area: basketball
+  name: Basketball
+  requirement: 20 stationary crossovers eyes up without losing the ball. Jump stop
+    and pivot on either foot, 5 of 5. 10 chest passes hit the 3m target.
+- block: cub
+  area: soccer
+  name: Soccer
+  requirement: 10 inside-foot wall passes in a row with each foot. First touch controlled
+    on 8 of 10. Keeper W-catch 10 of 10 hand feeds.
+- block: cub
+  area: mindset
+  name: Compete & Mindset
+  requirement: Runs the between-point reset without a reminder in one full tennis
+    session. Champion's Log filled 5 days in a week.
+ball_gates:
+- position: 1
+  from_ball: orange
+  to_ball: green
+  label: Orange → Green
+  requirement: Cleared. Teddy is on green.
+  status: cleared
+- position: 2
+  from_ball: green
+  to_ball: yellow
+  label: Green → Yellow (controlled)
+  requirement: 'Hand feeds, short court and wall only. Requires: 20-ball green rally
+    on the full court; handles the green high bounce with spacing on 8 of 10; serve
+    in 6 of 10; hits a cross-court pattern on request. Checked every Trials week.'
+  status: active
+- position: 3
+  from_ball: yellow
+  to_ball: yellow
+  label: Yellow full-court match play
+  requirement: Held until controlled exposure has been clean for a full block and
+    his coach agrees. Even then, green stays the default rally ball for form work.
+    Reassess Sep 2027.
+  status: held
+battery_tests:
+- position: 1
+  name: 20m sprint
+  protocol: Standing start, 2–3 trials, full rest, phone timer. Best.
+  area_name: Speed
+  unit: s
+- position: 2
+  name: Standing broad jump
+  protocol: 3 trials. Must stick the landing to count. Measure to the back heel.
+  area_name: Power & Landing
+  unit: cm
+- position: 3
+  name: Single-leg hop, each leg
+  protocol: 2 trials each leg. Stick on the same leg. A gap over 15% is a flag.
+  area_name: Power & Landing
+  unit: cm R / cm L
+- position: 4
+  name: Overhand throw, each arm
+  protocol: Tennis ball, 3 throws each arm. Best each.
+  area_name: Throw & Catch
+  unit: m R / m L
+- position: 5
+  name: Dead hang
+  protocol: Best of 2, 2 min rest between.
+  area_name: Strength
+  unit: s
+- position: 6
+  name: Line-touch agility
+  protocol: 5m out, touch, back, touch, out. 2 trials. Best.
+  area_name: Speed / Coordination
+  unit: s
+- position: 7
+  name: Jump rope singles
+  protocol: Consecutive without a miss. Best of 3.
+  area_name: Coordination
+  unit: reps
+- position: 8
+  name: Tennis rally count
+  protocol: Cooperative rally with Dad, current ball. Best of 3.
+  area_name: Tennis
+  unit: balls
+- position: 9
+  name: Basketball cone weave
+  protocol: 5 cones 2m apart. Dribble down with the right hand, back with the left,
+    ball never above the waist. 2 trials. Best.
+  area_name: Basketball
+  unit: s
+- position: 10
+  name: Soccer wall passes
+  protocol: 3m from the wall, 30 seconds, alternating feet, inside of the foot. Count
+    controlled returns.
+  area_name: Soccer
+  unit: in 30 s
+battery_measures:
+- test_id: t1
+  position: 1
+  label: 20m sprint
+  unit: s
+  direction: lower
+  battery_test_position: 1
+- test_id: t2
+  position: 2
+  label: Standing broad jump
+  unit: cm
+  direction: higher
+  battery_test_position: 2
+- test_id: t3r
+  position: 3
+  label: Single-leg hop, right
+  unit: cm
+  direction: higher
+  battery_test_position: 3
+- test_id: t3l
+  position: 4
+  label: Single-leg hop, left
+  unit: cm
+  direction: higher
+  battery_test_position: 3
+- test_id: t4r
+  position: 5
+  label: Overhand throw, right
+  unit: m
+  direction: higher
+  battery_test_position: 4
+- test_id: t4l
+  position: 6
+  label: Overhand throw, left
+  unit: m
+  direction: higher
+  battery_test_position: 4
+- test_id: t5
+  position: 7
+  label: Dead hang
+  unit: s
+  direction: higher
+  battery_test_position: 5
+- test_id: t6
+  position: 8
+  label: Line-touch agility
+  unit: s
+  direction: lower
+  battery_test_position: 6
+- test_id: t7
+  position: 9
+  label: Jump rope singles
+  unit: reps
+  direction: higher
+  battery_test_position: 7
+- test_id: t8
+  position: 10
+  label: Tennis rally count
+  unit: balls
+  direction: higher
+  battery_test_position: 8
+- test_id: t9
+  position: 11
+  label: Basketball cone weave
+  unit: s
+  direction: lower
+  battery_test_position: 9
+- test_id: t10
+  position: 12
+  label: Soccer wall passes
+  unit: in 30 s
+  direction: higher
+  battery_test_position: 10
+- test_id: t11r
+  position: 13
+  label: Single-leg balance, right
+  unit: s
+  direction: higher
+  battery_test_position:
+- test_id: t11l
+  position: 14
+  label: Single-leg balance, left
+  unit: s
+  direction: higher
+  battery_test_position:
+- test_id: h
+  position: 15
+  label: Height
+  unit: cm
+  direction: growth
+  battery_test_position:
+test_dates:
+- window: 2026-09
+  label: Baseline
+  display: Sep 15–17
+  position: 1
+- window: 2026-12
+  label: Retest 1
+  display: Dec 7–11
+  position: 2
+- window: 2027-03
+  label: Retest 2
+  display: Mar 1–5
+  position: 3
+- window: 2027-06
+  label: Retest 3
+  display: Jun 14–18
+  position: 4
+- window: 2027-08
+  label: Final
+  display: Aug 9–13
+  position: 5
+day_roles:
+- dow: mon
+  position: 0
+  name: Floor Day
+  organized:
+  - Gymnastics
+  minutes: 60–90
+  intensity: 1
+  note: Tumbling homework, landing, basketball handling. Low impact after gym.
+- dow: tue
+  position: 1
+  name: Rings Day
+  organized:
+  - Swim
+  minutes: 75–90
+  intensity: 2
+  note: Rings, hangs, strength, soccer touch and passing at the wall.
+- dow: wed
+  position: 2
+  name: Fast Day
+  organized: []
+  minutes: 100–120
+  intensity: 3
+  note: The one high-impact home day. Speed, power, soccer at speed, games.
+- dow: thu
+  position: 3
+  name: Wall Day
+  organized: []
+  minutes: 100–120
+  intensity: 2
+  note: Tennis wall and court, throwing, basketball skill block.
+- dow: fri
+  position: 4
+  name: Skate Day
+  organized: []
+  minutes: 90–120
+  intensity: 1
+  note: Skate park, balance, keeper work on grass, weekly challenge. Low impact before
+    Saturday.
+- dow: sat
+  position: 5
+  name: Game Day
+  organized:
+  - Soccer
+  - Lacrosse
+  - Tennis 2h
+  minutes: 'off'
+  intensity: 4
+  note: Home program off. 5-min evening shake-out.
+- dow: sun
+  position: 6
+  name: Court Day
+  organized:
+  - Tennis 2h
+  minutes: 30–45
+  intensity: 1
+  note: Quick card, 15 min of ball skills, patch check, week review.
