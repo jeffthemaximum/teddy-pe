@@ -7,6 +7,8 @@ Rails.application.routes.draw do
       post  "auth/login", to: "auth#login"
       get   "me",         to: "me#show"
       patch "me",         to: "me#update"
+      get   "drills",       to: "drills#index"
+      get   "drills/:slug", to: "drills#show"
     end
   end
 

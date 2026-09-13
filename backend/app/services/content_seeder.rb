@@ -26,6 +26,7 @@ class ContentSeeder
       seed_ball_gates(program.fetch("ball_gates"))
       seed_test_dates(program.fetch("test_dates"))
       seed_day_roles(program.fetch("day_roles"))
+      seed_drills(load_yaml("drills.yml").fetch("drills"))
       tests = seed_battery_tests(program.fetch("battery_tests"))
       seed_battery_measures(program.fetch("battery_measures"), tests)
     end
@@ -111,6 +112,14 @@ class ContentSeeder
     rows.each do |row|
       upsert(year.day_roles, { dow: row.fetch("dow") },
              row.slice("position", "name", "organized", "minutes", "intensity", "note"))
+    end
+  end
+
+  # Drills are global, so they are keyed on slug alone and never on the year.
+  def seed_drills(rows)
+    rows.each do |row|
+      upsert(Drill, { slug: row.fetch("slug") },
+             row.slice("name", "area_name", "aliases", "short", "how", "watch", "cue", "video"))
     end
   end
 

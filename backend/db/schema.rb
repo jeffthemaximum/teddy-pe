@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_13_193707) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_13_194700) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -76,7 +76,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_193707) do
     t.index ["battery_test_id"], name: "index_battery_measures_on_battery_test_id"
     t.index ["program_year_id", "test_id"], name: "index_battery_measures_on_program_year_id_and_test_id", unique: true
     t.index ["program_year_id"], name: "index_battery_measures_on_program_year_id"
-    t.check_constraint "direction::text = ANY (ARRAY['lower'::character varying, 'higher'::character varying, 'growth'::character varying]::text[])", name: "battery_measures_direction_check"
+    t.check_constraint "direction::text = ANY (ARRAY['lower'::character varying::text, 'higher'::character varying::text, 'growth'::character varying::text])", name: "battery_measures_direction_check"
   end
 
   create_table "battery_tests", force: :cascade do |t|
@@ -120,6 +120,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_193707) do
     t.datetime "updated_at", null: false
     t.index ["program_year_id", "dow"], name: "index_day_roles_on_program_year_id_and_dow", unique: true
     t.index ["program_year_id"], name: "index_day_roles_on_program_year_id"
+  end
+
+  create_table "drills", force: :cascade do |t|
+    t.string "slug", null: false
+    t.string "name", null: false
+    t.string "area_name", null: false
+    t.string "aliases", default: [], null: false, array: true
+    t.text "short", null: false
+    t.text "how", default: [], null: false, array: true
+    t.text "watch"
+    t.text "cue"
+    t.string "video"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_drills_on_slug", unique: true
   end
 
   create_table "patches", force: :cascade do |t|
@@ -172,7 +187,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_193707) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
-    t.check_constraint "role::text = ANY (ARRAY['coach'::character varying, 'athlete'::character varying, 'viewer'::character varying]::text[])", name: "users_role_check"
+    t.check_constraint "role::text = ANY (ARRAY['coach'::character varying::text, 'athlete'::character varying::text, 'viewer'::character varying::text])", name: "users_role_check"
   end
 
   add_foreign_key "area_cells", "areas"
