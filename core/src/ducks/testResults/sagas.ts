@@ -121,7 +121,7 @@ function* reconcileReplay(action: {
   payload: { dedupeKey: string; response: unknown };
 }) {
   const { dedupeKey, response } = action.payload;
-  if (!dedupeKey.startsWith("result:")) return;
+  if (!dedupeKey.startsWith(actions.RESULT_PREFIX)) return;
   if (isDeletedResponse(response)) {
     yield put(actions.resultDeleted({ window: response.window, testId: response.test_id }));
     return;
@@ -130,11 +130,48 @@ function* reconcileReplay(action: {
   yield put(actions.resultSaved(test_result));
 }
 
+// The other end of a replay, and the one that matters most in this duck of
+// all of them: these are numbers measured once, at a court, with a
+// stopwatch, on one afternoon that will not happen again. `outbox/
+// REPLAY_FAILED` with `permanent: true` means the server answered and
+// answered with a rejection that will be identical every time, so the write
+// is off the queue for good. Until this worker existed, nothing reduced that
+// action for this duck at all: the pending count fell to zero,
+// `testResults.error` stayed null, and Jeff read that as "sent" when the
+// number he typed had just been thrown away.
+//
+// Only a permanent failure is reported. A 401 is followed by a sign-out,
+// which has its own message; offline and a timeout leave the write exactly
+// where it is, still owed, and reporting a failure for a write that is
+// simply waiting for signal is the same mistake `saveQueued` exists to
+// avoid.
+//
+// It reports through `saveFailed`, the same action a live rejection uses, so
+// there is one way a rejected result reaches state, and the reducer's
+// existing SAVE_FAILED case already clears the measure's saving flag: no
+// second action is needed to stop a box spinning forever, the same relief
+// the journal duck gets from reusing its own saveFailed.
+const REPLAY_REJECTED = "That number did not save.";
+
+function* reconcileReplayFailure(action: {
+  type: string;
+  payload: { dedupeKey: string; permanent: boolean; message: string };
+}) {
+  const { dedupeKey, permanent, message } = action.payload;
+  if (!permanent) return;
+  const parsed = actions.parseResultDedupeKey(dedupeKey);
+  // Not this duck's write. A journal entry's queued save replays through
+  // the same action and is reported by its own duck.
+  if (!parsed) return;
+  yield put(actions.saveFailed({ ...parsed, message: `${REPLAY_REJECTED} ${message}` }));
+}
+
 export function* testResultsSaga() {
   yield all([
     takeEvery(t.FETCH_RESULTS, fetchResults),
     takeEvery(t.SAVE_RESULT, saveResult),
     takeEvery(outboxActionTypes.REPLAY_SUCCEEDED, reconcileReplay),
+    takeEvery(outboxActionTypes.REPLAY_FAILED, reconcileReplayFailure),
   ]);
 }
 
@@ -145,4 +182,5 @@ export const testResultsWorkers = {
   fetchResults,
   saveResult,
   reconcileReplay,
+  reconcileReplayFailure,
 };

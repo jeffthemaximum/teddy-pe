@@ -203,4 +203,89 @@ describe("the test results saga", () => {
 
     expect(h.dispatched).toHaveLength(0);
   });
+
+  // --- A replay the server rejected for good ---
+
+  it("says so when a replayed number is rejected for good, instead of letting the pending count read as sent", async () => {
+    // The loss this guards against: Jeff types a sprint time on a court with
+    // no signal, the queue replays, the server rejects it permanently, the
+    // write is dropped, and the pending count falls to zero. Nothing else in
+    // the app distinguishes that from a successful send, and a number
+    // measured once on one afternoon is gone.
+    const h = harness();
+
+    await h.run(testResultsWorkers.reconcileReplayFailure, {
+      type: "outbox/REPLAY_FAILED",
+      payload: {
+        id: "1",
+        dedupeKey: "result:2026-09:t1",
+        permanent: true,
+        message: "That is not a number.",
+      },
+    });
+
+    expect(h.dispatched).toEqual([
+      actions.saveFailed({
+        window: "2026-09",
+        testId: "t1",
+        message: "That number did not save. That is not a number.",
+      }),
+    ]);
+  });
+
+  it("says nothing when the write is still owed", async () => {
+    // Offline, a timeout, or a dead token: the write stays on the queue and
+    // goes out later. Reporting a failure for a write that is only waiting
+    // for signal is the same mistake `saveQueued` exists to avoid.
+    const h = harness();
+
+    await h.run(testResultsWorkers.reconcileReplayFailure, {
+      type: "outbox/REPLAY_FAILED",
+      payload: {
+        id: "1",
+        dedupeKey: "result:2026-09:t1",
+        permanent: false,
+        message: "No connection. Check the network and try again.",
+      },
+    });
+
+    expect(h.dispatched).toHaveLength(0);
+  });
+
+  it("reacts to its own rejected write and ignores another duck's rejection in the same batch", async () => {
+    // A fixture carrying only a `result:` rejection cannot prove the prefix
+    // check does anything: a worker that reported every duck's rejections
+    // would pass it just as easily. This one queues a journal write's
+    // rejection first and a test result's second, through the same harness,
+    // and checks that exactly one saveFailed comes out, for the one that is
+    // actually this duck's.
+    const h = harness();
+
+    await h.run(testResultsWorkers.reconcileReplayFailure, {
+      type: "outbox/REPLAY_FAILED",
+      payload: {
+        id: "1",
+        dedupeKey: "athlete:2026-09-17",
+        permanent: true,
+        message: "A note cannot be blank.",
+      },
+    });
+    await h.run(testResultsWorkers.reconcileReplayFailure, {
+      type: "outbox/REPLAY_FAILED",
+      payload: {
+        id: "2",
+        dedupeKey: "result:2026-09:t1",
+        permanent: true,
+        message: "That is not a number.",
+      },
+    });
+
+    expect(h.dispatched).toEqual([
+      actions.saveFailed({
+        window: "2026-09",
+        testId: "t1",
+        message: "That number did not save. That is not a number.",
+      }),
+    ]);
+  });
 });

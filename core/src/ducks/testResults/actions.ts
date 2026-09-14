@@ -62,11 +62,36 @@ export const fetchResultsFailed = (message: string) =>
 // `programYearId`: only one year is ever open on a phone at a time, and a
 // key it also has to carry would be one more way this and the queued copy
 // could drift apart.
+//
+// One place this key format is computed, the same discipline the journal
+// duck's ATHLETE_PREFIX/COACH_PREFIX split enforces (see journal/actions.ts):
+// the builder here and the parser below it, which the saga uses to read a
+// replay failure back apart, must never drift apart. A key format with two
+// independent owners is exactly how this project has been bitten before.
+export const RESULT_PREFIX = "result:";
+
+function resultDedupeKey(window: string, testId: string): string {
+  return `${RESULT_PREFIX}${window}:${testId}`;
+}
+
+// The inverse: pulls window and testId back out of a dedupeKey, or null for
+// anything that is not this duck's key, which is how the outbox's replay
+// reports get filtered down to writes this duck queued. Window is always
+// `YYYY-MM` and never carries a colon itself, so splitting on the first
+// colon after the prefix is exact.
+export function parseResultDedupeKey(dedupeKey: string): { window: string; testId: string } | null {
+  if (!dedupeKey.startsWith(RESULT_PREFIX)) return null;
+  const rest = dedupeKey.slice(RESULT_PREFIX.length);
+  const sep = rest.indexOf(":");
+  if (sep === -1) return null;
+  return { window: rest.slice(0, sep), testId: rest.slice(sep + 1) };
+}
+
 export const saveResult = (payload: SaveResultPayload) =>
   ({
     type: t.SAVE_RESULT,
     payload,
-    dedupeKey: `result:${payload.window}:${payload.testId}`,
+    dedupeKey: resultDedupeKey(payload.window, payload.testId),
     request: resultRequest(payload),
   }) as const;
 
