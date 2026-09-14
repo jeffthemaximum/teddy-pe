@@ -3,10 +3,11 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
-import { createCoreStore, memoryStorage, authActions } from "@teddy-pe/core";
+import { createCoreStore, memoryStorage, authActions, authSelectors } from "@teddy-pe/core";
 import { SignIn } from "../src/screens/SignIn";
 import { App } from "../src/App";
-import { stubMe } from "../vitest.setup";
+import { createAppStore } from "../src/bootstrap";
+import { stubMe, stubMeUnauthorized, ME_ATHLETE, ME_PROGRAM_YEAR_ID } from "../vitest.setup";
 
 function renderSignedOut() {
   const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
@@ -131,20 +132,18 @@ describe("restoring a stored session", () => {
     // The session is in storage and the app knows it. Showing a login form for
     // a moment and then replacing it is how an app looks broken on every launch.
     //
-    // restoreSession() is dispatched here, before render, the same order
-    // main.tsx uses: App itself no longer dispatches it from a useEffect (a
-    // useEffect fires after first paint, which is the flash this guards
-    // against; see src/main.tsx). Testing Library's render() also wraps
-    // this whole mount in act(), which flushes any effect synchronously
-    // regardless, so this test alone could pass even if App still dispatched
-    // from an effect and the real app still flashed on every launch. That
+    // createAppStore (src/bootstrap.ts) is the one function that builds the
+    // store and dispatches restoreSession() on it, before render, the same
+    // sequence main.tsx runs. Testing Library's render() also wraps this
+    // whole mount in act(), which flushes any effect synchronously
+    // regardless, so this test alone could pass even if the dispatch lived
+    // in an App effect and the real app still flashed on every launch. That
     // gap is real; the test below closes it.
     const storage = memoryStorage();
     const user = { id: 1, email: "a@b.c", name: "Jeff", role: "coach" };
     await storage.setItem("teddy-pe.session", JSON.stringify({ jwt: "a.b.c", user }));
     stubMe(user);
-    const store = createCoreStore({ baseUrl: "https://api.test", storage });
-    store.dispatch(authActions.restoreSession());
+    const store = createAppStore({ baseUrl: "https://api.test", storage });
     render(<Provider store={store}><App /></Provider>);
 
     expect(screen.queryByRole("button", { name: /sign in/i })).not.toBeInTheDocument();
@@ -162,10 +161,10 @@ describe("restoring a stored session", () => {
     const user = { id: 1, email: "a@b.c", name: "Jeff", role: "coach" };
     await storage.setItem("teddy-pe.session", JSON.stringify({ jwt: "a.b.c", user }));
     stubMe(user);
-    const store = createCoreStore({ baseUrl: "https://api.test", storage });
 
-    // The order main.tsx uses: dispatch before the tree renders at all.
-    store.dispatch(authActions.restoreSession());
+    // createAppStore (src/bootstrap.ts): the same function main.tsx calls,
+    // dispatching before the tree renders at all.
+    const store = createAppStore({ baseUrl: "https://api.test", storage });
 
     const container = document.createElement("div");
     document.body.appendChild(container);
@@ -210,5 +209,61 @@ describe("restoring a stored session", () => {
 
     root.unmount();
     container.remove();
+  });
+
+  it("lands on the sign in screen for a dead token, and never commits a shell", async () => {
+    // A token dies whenever a password changes: the JWT carries a digest of
+    // the password it was issued under, and a change invalidates every
+    // token minted before it. Before core fetched /me on restore, a dead
+    // token like this still rendered a signed-in shell, because restore
+    // trusted whatever was in storage; the shell only found out the token
+    // was dead the first time some real screen's own fetch came back 401,
+    // one commit later. This is that case end to end, through the same
+    // bootstrap main.tsx runs, with /me itself answering the 401 that
+    // proves the token dead.
+    const storage = memoryStorage();
+    const user = { id: 1, email: "a@b.c", name: "Jeff", role: "coach" };
+    await storage.setItem("teddy-pe.session", JSON.stringify({ jwt: "a.b.c", user }));
+    stubMeUnauthorized();
+
+    const store = createAppStore({ baseUrl: "https://api.test", storage });
+    render(<Provider store={store}><App /></Provider>);
+
+    // The same message a token that dies mid-session already uses (see
+    // core's SESSION_EXPIRED reducer case): a dead token on restore is not
+    // a different failure from the app's point of view, and should not
+    // read as a different one to Jeff either.
+    expect(
+      await screen.findByText("You were signed out. Sign in again."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /sign in/i })).toBeInTheDocument();
+
+    // The whole point: no signed-in shell, not even for a moment. Nothing
+    // in restoreSessionSaga's 401 branch ever dispatches RESTORE_FINISHED,
+    // so there is no commit where status reads "signedIn" to race here;
+    // this is a fact about the state machine, not a timing check.
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+  });
+
+  it("carries the athlete and current program year off /me into state, once restore resolves", async () => {
+    // core's whole reason for calling /me on restore, beyond checking the
+    // token: the Year screen reads currentProgramYearId off this state
+    // instead of fetching the whole program-years list to find the one
+    // marked current. Nothing else in this file, or in shell.test.tsx,
+    // asserts that athlete or current_program_year_id actually reach state;
+    // both would go missing or land malformed and every other test here
+    // would keep passing, since none of them render anything that depends
+    // on either value yet.
+    const storage = memoryStorage();
+    const user = { id: 1, email: "a@b.c", name: "Jeff", role: "coach" };
+    await storage.setItem("teddy-pe.session", JSON.stringify({ jwt: "a.b.c", user }));
+    stubMe(user);
+
+    const store = createAppStore({ baseUrl: "https://api.test", storage });
+    render(<Provider store={store}><App /></Provider>);
+    await screen.findByRole("button", { name: /sign out/i });
+
+    expect(authSelectors.selectAthlete(store.getState())).toEqual(ME_ATHLETE);
+    expect(authSelectors.selectCurrentProgramYearId(store.getState())).toBe(ME_PROGRAM_YEAR_ID);
   });
 });

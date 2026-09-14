@@ -6,15 +6,15 @@ import { SignIn } from "./screens/SignIn";
 import { AppRoutes, navItemsFor } from "./routes";
 
 // The session lives in storage, and by the time this ever renders, restoring
-// it is already in flight: main.tsx dispatches restoreSession() on the store
-// before createRoot(...).render() is even called, not from a useEffect here.
-// A useEffect fires after first paint, so a dispatch from one would still let
-// a perfectly good stored session commit the sign-in form for one frame
-// before replacing it, which is exactly the flash this app is not supposed
-// to show. Dispatching before the first render means the reducer is already
-// past "anonymous" by the time this component's first render happens, so
-// there is nothing to flash. This component only reads the status main.tsx
-// already set in motion.
+// it is already in flight: createAppStore (src/bootstrap.ts) dispatches
+// restoreSession() on the store before createRoot(...).render() is even
+// called, not from a useEffect here. A useEffect fires after first paint, so
+// a dispatch from one would still let a perfectly good stored session
+// commit the sign-in form for one frame before replacing it, which is
+// exactly the flash this app is not supposed to show. Dispatching before the
+// first render means the reducer is already past "anonymous" by the time
+// this component's first render happens, so there is nothing to flash. This
+// component only reads the status createAppStore already set in motion.
 export function App() {
   const status = useAppSelector(authSelectors.selectAuthStatus);
 

@@ -1,9 +1,10 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
-import { createCoreStore, memoryStorage, authActions } from "@teddy-pe/core";
+import { memoryStorage, authActions } from "@teddy-pe/core";
 import type { Role } from "@teddy-pe/core";
 import { App } from "../src/App";
+import { createAppStore } from "../src/bootstrap";
 import { stubMe } from "../vitest.setup";
 
 const USERS: Record<Role, { id: number; email: string; name: string; role: Role }> = {
@@ -16,13 +17,13 @@ const USERS: Record<Role, { id: number; email: string; name: string; role: Role 
 // app restores it. Dispatching a fake signed-in action would not work anyway,
 // because core deliberately keeps signInSucceeded off its public surface.
 //
-// restoreSession() is dispatched here, on the store, before render, the same
-// order main.tsx uses and for the same reason: App itself no longer dispatches
-// it from a useEffect, because a useEffect fires after first paint and that is
-// the flash the app is not supposed to show (see src/main.tsx and the no-flash
-// test in sign-in.test.tsx). A test that renders App has to set the store up
-// the same way main.tsx does, or it is testing a bootstrap sequence the real
-// app never runs.
+// createAppStore (src/bootstrap.ts) is the one function that builds the
+// store and dispatches restoreSession() on it, and main.tsx calls the same
+// one. A test that hand-rolled its own createCoreStore-plus-dispatch here
+// instead would be testing a bootstrap sequence only the test runs, and
+// could not catch a regression that moved the dispatch out of that function
+// and into App itself (see the no-flash tests in sign-in.test.tsx, which
+// found exactly that gap).
 async function renderAs(role: Role) {
   const storage = memoryStorage();
   await storage.setItem(
@@ -30,8 +31,7 @@ async function renderAs(role: Role) {
     JSON.stringify({ jwt: "a.b.c", user: USERS[role] }),
   );
   stubMe(USERS[role]);
-  const store = createCoreStore({ baseUrl: "https://api.test", storage });
-  store.dispatch(authActions.restoreSession());
+  const store = createAppStore({ baseUrl: "https://api.test", storage });
   render(
     <Provider store={store}>
       <App />
@@ -81,8 +81,7 @@ describe("the shell", () => {
   });
 
   it("shows no nav at all before anyone signs in", async () => {
-    const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
-    store.dispatch(authActions.restoreSession());
+    const store = createAppStore({ baseUrl: "https://api.test", storage: memoryStorage() });
     render(<Provider store={store}><App /></Provider>);
     expect(await screen.findByRole("button", { name: /sign in/i })).toBeInTheDocument();
     expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
@@ -106,8 +105,7 @@ describe("the shell", () => {
       JSON.stringify({ jwt: "a.b.c", user: USERS.coach }),
     );
     stubMe(USERS.coach);
-    const store = createCoreStore({ baseUrl: "https://api.test", storage });
-    store.dispatch(authActions.restoreSession());
+    const store = createAppStore({ baseUrl: "https://api.test", storage });
     const dispatched: unknown[] = [];
     const realDispatch = store.dispatch;
     store.dispatch = ((a: never) => {
@@ -133,8 +131,7 @@ describe("the shell", () => {
       JSON.stringify({ jwt: "a.b.c", user: USERS.viewer }),
     );
     stubMe(USERS.viewer);
-    const store = createCoreStore({ baseUrl: "https://api.test", storage });
-    store.dispatch(authActions.restoreSession());
+    const store = createAppStore({ baseUrl: "https://api.test", storage });
 
     const { unmount } = render(
       <Provider store={store}>
@@ -195,8 +192,7 @@ describe("the shell", () => {
       JSON.stringify({ jwt: "a.b.c", user: guest }),
     );
     stubMe(guest);
-    const store = createCoreStore({ baseUrl: "https://api.test", storage });
-    store.dispatch(authActions.restoreSession());
+    const store = createAppStore({ baseUrl: "https://api.test", storage });
     render(<Provider store={store}><App /></Provider>);
     await screen.findByRole("navigation");
 
