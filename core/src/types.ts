@@ -197,7 +197,16 @@ export interface TestResult {
   test_id: string;
   window: string;
   raw_value: string;
-  numeric_value: number | null;
+  // TestResultsController#serialize sends `result.numeric_value&.to_s`: a
+  // string or null, never a number. A chart that treated this as a number
+  // without parsing it would do arithmetic on a string.
+  numeric_value: string | null;
+  // When the measurement was taken. Distinct from `updated_at`, which is
+  // when this row was last written and the one the offline queue needs: a
+  // replay from a phone that was offline for two days lands on the same
+  // row by design, and only `updated_at` tells either end it overwrote
+  // something newer.
+  recorded_at: string;
   updated_at: string;
 }
 

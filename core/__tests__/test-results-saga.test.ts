@@ -28,25 +28,33 @@ function harness() {
   };
 }
 
-const save = actions.saveResult({ window: "2026-09", testId: "t1", rawValue: "4.42" });
+const save = actions.saveResult({ programYearId: 1, window: "2026-09", testId: "t1", rawValue: "4.42" });
 
+// Every real column, numeric_value a string per the serializer
+// (`result.numeric_value&.to_s`), recorded_at included alongside updated_at.
 const savedResult = {
   id: 1,
   test_id: "t1",
   window: "2026-09",
   raw_value: "4.42",
-  numeric_value: 4.42,
+  numeric_value: "4.42",
+  recorded_at: "z",
   updated_at: "z",
 };
 
 describe("the test results saga", () => {
   afterEach(() => jest.restoreAllMocks());
 
-  it("posts the raw value the coach typed, not a parsed one", async () => {
+  it("posts the raw value the coach typed, not a parsed one, along with the year it belongs to", async () => {
     // The API stores raw_value and parses numeric_value itself. A range like
     // "15 to 18" is a real thing to type, and parsing on the client would
     // either lose it or disagree with the server about what it means.
-    const spy = jest.spyOn(client, "apiRequest").mockResolvedValue(savedResult);
+    //
+    // The controller does `result_params.fetch(:program_year_id)`, a fetch
+    // that raises on a missing key, and the field is `value`, not
+    // `raw_value` — TestResultsController#create permits exactly
+    // (:program_year_id, :window, :test_id, :value).
+    const spy = jest.spyOn(client, "apiRequest").mockResolvedValue({ test_result: savedResult });
     const h = harness();
 
     await h.run(testResultsWorkers.saveResult, save);
@@ -56,10 +64,28 @@ describe("the test results saga", () => {
       expect.objectContaining({
         method: "POST",
         path: "/api/v1/test_results",
-        body: { test_result: { window: "2026-09", test_id: "t1", raw_value: "4.42" } },
+        body: { test_result: { program_year_id: 1, window: "2026-09", test_id: "t1", value: "4.42" } },
       }),
     );
     expect(h.dispatched).toContainEqual(actions.resultSaved(savedResult));
+  });
+
+  it("removes the measure from state when the coach clears the box", async () => {
+    // Clearing a box deletes the row server-side, and the controller answers
+    // with a different shape: {deleted: true, test_id, window}, not a row.
+    // Proving the delete path means proving the measure is actually gone
+    // from state, not merely that the call resolved — see the reducer test
+    // for the "gone from state" half of this.
+    const clear = actions.saveResult({ programYearId: 1, window: "2026-09", testId: "t1", rawValue: "" });
+    jest.spyOn(client, "apiRequest").mockResolvedValue({ deleted: true, test_id: "t1", window: "2026-09" });
+    const h = harness();
+
+    await h.run(testResultsWorkers.saveResult, clear);
+
+    expect(h.dispatched).toContainEqual(actions.resultDeleted({ window: "2026-09", testId: "t1" }));
+    // And it did not also fabricate a save: a saga that folded the delete
+    // response in as if it were a row would dispatch both.
+    expect(h.dispatched.filter((a) => (a as { type: string }).type === "testResults/RESULT_SAVED")).toHaveLength(0);
   });
 
   it("queues the number instead of losing it when there is no connection", async () => {
@@ -111,13 +137,16 @@ describe("the test results saga", () => {
     );
   });
 
-  it("fetches the battery's results", async () => {
+  it("fetches the battery's results for the year that is open", async () => {
     const spy = jest.spyOn(client, "apiRequest").mockResolvedValue({ test_results: [savedResult] });
     const h = harness();
 
-    await h.run(testResultsWorkers.fetchResults, actions.fetchResults());
+    await h.run(testResultsWorkers.fetchResults, actions.fetchResults(1));
 
-    expect(spy).toHaveBeenCalledWith(config, expect.objectContaining({ path: "/api/v1/test_results" }));
+    expect(spy).toHaveBeenCalledWith(
+      config,
+      expect.objectContaining({ path: "/api/v1/test_results?program_year_id=1" }),
+    );
     expect(h.dispatched).toContainEqual(actions.resultsFetched([savedResult]));
   });
 
@@ -125,7 +154,7 @@ describe("the test results saga", () => {
     jest.spyOn(client, "apiRequest").mockRejectedValue(new ApiError(401, "unauthorized", "Invalid or missing token."));
     const h = harness();
 
-    await h.run(testResultsWorkers.fetchResults, actions.fetchResults());
+    await h.run(testResultsWorkers.fetchResults, actions.fetchResults(1));
 
     expect(h.dispatched).toContainEqual(sessionExpired());
   });
@@ -137,10 +166,28 @@ describe("the test results saga", () => {
 
     await h.run(testResultsWorkers.reconcileReplay, {
       type: "outbox/REPLAY_SUCCEEDED",
-      payload: { id: "1", dedupeKey: "result:2026-09:t1", response: savedResult },
+      payload: { id: "1", dedupeKey: "result:2026-09:t1", response: { test_result: savedResult } },
     });
 
     expect(h.dispatched).toContainEqual(actions.resultSaved(savedResult));
+  });
+
+  it("folds a replayed delete the same way a live one is handled", async () => {
+    // A clear made offline (typed a number, cleared it, then lost signal)
+    // replays through the same outbox path as any other write, and the
+    // response is still whichever of the two shapes the controller sends.
+    const h = harness();
+
+    await h.run(testResultsWorkers.reconcileReplay, {
+      type: "outbox/REPLAY_SUCCEEDED",
+      payload: {
+        id: "1",
+        dedupeKey: "result:2026-09:t1",
+        response: { deleted: true, test_id: "t1", window: "2026-09" },
+      },
+    });
+
+    expect(h.dispatched).toContainEqual(actions.resultDeleted({ window: "2026-09", testId: "t1" }));
   });
 
   it("ignores a replayed write that belongs to some other duck", async () => {

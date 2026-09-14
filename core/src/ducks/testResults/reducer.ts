@@ -36,6 +36,22 @@ function fold(
   return { ...byWindow, [result.window]: { ...forWindow, [result.test_id]: result } };
 }
 
+// The one delete this API has: clearing a box takes the row out of state
+// entirely rather than leaving a null or an empty raw_value sitting where
+// it used to be, which would still read as "there is a result here" to
+// anything counting measures recorded.
+function remove(
+  byWindow: TestResultsState["byWindow"],
+  window: string,
+  testId: string,
+): TestResultsState["byWindow"] {
+  const forWindow = byWindow[window];
+  if (!forWindow || !(testId in forWindow)) return byWindow;
+  const next = { ...forWindow };
+  delete next[testId];
+  return { ...byWindow, [window]: next };
+}
+
 export function reducer(
   state: TestResultsState = initialState,
   action: TestResultsAction | { type: string },
@@ -55,6 +71,17 @@ export function reducer(
         ...state,
         byWindow: fold(state.byWindow, result),
         saving: clearSaving(state.saving, savingKey(result.window, result.test_id)),
+      };
+    }
+
+    case t.RESULT_DELETED: {
+      const { window, testId } = (
+        action as Extract<TestResultsAction, { type: typeof t.RESULT_DELETED }>
+      ).payload;
+      return {
+        ...state,
+        byWindow: remove(state.byWindow, window, testId),
+        saving: clearSaving(state.saving, savingKey(window, testId)),
       };
     }
 

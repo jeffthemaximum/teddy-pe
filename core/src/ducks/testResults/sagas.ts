@@ -11,6 +11,21 @@ import type { QueueableAction } from "../outbox/types";
 import type { CoreConfig } from "../../config";
 import type { TestResult } from "../../types";
 
+// TestResultsController#create answers one of two shapes for the same
+// endpoint, depending on whether the value it was sent was empty:
+// `{test_result: {...}}` for a save, `{deleted: true, test_id, window}` for
+// a clear. Both this saga and the outbox replay path (below) see either one,
+// so both check this rather than assuming a save every time.
+interface DeletedResponse {
+  deleted: true;
+  test_id: string;
+  window: string;
+}
+
+function isDeletedResponse(body: unknown): body is DeletedResponse {
+  return typeof body === "object" && body !== null && (body as { deleted?: unknown }).deleted === true;
+}
+
 // The same three-way branch the journal duck uses: offline or a timeout
 // queues the write so a number typed at a test session is never lost, a
 // dead token signs the app out rather than retrying forever against a
@@ -40,7 +55,7 @@ function* handleSaveFailure(
   yield put(actions.saveFailed({ ...info, message }));
 }
 
-function* fetchResults() {
+function* fetchResults(action: ReturnType<typeof actions.fetchResults>) {
   const config: CoreConfig = yield getContext("config");
   const token: string | null = yield select(selectToken);
   // Nothing here is fetchable unauthenticated, so an anonymous fetch is
@@ -48,7 +63,12 @@ function* fetchResults() {
   if (!token) return;
 
   try {
-    const response: { test_results: TestResult[] } = yield call(fetchTestResults, config, token);
+    const response: { test_results: TestResult[] } = yield call(
+      fetchTestResults,
+      config,
+      token,
+      action.payload.programYearId,
+    );
     yield put(actions.resultsFetched(response.test_results));
   } catch (e) {
     if (isUnauthorized(e)) {
@@ -64,32 +84,50 @@ function* fetchResults() {
 // `action` already carries `dedupeKey` and `request` (see actions.ts), built
 // at the moment it was created. Nothing here rebuilds the request or the
 // key: on failure the exact action received is the one handed to `enqueue`.
+//
+// The response is read as `unknown` first and branched on shape, not typed
+// straight to TestResult: an empty box sent through this same action comes
+// back as a delete, never a row.
 function* saveResult(action: ReturnType<typeof actions.saveResult>) {
   const config: CoreConfig = yield getContext("config");
   const token: string | null = yield select(selectToken);
   const { window, testId } = action.payload;
   try {
-    const result: TestResult = yield call(apiRequest, config, { ...action.request, token });
-    yield put(actions.resultSaved(result));
+    const response: unknown = yield call(apiRequest, config, { ...action.request, token });
+    if (isDeletedResponse(response)) {
+      yield put(actions.resultDeleted({ window: response.window, testId: response.test_id }));
+      return;
+    }
+    const { test_result } = response as { test_result: TestResult };
+    yield put(actions.resultSaved(test_result));
   } catch (e) {
     yield call(handleSaveFailure, e, { window, testId }, action);
   }
 }
 
 // The other half of the outbox story: a result queued offline eventually
-// replays, and the response the server gave it — the row it actually wrote,
-// numeric_value included — has to reach this duck's state somehow.
-// `outbox/REPLAY_SUCCEEDED` carries the `dedupeKey` the write was queued
-// under and the raw response body, forwarded verbatim; `result:` is a
-// prefix only this duck assigns. Any other dedupeKey (the journal's, say)
-// is not this duck's business and is left alone.
+// replays, and the response the server gave it has to reach this duck's
+// state somehow. `outbox/REPLAY_SUCCEEDED` carries the `dedupeKey` the write
+// was queued under and the raw response body, forwarded verbatim; `result:`
+// is a prefix only this duck assigns. Any other dedupeKey (the journal's,
+// say) is not this duck's business and is left alone.
+//
+// A cleared box queued offline (someone typed a number, then cleared it,
+// then lost signal) replays through this same path and needs the same
+// shape check a live save does: the response is still whichever of the two
+// shapes the controller actually sent, not necessarily a row.
 function* reconcileReplay(action: {
   type: string;
   payload: { dedupeKey: string; response: unknown };
 }) {
   const { dedupeKey, response } = action.payload;
   if (!dedupeKey.startsWith("result:")) return;
-  yield put(actions.resultSaved(response as TestResult));
+  if (isDeletedResponse(response)) {
+    yield put(actions.resultDeleted({ window: response.window, testId: response.test_id }));
+    return;
+  }
+  const { test_result } = response as { test_result: TestResult };
+  yield put(actions.resultSaved(test_result));
 }
 
 export function* testResultsSaga() {

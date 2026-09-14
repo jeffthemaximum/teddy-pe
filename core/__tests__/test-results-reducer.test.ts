@@ -29,15 +29,19 @@ describe("selectDefaultWindow", () => {
   });
 });
 
-// Every real column a TestResult has, not an abbreviated shape: id and
-// numeric_value included, the same reasoning the journal fixtures use, so
-// the reducer is only ever proven against a shape the real API can send.
+// Every real column a TestResult has, not an abbreviated shape: id,
+// numeric_value and recorded_at included, the same reasoning the journal
+// fixtures use, so the reducer is only ever proven against a shape the real
+// API can send. numeric_value is a string here on purpose:
+// TestResultsController#serialize sends `result.numeric_value&.to_s`, never
+// a number.
 const sept: TestResult = {
   id: 1,
   test_id: "t1",
   window: "2026-09",
   raw_value: "4.42",
-  numeric_value: 4.42,
+  numeric_value: "4.42",
+  recorded_at: "2026-09-16T19:00:00Z",
   updated_at: "2026-09-16T19:00:00Z",
 };
 
@@ -59,7 +63,7 @@ describe("the test results reducer", () => {
     const first = reducer(undefined, actions.resultSaved(sept));
     const second = reducer(
       first,
-      actions.resultSaved({ ...sept, test_id: "t2", raw_value: "5.10", numeric_value: 5.1 }),
+      actions.resultSaved({ ...sept, test_id: "t2", raw_value: "5.10", numeric_value: "5.10" }),
     );
     expect(Object.keys(second.byWindow["2026-09"]!).sort()).toEqual(["t1", "t2"]);
     expect(second.byWindow["2026-09"]!["t1"]!.raw_value).toBe("4.42");
@@ -82,7 +86,7 @@ describe("the test results reducer", () => {
     const first = reducer(undefined, actions.resultSaved(sept));
     const second = reducer(
       first,
-      actions.resultSaved({ ...sept, raw_value: "4.30", numeric_value: 4.3, updated_at: "2026-09-16T19:05:00Z" }),
+      actions.resultSaved({ ...sept, raw_value: "4.30", numeric_value: "4.30", updated_at: "2026-09-16T19:05:00Z" }),
     );
     expect(Object.keys(second.byWindow["2026-09"]!)).toEqual(["t1"]);
     expect(second.byWindow["2026-09"]!["t1"]!.raw_value).toBe("4.30");
@@ -98,20 +102,20 @@ describe("the test results reducer", () => {
   });
 
   it("tracks saving per window and test id, so one box does not spin another", () => {
-    const s = reducer(undefined, actions.saveResult({ window: "2026-09", testId: "t1", rawValue: "4.42" }));
+    const s = reducer(undefined, actions.saveResult({ programYearId: 1, window: "2026-09", testId: "t1", rawValue: "4.42" }));
     expect(selectors.selectIsSaving("2026-09", "t1")({ testResults: s })).toBe(true);
     expect(selectors.selectIsSaving("2026-09", "t2")({ testResults: s })).toBe(false);
     expect(selectors.selectIsSaving("2026-12", "t1")({ testResults: s })).toBe(false);
   });
 
   it("stops saving when the save lands", () => {
-    const saving = reducer(undefined, actions.saveResult({ window: "2026-09", testId: "t1", rawValue: "4.42" }));
+    const saving = reducer(undefined, actions.saveResult({ programYearId: 1, window: "2026-09", testId: "t1", rawValue: "4.42" }));
     const saved = reducer(saving, actions.resultSaved(sept));
     expect(selectors.selectIsSaving("2026-09", "t1")({ testResults: saved })).toBe(false);
   });
 
   it("clears saving when a write is queued rather than saved or failed, and records nothing else", () => {
-    const saving = reducer(undefined, actions.saveResult({ window: "2026-09", testId: "t1", rawValue: "4.42" }));
+    const saving = reducer(undefined, actions.saveResult({ programYearId: 1, window: "2026-09", testId: "t1", rawValue: "4.42" }));
     const queued = reducer(saving, actions.saveQueued({ window: "2026-09", testId: "t1" }));
     expect(selectors.selectIsSaving("2026-09", "t1")({ testResults: queued })).toBe(false);
     expect(queued.byWindow["2026-09"]).toBeUndefined();
@@ -119,7 +123,7 @@ describe("the test results reducer", () => {
   });
 
   it("clears saving and records the message on a real failure", () => {
-    const saving = reducer(undefined, actions.saveResult({ window: "2026-09", testId: "t1", rawValue: "abc" }));
+    const saving = reducer(undefined, actions.saveResult({ programYearId: 1, window: "2026-09", testId: "t1", rawValue: "abc" }));
     const failed = reducer(
       saving,
       actions.saveFailed({ window: "2026-09", testId: "t1", message: "That is not a number." }),
@@ -133,6 +137,35 @@ describe("the test results reducer", () => {
     const failed = reducer(withData, actions.fetchResultsFailed("Something went wrong."));
     expect(failed.byWindow["2026-09"]!["t1"]).toEqual(sept);
     expect(selectors.selectTestResultsError({ testResults: failed })).toBe("Something went wrong.");
+  });
+
+  it("removes the measure from state when the box was cleared, leaving its window's other measures alone", () => {
+    // Clearing a box deletes the row server-side. Proving the measure is
+    // gone, not merely that the action was accepted: a reducer that folded
+    // `resultDeleted` in as if it were a save (storing something truthy
+    // under test_id) would pass a looser assertion but still leave a
+    // deleted measure looking recorded.
+    const withTwo = reducer(
+      reducer(undefined, actions.resultSaved(sept)),
+      actions.resultSaved({ ...sept, test_id: "t2", raw_value: "5.10", numeric_value: "5.10" }),
+    );
+    const cleared = reducer(withTwo, actions.resultDeleted({ window: "2026-09", testId: "t1" }));
+    expect("t1" in cleared.byWindow["2026-09"]!).toBe(false);
+    expect(cleared.byWindow["2026-09"]!["t2"]).toBeDefined();
+  });
+
+  it("clears the saving flag on a delete the same way a save clears it", () => {
+    const saving = reducer(
+      undefined,
+      actions.saveResult({ programYearId: 1, window: "2026-09", testId: "t1", rawValue: "" }),
+    );
+    const cleared = reducer(saving, actions.resultDeleted({ window: "2026-09", testId: "t1" }));
+    expect(selectors.selectIsSaving("2026-09", "t1")({ testResults: cleared })).toBe(false);
+  });
+
+  it("does nothing to byWindow when the deleted measure was never recorded", () => {
+    const s = reducer(undefined, actions.resultDeleted({ window: "2026-09", testId: "t1" }));
+    expect(s.byWindow).toEqual({});
   });
 });
 
