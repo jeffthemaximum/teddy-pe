@@ -320,6 +320,31 @@ describe("the drill list", () => {
   });
 });
 
+describe("a block toggle on Today", () => {
+  // He taps this one-handed, between drills, with a ball in the other hand.
+  // The 44px floor is the same one every other target in this file is held
+  // to, and a block toggle is the most-tapped control on the screen he now
+  // opens on.
+  it("is at least as tall as a finger", () => {
+    expect(pixels(declared(".today-card__block-toggle", "min-height"))).toBeGreaterThanOrEqual(44);
+  });
+
+  // The whole row, not the six characters of the block's name. A toggle that
+  // only takes taps on its text is a 44px rule that buys nothing.
+  it("takes taps across the whole row", () => {
+    expect(declared(".today-card__block-toggle", "width")).toBe("100%");
+  });
+
+  // Which block is open is said by aria-expanded in the markup, which
+  // today-card.test.tsx asserts. This is the visual half: the open one has
+  // to be tellable from the seven closed ones by something other than the
+  // panel below it, or a glance mid-session lands on the wrong row.
+  it("marks the open block with something other than colour", () => {
+    const open = declared('.today-card__block-toggle[aria-expanded="true"]', "font-weight");
+    expect(open).not.toBeNull();
+  });
+});
+
 describe("token markup", () => {
   it("carries each token's style into the class, so the sheet can tell them apart", () => {
     const tokens: Token[] = [

@@ -517,7 +517,10 @@ legend {
   margin: 0 0 0.15rem;
 }
 
-.day-card__role {
+/* Shared with Today's own card: same "role · minutes" line, just written by
+   a second component, so it reads the same wherever it lands. */
+.day-card__role,
+.today-card__role {
   margin: 0 0 0.75rem;
   color: var(--ink-soft);
   font-weight: 600;
@@ -553,7 +556,11 @@ legend {
   margin-bottom: 0.4rem;
 }
 
-.day-card__dad-note {
+/* Same note, same "Note:" prefix, whichever card wrote it: This Week's
+   .day-card and Today's .today-card are two components rendering one idea,
+   so they share the one rule rather than drift apart under separate edits. */
+.day-card__dad-note,
+.today-card__dad-note {
   margin: 0.9rem 0 0;
   padding: 0.7rem 0.9rem;
   border-radius: 12px;
@@ -562,7 +569,8 @@ legend {
   font-size: 1rem;
 }
 
-.day-card__dad-note strong {
+.day-card__dad-note strong,
+.today-card__dad-note strong {
   color: var(--court-deep);
 }
 
@@ -612,6 +620,76 @@ legend {
    above it, spent only on the paragraphs that actually carry one. */
 .day-card__blocks > li > p:has(.token--drill) {
   line-height: 2.6;
+}
+
+/* ---------------------------------------------------------------- today */
+
+/* Today. The screen he opens standing up, one-handed, mid-session, so the
+   whole of it is built around a thumb: full-width rows, a 44px floor on
+   anything tappable, and nothing that needs two hands or a careful aim. */
+.today__date {
+  margin-block: 0 0.75rem;
+  color: var(--ink-faint);
+}
+
+.today__no-card {
+  color: var(--ink-soft);
+}
+
+.today-card__blocks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* The whole row is the target, not the six characters of the block's name.
+   A toggle sized to its text would make the 44px floor below buy nothing,
+   because a miss would land beside it rather than on it. */
+.today-card__block-toggle {
+  width: 100%;
+  min-height: var(--tap);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--rule);
+  padding: 0.6rem 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Which block is open, said by weight as well as by the panel underneath it,
+   so a glance mid-session lands on the right row without reading colour.
+   today-card.test.tsx asserts the aria-expanded half of the same question. */
+.today-card__block-toggle[aria-expanded="true"] {
+  font-weight: 700;
+}
+
+.today-card__block-minutes {
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.today-card__block-body {
+  padding: 0 0 0.75rem 0.6rem;
+}
+
+/* A different job from the card above it, the test sheet rather than the
+   day's plan, so it gets its own rule instead of running straight on. */
+.today__tests {
+  margin-top: 2.4rem;
+  border-top: 2px solid var(--rule);
+  padding-top: 1.2rem;
+}
+
+/* A count, not a warning. */
+.tests__blank-count {
+  color: var(--ink-faint);
 }
 
 /* --------------------------------------------------------------- tokens */
