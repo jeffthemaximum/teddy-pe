@@ -351,3 +351,18 @@ The web app is up at `https://teddy-pe-mlfs.vercel.app`, built from `main`, serv
 - **Card order, not glossary order.** The list reads down the session the way it ran, because that is the order he is remembering it in.
 - **The week is fetched here, not lifted into a parent.** It is the same duck This Week fills, so arriving from that tab costs nothing, and the screen keeps asking for what it needs the way every other screen in this app does.
 - **The tests that predated the filter now seed a week.** Eleven of them rendered this form with no day cards in the store, which is a real state and no longer the one those tests are about. They load the week fixture now and exercise the path production takes.
+
+## 2026-09-14: the password minimum comes down to 6
+
+**What Jeff asked.** Lower the minimum password length to 6, and reset all three accounts to one password he chose. The password itself is deliberately not written down here, or anywhere else in this repo.
+
+**Why it needed asking.** It is 7 characters and the model required 12, so the reset could not run at all until the rule moved. The concern was raised once, in both directions, and Jeff decided. It is his family, his app and his call.
+
+**Decisions made doing it.**
+
+- **Six, written down with its reason beside it.** The comment on the validation says what the number is for, so the next person to move it is weighing the same thing rather than a bare integer.
+- **The rule got its first test.** `backend/spec/models/user_spec.rb` did not exist, and nothing anywhere asserted the minimum. That is precisely why lowering it looked free: a one-character edit, no suite to disagree. It is now asserted from both sides, one below and one at the boundary, plus the `allow_nil` behaviour that keeps a rename from being a password change.
+- **The throttle is what actually holds the door.** `AuthController#login` allows 10 attempts in 3 minutes per address, counted by attempt rather than by failure, and none of that changed. The length minimum is the floor for the other case, where the database itself leaks and bcrypt is all that is left. Worth being clear which defence does which job, because the two are easy to confuse and only one of them moved.
+- **No client-side rule to match.** Neither `web/` nor `core/` validates length, so the server is the only place the number lives and there is no second copy to drift.
+- **The reset waits for the deploy.** A `rails runner` on the Fly machine runs the deployed code, so resetting to a 7-character password before this ships raises `RecordInvalid`. Merge, deploy, then reset, in that order.
+- **Everyone signs out.** The JWT carries a fingerprint of the password digest (`api_controller.rb`), so every token on every device dies at the reset and all three sign in again. That is the design working, not a side effect to route around.
