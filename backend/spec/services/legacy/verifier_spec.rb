@@ -6,10 +6,11 @@ RSpec.describe Legacy::Verifier, :legacy do
   let!(:date) { create(:test_date, program_year: year, window: "2026-09", label: "Baseline") }
   let!(:measure) { create(:battery_measure, program_year: year, test_id: "t1") }
 
-  def insert_diary(session_date:, note:, overall: 4)
-    ActiveRecord::Base.connection.exec_query(<<~SQL, "diary", [ session_date, note, overall ])
-      insert into diary_entry (id, session_date, note, overall)
-      values ('e-' || $1::text, $1::date, $2, $3)
+  def insert_diary(session_date:, note:, overall: 4, ratings: {})
+    binds = [ session_date, note, overall, ratings.to_json ]
+    ActiveRecord::Base.connection.exec_query(<<~SQL, "diary", binds)
+      insert into diary_entry (id, session_date, note, overall, ratings)
+      values ('e-' || $1::text, $1::date, $2, $3, $4::jsonb)
     SQL
   end
 
@@ -26,7 +27,7 @@ RSpec.describe Legacy::Verifier, :legacy do
     Legacy::JournalMigrator.new(coach: coach).run!
     Legacy::ResultMigrator.new(coach: coach).run!
 
-    report = described_class.new.run
+    report = described_class.new(coach: coach).run
 
     expect(report[:clean?]).to be(true)
     expect(report[:counts]).to eq(legacy_diary: 1, migrated_diary: 1,
@@ -38,7 +39,7 @@ RSpec.describe Legacy::Verifier, :legacy do
   it "names a legacy entry that never arrived" do
     insert_diary(session_date: "2026-09-16", note: "Good session.")
 
-    report = described_class.new.run
+    report = described_class.new(coach: coach).run
 
     expect(report[:clean?]).to be(false)
     expect(report[:missing]).to eq([ { kind: :diary, key: "2026-09-16" } ])
@@ -46,18 +47,108 @@ RSpec.describe Legacy::Verifier, :legacy do
 
   # The reason this compares fields rather than counting: a migration that
   # wrote the right number of rows carrying the wrong words passes a count.
-  it "names a field that arrived with different contents" do
+  #
+  # It lands in :conflicts rather than :mismatches for the same reason a
+  # result that disagrees does. Legacy::JournalMigrator now either writes the
+  # legacy row verbatim or does not write at all, so a diary field that
+  # disagrees can only mean the entry was already there and was kept on
+  # purpose. Calling that a mismatch would read as a migration bug and send
+  # someone hunting for one.
+  it "names a diary field that disagrees, as a conflict rather than a migration bug" do
     insert_diary(session_date: "2026-09-16", note: "Good session.")
     Legacy::JournalMigrator.new(coach: coach).run!
     CoachEntry.sole.update!(note: "something else entirely")
 
-    report = described_class.new.run
+    report = described_class.new(coach: coach).run
 
     expect(report[:clean?]).to be(false)
-    expect(report[:mismatches]).to eq([
+    expect(report[:conflicts]).to eq([
       { kind: :diary, key: "2026-09-16", field: :note,
-        legacy: "Good session.", migrated: "something else entirely" },
+        legacy: "Good session.", kept: "something else entirely" },
     ])
+    expect(report[:mismatches]).to eq([])
+  end
+
+  # The verifier compared no drill_ratings at all, so a rating that never
+  # arrived, or one the new system was holding a different answer for, passed
+  # the gate silently and then the legacy json was deleted.
+  it "names a drill rating that disagrees" do
+    drill = create(:drill, slug: "wall-rally")
+    insert_diary(session_date: "2026-09-16", note: "Good session.",
+                 ratings: { "wall-rally" => "owns" })
+    Legacy::JournalMigrator.new(coach: coach).run!
+    DrillRating.sole.update!(rating: "getting")
+
+    report = described_class.new(coach: coach).run
+
+    expect(drill.reload).to be_present
+    expect(report[:clean?]).to be(false)
+    expect(report[:conflicts]).to eq([
+      { kind: :diary, key: "2026-09-16", field: "rating:wall-rally",
+        legacy: "owns", kept: "getting" },
+    ])
+  end
+
+  it "names a drill rating that never arrived at all" do
+    create(:drill, slug: "wall-rally")
+    insert_diary(session_date: "2026-09-16", note: "Good session.",
+                 ratings: { "wall-rally" => "owns" })
+    Legacy::JournalMigrator.new(coach: coach).run!
+    DrillRating.sole.destroy!
+
+    report = described_class.new(coach: coach).run
+
+    expect(report[:clean?]).to be(false)
+    expect(report[:conflicts]).to eq([
+      { kind: :diary, key: "2026-09-16", field: "rating:wall-rally",
+        legacy: "owns", kept: nil },
+    ])
+  end
+
+  # A slug with no Drill is the one rating the migrator reports as dropped
+  # and cannot write. Counting it here would make a correct migration read as
+  # broken and block the cutover this task exists to gate.
+  it "does not blame a rating whose drill no longer exists" do
+    insert_diary(session_date: "2026-09-16", note: "Good session.",
+                 ratings: { "renamed-drill" => "owns" })
+    Legacy::JournalMigrator.new(coach: coach).run!
+
+    report = described_class.new(coach: coach).run
+
+    expect(report[:clean?]).to be(true)
+    expect(report[:conflicts]).to eq([])
+  end
+
+  # The unique index is (user_id, program_year_id, session_date), so running
+  # legacy:migrate once with a wrong COACH_EMAIL and once with the right one
+  # leaves two complete sets, violating nothing. CoachEntry.kept.find_by
+  # (session_date:) then picked one arbitrarily and the verifier read clean
+  # over an entry that has nothing to do with the coach being verified.
+  it "looks the entry up under the coach it was written for, not by date alone" do
+    other_coach = create(:user, :coach)
+    insert_diary(session_date: "2026-09-16", note: "Good session.")
+    Legacy::JournalMigrator.new(coach: other_coach).run!
+
+    report = described_class.new(coach: coach).run
+
+    expect(CoachEntry.kept.count).to eq(1)
+    expect(report[:clean?]).to be(false)
+    expect(report[:missing]).to eq([ { kind: :diary, key: "2026-09-16" } ])
+    expect(report[:counts][:migrated_diary]).to eq(0)
+  end
+
+  # The structural one. DIARY_FIELDS and JournalMigrator#carried are two
+  # hand-written lists and nothing asserted they agree, so adding a field to
+  # carried made the verifier silently stop checking it and no test failed.
+  #
+  # IF YOU ADD A FIELD TO JournalMigrator#carried, ADD IT TO
+  # Verifier::DIARY_FIELDS TOO, or the verifier stops checking that field and
+  # the legacy table is deleted with it unverified.
+  it "checks exactly the fields the journal migrator carries" do
+    carried = Legacy::JournalMigrator.new(coach: coach)
+                                     .send(:carried, Legacy::DiaryEntry.new).keys
+
+    expect(described_class::DIARY_FIELDS).to match_array(carried)
   end
 
   # Ruling: a result row that disagrees is never a mismatch, because
@@ -73,7 +164,7 @@ RSpec.describe Legacy::Verifier, :legacy do
     Legacy::ResultMigrator.new(coach: coach).run!
     TestResult.sole.update!(raw_value: "9.9")
 
-    report = described_class.new.run
+    report = described_class.new(coach: coach).run
 
     expect(report[:clean?]).to be(false)
     expect(report[:conflicts]).to eq([
@@ -96,7 +187,7 @@ RSpec.describe Legacy::Verifier, :legacy do
                        battery_measure: measure, recorded_by_user: coach, raw_value: "4.4")
     insert_result(value: "9.9")
 
-    report = described_class.new.run
+    report = described_class.new(coach: coach).run
 
     expect(report[:clean?]).to be(false)
     expect(report[:conflicts]).to eq([
@@ -105,10 +196,26 @@ RSpec.describe Legacy::Verifier, :legacy do
     expect(report[:mismatches]).to eq([])
   end
 
+  # The one that stops a deletion of the only copy. comparable_diary returned
+  # [] when the table was absent, which made clean? true, which made
+  # legacy:verify print "Safe to delete the old pipeline" and exit 0. The
+  # realistic cause is LEGACY_DATABASE_URL being unset while the old rows sit
+  # in the Vercel Neon database. Row count is deliberately not part of this:
+  # a legacy table that exists and is empty is a legitimate state, and
+  # blocking on it would teach someone to bypass the gate.
+  it "refuses to read clean when a legacy table is not on this connection" do
+    ActiveRecord::Base.connection.drop_table("diary_entry")
+
+    report = described_class.new(coach: coach).run
+
+    expect(report[:clean?]).to be(false)
+    expect(report[:tables_missing]).to eq([ "diary_entry" ])
+  end
+
   it "does not call an entry missing when it was skipped for having no program year" do
     insert_diary(session_date: "2020-01-01", note: "before the program")
 
-    report = described_class.new.run
+    report = described_class.new(coach: coach).run
 
     expect(report[:missing]).to eq([])
     expect(report[:counts][:legacy_diary]).to eq(0)
@@ -121,7 +228,7 @@ RSpec.describe Legacy::Verifier, :legacy do
   it "does not call a result missing when its value was cleared" do
     insert_result(value: "   ")
 
-    report = described_class.new.run
+    report = described_class.new(coach: coach).run
 
     expect(report[:missing]).to eq([])
     expect(report[:counts][:legacy_results]).to eq(0)
@@ -132,7 +239,7 @@ RSpec.describe Legacy::Verifier, :legacy do
     create(:test_date, program_year: other_year, window: "2026-09", label: "Baseline")
     insert_result(value: "4.6")
 
-    report = described_class.new.run
+    report = described_class.new(coach: coach).run
 
     expect(report[:missing]).to eq([])
     expect(report[:counts][:legacy_results]).to eq(0)
@@ -163,7 +270,7 @@ RSpec.describe Legacy::Verifier, :legacy do
     Legacy::JournalMigrator.new(coach: coach).run!
     Legacy::ResultMigrator.new(coach: coach).run!
 
-    report = described_class.new.run
+    report = described_class.new(coach: coach).run
 
     # Hand-typed, not read back off the report: a verifier hard-coded to
     # report clean with empty buckets would still pass a bare clean?/missing/

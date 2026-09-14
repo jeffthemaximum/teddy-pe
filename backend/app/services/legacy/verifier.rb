@@ -19,34 +19,57 @@ module Legacy
   # ever reads the two databases), so it reports those as missing on its own
   # by finding no matching row. That is correct and desired.
   #
-  # A result row that disagrees is a third thing again, neither a mismatch
-  # nor missing: Legacy::ResultMigrator never overwrites a TestResult that
-  # already existed at that slot, so a legacy value that disagrees with what
-  # is on the row means something was already recorded there before this
-  # migration ran and the newer number was kept on purpose. That is a
-  # conflict, not a sign the migration wrote the wrong thing, but it still
-  # has to block clean?, because the legacy number is about to be deleted
-  # forever and this is the last chance for a person to look at it.
+  # A row that disagrees is a third thing again, neither a mismatch nor
+  # missing. Neither migrator overwrites anything the new system already
+  # holds, so a legacy value that disagrees with what is on the row means
+  # something was already recorded there before this migration ran and the
+  # newer version was kept on purpose. That is a conflict, not a sign the
+  # migration wrote the wrong thing, but it still has to block clean?,
+  # because the legacy version is about to be deleted forever and this is the
+  # last chance for a person to look at it. That now covers the diary as well
+  # as the results: since Legacy::JournalMigrator stopped overwriting, a
+  # diary field that disagrees can only mean the same thing.
+  #
+  # And a legacy table that is not on this connection is never clean. It used
+  # to read as "there were no rows to compare", which is exactly what an
+  # unset LEGACY_DATABASE_URL looks like, one step before the only copy is
+  # deleted. Row count is deliberately not part of clean?: a legacy table
+  # that exists and is empty is a legitimate state, and blocking on it would
+  # push someone into bypassing the gate, which is worse than the problem.
   class Verifier
-    DIARY_FIELDS = %i[note pain_note overall energy flag_pain challenge_num].freeze
+    # KEEP IN STEP WITH Legacy::JournalMigrator#carried. A field carried
+    # across but missing from this list is migrated and never checked, and
+    # then the legacy table is deleted with it unverified. verifier_spec.rb
+    # asserts the two lists are equal.
+    DIARY_FIELDS = %i[overall energy flag_pain pain_note note challenge_num].freeze
+
+    def initialize(coach:)
+      @coach = coach
+    end
 
     def run
       Legacy::Record.connect!
 
+      tables_missing = Legacy::Mapping.missing_tables(Legacy::DiaryEntry, Legacy::TestResultRow)
       mismatches = []
       missing = []
       conflicts = []
 
       diary = comparable_diary
-      diary.each { |row| check_diary(row, mismatches, missing) }
+      diary.each { |row| check_diary(row, missing, conflicts) }
 
       results = comparable_results
-      results.each { |row| check_result(row, mismatches, missing, conflicts) }
+      results.each { |row| check_result(row, missing, conflicts) }
 
       {
-        clean?: mismatches.empty? && missing.empty? && conflicts.empty?,
-        counts: { legacy_diary: diary.size, migrated_diary: CoachEntry.kept.count,
+        clean?: tables_missing.empty? && mismatches.empty? && missing.empty? && conflicts.empty?,
+        tables_missing: tables_missing,
+        counts: { legacy_diary: diary.size, migrated_diary: migrated_diary_count,
                   legacy_results: results.size, migrated_results: TestResult.count },
+        # Nothing fills this any more. It stays in the report because callers
+        # and the rake task read it, and because the day something does start
+        # filling it is the day a migrator began writing over a row instead
+        # of declining to, which is worth having a name ready for.
         mismatches: mismatches,
         missing: missing,
         conflicts: conflicts
@@ -54,6 +77,11 @@ module Legacy
     end
 
     private
+
+    # Scoped to the coach for the same reason check_diary is. Two full sets,
+    # one per coach account, is a state the unique index allows, and a count
+    # over every account would hide it.
+    def migrated_diary_count = CoachEntry.kept.where(user: @coach).count
 
     def comparable_diary
       return [] unless Legacy::DiaryEntry.table_present?
@@ -79,9 +107,17 @@ module Legacy
       end
     end
 
-    def check_diary(row, mismatches, missing)
+    # Addressed the way the unique index is,
+    # (user_id, program_year_id, session_date) where deleted_at is null, and
+    # the way Legacy::JournalMigrator writes. find_by(session_date:) alone
+    # would pick arbitrarily between the two complete sets that running
+    # legacy:migrate once with a wrong COACH_EMAIL and once with the right
+    # one leaves behind, and read clean over an entry belonging to somebody
+    # else's account.
+    def check_diary(row, missing, conflicts)
       key = row.session_date.to_s
-      entry = CoachEntry.kept.find_by(session_date: row.session_date)
+      entry = CoachEntry.kept.find_by(user: @coach, program_year: year_for(row.session_date),
+                                      session_date: row.session_date)
       if entry.nil?
         missing << { kind: :diary, key: key }
         return
@@ -89,14 +125,33 @@ module Legacy
 
       DIARY_FIELDS.each do |field|
         legacy = normalise(row.public_send(field))
-        migrated = normalise(entry.public_send(field))
-        next if legacy == migrated
+        kept = normalise(entry.public_send(field))
+        next if legacy == kept
 
-        mismatches << { kind: :diary, key: key, field: field, legacy: legacy, migrated: migrated }
+        conflicts << { kind: :diary, key: key, field: field, legacy: legacy, kept: kept }
+      end
+
+      check_diary_ratings(row, entry, key, conflicts)
+    end
+
+    # The ratings were the half of a diary entry nothing compared at all. A
+    # slug with no Drill is excluded: that is the rating the migrator reports
+    # as dropped and cannot write, and blaming the migration for it would
+    # make a correct run read as broken.
+    def check_diary_ratings(row, entry, key, conflicts)
+      (row.ratings || {}).each do |slug, rating|
+        drill = Drill.find_by(slug: slug)
+        next if drill.nil?
+
+        kept = entry.drill_ratings.find_by(drill: drill)&.rating
+        next if kept == rating.to_s
+
+        conflicts << { kind: :diary, key: key, field: "rating:#{slug}",
+                       legacy: rating.to_s, kept: kept }
       end
     end
 
-    def check_result(row, mismatches, missing, conflicts)
+    def check_result(row, missing, conflicts)
       key = "#{row.test_window}:#{row.test_id}"
       date = resolve_test_date(row.test_window)
       measure = date && BatteryMeasure.find_by(program_year_id: date.program_year_id, test_id: row.test_id)
