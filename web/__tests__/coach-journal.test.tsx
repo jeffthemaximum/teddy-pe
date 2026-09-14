@@ -375,9 +375,13 @@ describe("the coach's journal", () => {
     await user.type(screen.getByLabelText(/challenge number/i), "2");
     await user.click(screen.getByRole("button", { name: /save/i }));
 
+    // Autosave fires its own save on every field he leaves, so more than
+    // one SAVE_COACH_ENTRY goes out here. Every save carries the whole
+    // entry, so the last one, the one Save itself sent, is the complete
+    // picture.
     const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
-    expect(saves).toHaveLength(1);
-    expect(saves[0]?.payload).toEqual({
+    expect(saves.length).toBeGreaterThan(0);
+    expect(saves.at(-1)?.payload).toEqual({
       programYearId: 42,
       date: "2026-09-16",
       note: "Great touch on the wall today.",
@@ -403,9 +407,11 @@ describe("the coach's journal", () => {
     await user.type(screen.getByLabelText(/what did you see/i), "Walked home happy. Will score later.");
     await user.click(screen.getByRole("button", { name: /save/i }));
 
+    // Autosave means the blur on the note field saves once on its own, and
+    // Save then sends again. The last save is still the whole, current form.
     const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
-    expect(saves).toHaveLength(1);
-    const payload = saves[0]?.payload as { overall: unknown; energy: unknown; note: unknown };
+    expect(saves.length).toBeGreaterThan(0);
+    const payload = saves.at(-1)?.payload as { overall: unknown; energy: unknown; note: unknown };
     expect(payload.overall).toBeNull();
     expect(payload.energy).toBeNull();
     expect(payload.note).toBe("Walked home happy. Will score later.");
@@ -416,16 +422,22 @@ describe("the coach's journal", () => {
     // API and fails every real save.
     const user = userEvent.setup();
     const { store } = renderCoachJournal(42);
+    // Tracked before the form has mounted (see "saving as you go" above):
+    // dispatch is read fresh at mount, so installing this any later would
+    // miss the tap's own save.
+    const dispatched = trackDispatch(store);
     loadDrills(store);
     loadWeek(store);
     setDate("2026-09-16");
-    const dispatched = trackDispatch(store);
 
     await user.click(within(ratingGroup("Wall Taps")).getByRole("radio", { name: "getting" }));
     await user.click(screen.getByRole("button", { name: /save/i }));
 
+    // The tap itself already carries the whole entry; the last save is read
+    // here rather than the first because autosave, not this Save click, is
+    // what actually put it on the wire.
     const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
-    const payload = saves[0]?.payload as { ratings: Record<string, unknown> };
+    const payload = saves.at(-1)?.payload as { ratings: Record<string, unknown> };
     expect(payload.ratings["wall-taps"]).toBe("getting");
     expect(typeof payload.ratings["wall-taps"]).toBe("string");
     expect(payload.ratings["wall-taps"]).not.toBe(2);
@@ -444,8 +456,10 @@ describe("the coach's journal", () => {
     // Balance Beam Walk is left untouched on purpose.
     await user.click(screen.getByRole("button", { name: /save/i }));
 
+    // Each tap already saved on its own; the last save, from Save itself,
+    // is asserted here because it is the one guaranteed to carry both.
     const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
-    const payload = saves[0]?.payload as { ratings: Record<string, unknown> };
+    const payload = saves.at(-1)?.payload as { ratings: Record<string, unknown> };
     expect(payload.ratings).toEqual({
       "star-jump": "owns",
       "wall-taps": "not_yet",
@@ -799,19 +813,25 @@ describe("the coach's journal", () => {
     it("still saves a rating made before the card dropped the drill", async () => {
       const user = userEvent.setup();
       const { store } = renderCoachJournal(42);
+      // Tracked before the form has mounted (see "saving as you go" above):
+      // dispatch is read fresh at mount, so installing this any later would
+      // miss the tap's own save.
+      const dispatched = trackDispatch(store);
       loadDrills(store);
       loadWeek(store);
       act(() => {
         store.dispatch({ type: "journal/COACH_ENTRIES_FETCHED", payload: [FRIDAY_ENTRY] });
       });
       setDate("2026-09-18");
-      const dispatched = trackDispatch(store);
 
       await user.click(within(ratingGroup("Wall Taps")).getByRole("radio", { name: "getting" }));
       await user.click(screen.getByRole("button", { name: /save/i }));
 
+      // The tap itself already carries the whole entry; the last save is
+      // read here rather than the first because autosave, not this Save
+      // click, is what actually put it on the wire.
       const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
-      const payload = saves[0]?.payload as { ratings: Record<string, unknown> };
+      const payload = saves.at(-1)?.payload as { ratings: Record<string, unknown> };
       expect(payload.ratings).toEqual({ "star-jump": "owns", "wall-taps": "getting" });
     });
   });
@@ -845,8 +865,10 @@ describe("the coach's journal", () => {
       await user.type(screen.getByLabelText(/challenge number/i), "7");
       await user.click(screen.getByRole("button", { name: /save/i }));
 
+      // Blurring the field to click Save already saved it once; the last
+      // save is the one to check, not the first.
       const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
-      expect((saves[0]?.payload as { challenge_num: unknown }).challenge_num).toBe("7");
+      expect((saves.at(-1)?.payload as { challenge_num: unknown }).challenge_num).toBe("7");
     });
 
     it("shows no challenge for a date outside this week", () => {
@@ -871,6 +893,119 @@ describe("the coach's journal", () => {
 
       expect(screen.queryByText(CHALLENGE)).not.toBeInTheDocument();
       expect(screen.getByLabelText(/challenge number/i)).toBeInTheDocument();
+    });
+  });
+  // ---- saving as he goes --------------------------------------------------
+  describe("saving as you go", () => {
+    // Autosave is the whole reason this screen changed. A session written up
+    // on a phone that locks must not lose what was typed, and the only way
+    // that holds is if nothing waits for a button.
+    it("saves a text field when it loses focus", async () => {
+      const user = userEvent.setup();
+      const { store } = renderCoachJournal(42);
+      // Tracked before the form itself has mounted: the form only appears
+      // once drillsData arrives, and dispatch is read fresh at mount, so
+      // installing this after that point would miss every save below.
+      const dispatched = trackDispatch(store);
+      loadDrills(store);
+      loadWeek(store);
+      setDate("2026-09-16");
+      const note = screen.getByLabelText(/what did you see/i);
+
+      await user.type(note, "Landed quiet on eight of ten.");
+      fireEvent.blur(note);
+
+      const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
+      expect(saves).toHaveLength(1);
+      expect((saves[0]?.payload as { note: unknown }).note).toBe(
+        "Landed quiet on eight of ten.",
+      );
+    });
+
+    // The guard MeasureRow.commit already uses on the test sheet's own
+    // boxes. A field tabbed past is not an edit, and firing a write for one
+    // would put a request on the wire for every field he walks through.
+    it("does not save a text field he only passed through", () => {
+      const { store } = renderCoachJournal(42);
+      const dispatched = trackDispatch(store);
+      loadDrills(store);
+      loadWeek(store);
+      setDate("2026-09-16");
+      const note = screen.getByLabelText(/what did you see/i);
+
+      fireEvent.focus(note);
+      fireEvent.blur(note);
+
+      expect(dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY")).toHaveLength(0);
+    });
+
+    it("saves the moment a radio is tapped", async () => {
+      const user = userEvent.setup();
+      const { store } = renderCoachJournal(42);
+      const dispatched = trackDispatch(store);
+      loadDrills(store);
+      loadWeek(store);
+      setDate("2026-09-16");
+
+      await user.click(within(ratingGroup("Energy")).getByRole("radio", { name: "4" }));
+
+      const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
+      expect(saves).toHaveLength(1);
+      expect((saves[0]?.payload as { energy: unknown }).energy).toBe(4);
+    });
+
+    it("saves the moment a drill rating is tapped", async () => {
+      const user = userEvent.setup();
+      const { store } = renderCoachJournal(42);
+      const dispatched = trackDispatch(store);
+      loadDrills(store);
+      loadWeek(store);
+      setDate("2026-09-16");
+
+      await user.click(within(ratingGroup("Star Jump")).getByRole("radio", { name: "owns" }));
+
+      const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
+      expect((saves.at(-1)?.payload as { ratings: Record<string, unknown> }).ratings).toEqual({
+        "star-jump": "owns",
+      });
+    });
+
+    // Save is the retry, and it is the one thing autosave cannot be. A write
+    // the queue gave up on will not go again until a field is touched, so
+    // this must send even when nothing has changed.
+    it("re-sends on Save when nothing has changed", async () => {
+      const user = userEvent.setup();
+      const { store } = renderCoachJournal(42);
+      const dispatched = trackDispatch(store);
+      loadDrills(store);
+      loadWeek(store);
+      setDate("2026-09-16");
+
+      await user.click(screen.getByRole("button", { name: /save/i }));
+
+      expect(dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY")).toHaveLength(1);
+    });
+
+    it("sends the whole entry on every save, not just the field that changed", async () => {
+      const user = userEvent.setup();
+      const { store } = renderCoachJournal(42);
+      const dispatched = trackDispatch(store);
+      loadDrills(store);
+      loadWeek(store);
+      setDate("2026-09-16");
+
+      await user.click(within(ratingGroup("Energy")).getByRole("radio", { name: "4" }));
+      const note = screen.getByLabelText(/what did you see/i);
+      await user.type(note, "Good session.");
+      fireEvent.blur(note);
+
+      // saveCoachEntry is a whole-entry upsert, so the second write has to
+      // carry the first one's energy or tapping a radio then typing a note
+      // would erase the radio.
+      const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
+      const last = saves.at(-1)?.payload as { energy: unknown; note: unknown };
+      expect(last.energy).toBe(4);
+      expect(last.note).toBe("Good session.");
     });
   });
 });
