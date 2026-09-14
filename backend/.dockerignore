@@ -1,0 +1,13 @@
+.git
+.gitignore
+spec
+tmp
+log
+coverage
+script
+
+# Never ship a key in an image layer. fly deploy uploads this directory as
+# build context, and the Dockerfile copies all of it.
+/config/master.key
+/config/credentials/*.key
+.env*
