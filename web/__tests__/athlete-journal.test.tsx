@@ -1,7 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
-import { createCoreStore, memoryStorage } from "@teddy-pe/core";
+import { createCoreStore, journalActions, memoryStorage } from "@teddy-pe/core";
 import type { AthleteEntry } from "@teddy-pe/core";
 import { AthleteJournal } from "../src/screens/AthleteJournal";
 
@@ -37,21 +37,31 @@ const SHARED_ENTRY = entry({ shared: true });
 // Puts a known current program year id in front of the screen without a
 // real /me round trip, the same action core's own restoreSessionSaga
 // dispatches (see this-week.test.tsx's identical helper).
-function seedAuth(store: ReturnType<typeof createCoreStore>, currentProgramYearId: number | null) {
+// `role` is a parameter because this screen is open to Jeff as well
+// (routes.tsx: /journal is roles ["coach", "athlete"]), and what the screen
+// offers differs by who is holding it.
+function seedAuth(
+  store: ReturnType<typeof createCoreStore>,
+  currentProgramYearId: number | null,
+  role: "athlete" | "coach" = "athlete",
+) {
   store.dispatch({
     type: "auth/RESTORE_FINISHED",
     payload: {
       jwt: "a.b.c",
-      user: { id: 1, email: "teddy@example.com", name: "Teddy", role: "athlete" },
+      user: { id: 1, email: "teddy@example.com", name: "Teddy", role },
       athlete: null,
       current_program_year_id: currentProgramYearId,
     },
   });
 }
 
-function renderJournal(currentProgramYearId: number | null = 555) {
+function renderJournal(
+  currentProgramYearId: number | null = 555,
+  role: "athlete" | "coach" = "athlete",
+) {
   const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
-  seedAuth(store, currentProgramYearId);
+  seedAuth(store, currentProgramYearId, role);
   return {
     store,
     ...render(
@@ -295,6 +305,131 @@ describe("the athlete journal", () => {
     });
 
     expect(screen.getByText(/saved on your device/i)).toBeInTheDocument();
+  });
+
+  // ---- deleting today's entry ---------------------------------------------
+  describe("deleting what he wrote", () => {
+    it("offers nothing to delete when there is no entry yet", () => {
+      const { store } = renderJournal();
+      hydrateEmpty(store);
+
+      expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
+    });
+
+    it("offers a delete on an entry he has written", () => {
+      const { store } = renderJournal();
+      hydrateWith(store, UNSHARED_ENTRY);
+
+      expect(screen.getByRole("button", { name: "Delete today" })).toBeInTheDocument();
+    });
+
+    // The same line AthleteEntryPolicy#destroy? draws. Jeff opening this
+    // screen sees whatever Teddy shared with him, and it is not his to
+    // delete, so there is no control offered for it. The server refuses him
+    // either way; this is the half that does not invite the tap.
+    it("offers Dad no delete on an entry Teddy shared with him", () => {
+      const { store } = renderJournal(555, "coach");
+      hydrateWith(store, SHARED_ENTRY);
+
+      expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
+      // And the entry really is on screen, so this is a missing control
+      // rather than a missing entry.
+      expect(screen.getByLabelText(/what went best today/i)).toHaveValue("The wall rally");
+    });
+
+    it("asks before it does anything", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const { store, dispatched } = renderJournalRecording();
+      hydrateWith(store, UNSHARED_ENTRY);
+      dispatched.length = 0;
+
+      await user.click(screen.getByRole("button", { name: "Delete today" }));
+
+      expect(screen.getByText("Delete what you wrote today?")).toBeInTheDocument();
+      expect(dispatched.filter((a) => a.type === "journal/DELETE_ENTRY")).toHaveLength(0);
+      // And what he wrote is still there while he decides.
+      expect(screen.getByLabelText(/what went best today/i)).toHaveValue("The wall rally");
+    });
+
+    it("puts the question away when he decides to keep it", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const { store, dispatched } = renderJournalRecording();
+      hydrateWith(store, UNSHARED_ENTRY);
+      dispatched.length = 0;
+
+      await user.click(screen.getByRole("button", { name: "Delete today" }));
+      await user.click(screen.getByRole("button", { name: "Keep it" }));
+
+      expect(screen.queryByText("Delete what you wrote today?")).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Delete today" })).toBeInTheDocument();
+      expect(dispatched.filter((a) => a.type === "journal/DELETE_ENTRY")).toHaveLength(0);
+      expect(screen.getByLabelText(/what went best today/i)).toHaveValue("The wall rally");
+    });
+
+    // The path and the method are transcribed from routes.rb
+    // (`resources :athlete_entries, only: %i[index show create update
+    // destroy]`), not read back off this app: the request the dispatched
+    // action carries is what actually goes on the wire.
+    it("deletes it by its id once he says yes", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const { store, dispatched } = renderJournalRecording();
+      hydrateWith(store, UNSHARED_ENTRY);
+      dispatched.length = 0;
+
+      await user.click(screen.getByRole("button", { name: "Delete today" }));
+      await user.click(screen.getByRole("button", { name: "Yes, delete it" }));
+
+      const deletes = dispatched.filter((a) => a.type === "journal/DELETE_ENTRY");
+      expect(deletes).toHaveLength(1);
+      expect(deletes[0]!.payload).toEqual({ side: "athlete", date: TODAY, id: 9001 });
+      expect(
+        (deletes[0] as unknown as { request: { path: string; method: string } }).request,
+      ).toEqual({ path: "/api/v1/athlete_entries/9001", method: "DELETE" });
+      // Nothing was saved on the way out: a delete that also fired a save
+      // would write the entry back a moment after removing it.
+      expect(dispatched.filter((a) => a.type === "journal/SAVE_ATHLETE_ENTRY")).toHaveLength(0);
+    });
+
+    it("empties the page once the entry is gone", () => {
+      const { store } = renderJournal();
+      hydrateWith(store, UNSHARED_ENTRY);
+      expect(screen.getByLabelText(/what went best today/i)).toHaveValue("The wall rally");
+
+      act(() => {
+        store.dispatch({
+          type: "journal/ENTRY_DELETED",
+          payload: { side: "athlete", date: TODAY },
+        });
+      });
+
+      expect(screen.getByLabelText(/what went best today/i)).toHaveValue("");
+      expect(screen.getByLabelText(/what was hard today/i)).toHaveValue("");
+      expect(screen.getByLabelText(/tell me about today/i)).toHaveValue("");
+      expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
+    });
+
+    it("tells him plainly when the delete is still waiting for a connection", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const { store } = renderJournal();
+      hydrateWith(store, UNSHARED_ENTRY);
+
+      await user.click(screen.getByRole("button", { name: "Delete today" }));
+      await user.click(screen.getByRole("button", { name: "Yes, delete it" }));
+
+      act(() => {
+        // The exact QueueableAction a real offline delete queues.
+        store.dispatch({
+          type: "outbox/ENQUEUE",
+          payload: journalActions.deleteEntry({ side: "athlete", date: TODAY, id: 9001 }),
+        });
+        store.dispatch({
+          type: "journal/ENTRY_DELETED",
+          payload: { side: "athlete", date: TODAY },
+        });
+      });
+
+      expect(screen.getByText(/deleted here/i)).toBeInTheDocument();
+    });
   });
 
   it("renders nothing rather than throwing before anything has loaded", () => {

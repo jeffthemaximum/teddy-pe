@@ -28,12 +28,31 @@ const FELT_VALUES = [1, 2, 3, 4, 5];
 const PRIVATE_TEXT = "Only you can see this.";
 const SHARED_TEXT = "Dad can see this too.";
 
+// The delete, in his words and honest about what it does. It takes the entry
+// off this screen and out of everything the app shows; the row itself keeps
+// every word, and getting one back is something Dad does at a console. So
+// the second line is a true thing a 7-year-old can act on, not a softener.
+const DELETE_LABEL = "Delete today";
+const DELETE_QUESTION = "Delete what you wrote today?";
+const DELETE_DETAIL = "It goes off this page for good. Dad can get it back if you ask him.";
+const DELETE_CONFIRM = "Yes, delete it";
+const DELETE_CANCEL = "Keep it";
+const DELETE_QUEUED_TEXT = "Deleted here. It will tell the server once you're back online.";
+
 export function AthleteJournal() {
   const dispatch = useAppDispatch();
   const currentId = useAppSelector(authSelectors.selectCurrentProgramYearId);
   const today = todayISODate();
 
   const entry = useAppSelector(journalSelectors.selectAthleteEntryFor(today));
+  // Whose entry this is. This screen is open to Jeff as well (see
+  // routes.tsx: /journal is roles ["coach", "athlete"]), and what he sees
+  // there is whatever Teddy has shared with him, so the entry on screen is
+  // not always the signed-in person's. Only its owner gets a delete control,
+  // and the API draws the same line in AthleteEntryPolicy#destroy? whatever
+  // this renders.
+  const role = useAppSelector(authSelectors.selectRole);
+  const queued = useAppSelector(journalSelectors.selectIsEntryQueued("athlete", today));
   const loading = useAppSelector(journalSelectors.selectIsLoadingAthleteEntries);
   const error = useAppSelector(journalSelectors.selectJournalError);
   const saving = useAppSelector(journalSelectors.selectIsSaving(today));
@@ -79,6 +98,29 @@ export function AthleteJournal() {
     wasLoadingRef.current = loading;
   }, [entry, loading, error]);
 
+  // The delete asks first, and this is what it is waiting on. Two taps, not
+  // one, and the second one is a different button in a different place from
+  // the first, so the gesture that deletes cannot be the gesture that opened
+  // the question.
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [justDeleted, setJustDeleted] = useState(false);
+
+  // When the entry he was looking at goes away, the form goes back to blank.
+  // Tied to the entry actually leaving state rather than to the tap, so a
+  // delete the server refuses leaves his words on screen: the hydration
+  // effect above runs once and will never put them back.
+  const hadEntryRef = useRef(entry !== null);
+  useEffect(() => {
+    if (hadEntryRef.current && entry === null) {
+      setFelt(null);
+      setBest("");
+      setHard("");
+      setNote("");
+      setConfirmingDelete(false);
+    }
+    hadEntryRef.current = entry !== null;
+  }, [entry]);
+
   // Whether the last save is sitting in the outbox rather than actually
   // gone to the server, read off the same two things a screen is allowed to
   // read (isSaving(date) and the entry it already holds) rather than asking
@@ -121,6 +163,12 @@ export function AthleteJournal() {
   // extend into a nested function, since either could in principle be
   // called long after this render.
   const programYearId = currentId;
+  const entryId = entry?.id ?? null;
+  // Only his own, and only one the server has actually got. Jeff reading a
+  // shared entry here gets no delete control, which is the same line
+  // AthleteEntryPolicy#destroy? draws server-side; this is the polite half
+  // of it, not the enforcement.
+  const canDelete = entryId !== null && role === "athlete";
 
   function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -143,6 +191,16 @@ export function AthleteJournal() {
 
   function handleToggleShared() {
     dispatch(journalActions.setShared({ programYearId, date: today, shared: !shared }));
+  }
+
+  function handleDelete() {
+    // `entryId` below is what makes this reachable at all: the route is
+    // addressed by id (DELETE /api/v1/athlete_entries/:id), so an entry that
+    // exists only as a write still waiting in the outbox has nothing to
+    // delete and never shows the control.
+    if (entryId === null) return;
+    setJustDeleted(true);
+    dispatch(journalActions.deleteEntry({ side: "athlete", date: today, id: entryId }));
   }
 
   return (
@@ -193,6 +251,41 @@ export function AthleteJournal() {
           {saving ? "Saving..." : "Save"}
         </button>
       </form>
+
+      {/* Outside the form, and last on the page, so the tap that deletes is
+          nowhere near the tap that saves. It asks first: this is the only
+          control on Teddy's screen that removes his own writing, it cannot
+          be undone from here, and one stray thumb next to Save would cost
+          him the day. A window.confirm would be a wall of adult text in a
+          box he has no reason to trust, and the two states below can be read
+          and tapped by a 7-year-old. */}
+      {canDelete && (
+        <section className="athlete-journal__delete">
+          {confirmingDelete ? (
+            <>
+              <p>{DELETE_QUESTION}</p>
+              <p>{DELETE_DETAIL}</p>
+              {/* Keep it first, so the safe answer is the one under the
+                  thumb that just tapped. */}
+              <button type="button" onClick={() => setConfirmingDelete(false)}>
+                {DELETE_CANCEL}
+              </button>
+              <button type="button" onClick={handleDelete} disabled={saving}>
+                {DELETE_CONFIRM}
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={() => setConfirmingDelete(true)}>
+              {DELETE_LABEL}
+            </button>
+          )}
+        </section>
+      )}
+
+      {/* The entry is off this screen already, and the write that says so is
+          still in the outbox. Saying nothing here would look exactly like a
+          delete that had reached the server. */}
+      {justDeleted && entry === null && queued && <p role="status">{DELETE_QUEUED_TEXT}</p>}
     </div>
   );
 }

@@ -425,4 +425,115 @@ describe("the coach's journal", () => {
 
     expect(container).toBeEmptyDOMElement();
   });
+
+  // ---- deleting an entry --------------------------------------------------
+  describe("deleting an entry", () => {
+    function openExistingEntry() {
+      const { store } = renderCoachJournal(42);
+      loadDrills(store);
+      act(() => {
+        store.dispatch({ type: "journal/COACH_ENTRIES_FETCHED", payload: [EXISTING_ENTRY] });
+      });
+      setDate("2026-09-16");
+      return store;
+    }
+
+    it("offers nothing to delete on a day with no entry", () => {
+      const store = renderCoachJournal(42);
+      loadDrills(store.store);
+      setDate("2026-09-15");
+
+      expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
+    });
+
+    it("offers a delete on a day that has one", () => {
+      openExistingEntry();
+
+      expect(screen.getByRole("button", { name: "Delete this entry" })).toBeInTheDocument();
+    });
+
+    it("asks before it does anything", async () => {
+      const user = userEvent.setup();
+      const store = openExistingEntry();
+      const dispatched = trackDispatch(store);
+
+      await user.click(screen.getByRole("button", { name: "Delete this entry" }));
+
+      expect(screen.getByText("Delete this entry?")).toBeInTheDocument();
+      expect(dispatched.filter((a) => a.type === "journal/DELETE_ENTRY")).toHaveLength(0);
+    });
+
+    it("puts the question away again when he says keep it", async () => {
+      const user = userEvent.setup();
+      const store = openExistingEntry();
+      const dispatched = trackDispatch(store);
+
+      await user.click(screen.getByRole("button", { name: "Delete this entry" }));
+      await user.click(screen.getByRole("button", { name: "Keep it" }));
+
+      expect(screen.queryByText("Delete this entry?")).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Delete this entry" })).toBeInTheDocument();
+      expect(dispatched.filter((a) => a.type === "journal/DELETE_ENTRY")).toHaveLength(0);
+    });
+
+    // The route is asserted here, not just the action name: the request the
+    // screen's own dispatch carries is what actually goes on the wire.
+    // /api/v1/coach_entries/501 and DELETE are transcribed from routes.rb
+    // (`resources :coach_entries, only: %i[index create update destroy]`),
+    // not read back off anything in this app.
+    it("deletes the entry on screen, by its id, once he confirms", async () => {
+      const user = userEvent.setup();
+      const store = openExistingEntry();
+      const dispatched = trackDispatch(store);
+
+      await user.click(screen.getByRole("button", { name: "Delete this entry" }));
+      await user.click(screen.getByRole("button", { name: "Yes, delete it" }));
+
+      const deletes = dispatched.filter((a) => a.type === "journal/DELETE_ENTRY");
+      expect(deletes).toHaveLength(1);
+      expect(deletes[0]!.payload).toEqual({ side: "coach", date: "2026-09-16", id: 501 });
+      expect((deletes[0] as unknown as { request: { path: string; method: string } }).request).toEqual(
+        { path: "/api/v1/coach_entries/501", method: "DELETE" },
+      );
+    });
+
+    it("clears the form and the control once the entry is gone", () => {
+      const store = openExistingEntry();
+      expect(screen.getByLabelText(/what did you see/i)).toHaveValue(EXISTING_ENTRY.note);
+
+      act(() => {
+        store.dispatch({
+          type: "journal/ENTRY_DELETED",
+          payload: { side: "coach", date: "2026-09-16" },
+        });
+      });
+
+      expect(screen.getByLabelText(/what did you see/i)).toHaveValue("");
+      expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
+    });
+
+    it("says the delete is still waiting when it was made with no connection", async () => {
+      const user = userEvent.setup();
+      const store = openExistingEntry();
+
+      await user.click(screen.getByRole("button", { name: "Delete this entry" }));
+      await user.click(screen.getByRole("button", { name: "Yes, delete it" }));
+
+      act(() => {
+        // The exact QueueableAction a real offline delete queues, built the
+        // same way the screen built the one it just dispatched, so a queued
+        // write that did not match a real one would prove nothing.
+        store.dispatch({
+          type: "outbox/ENQUEUE",
+          payload: journalActions.deleteEntry({ side: "coach", date: "2026-09-16", id: 501 }),
+        });
+        store.dispatch({
+          type: "journal/ENTRY_DELETED",
+          payload: { side: "coach", date: "2026-09-16" },
+        });
+      });
+
+      expect(screen.getByText(/deleted here/i)).toBeInTheDocument();
+    });
+  });
 });

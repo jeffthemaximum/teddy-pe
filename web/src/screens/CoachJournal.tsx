@@ -4,17 +4,11 @@ import {
   drills,
   journalActions,
   journalSelectors,
-  outboxSelectors,
   selectDrills,
   useAppDispatch,
   useAppSelector,
 } from "@teddy-pe/core";
-import type {
-  CoachEntry,
-  DrillRatingValue,
-  QueuedWrite,
-  SaveCoachEntryPayload,
-} from "@teddy-pe/core";
+import type { CoachEntry, DrillRatingValue, SaveCoachEntryPayload } from "@teddy-pe/core";
 import { Loading } from "../components/Loading";
 import { ErrorNote } from "../components/ErrorNote";
 import { WaitingForYearId } from "../components/WaitingForYearId";
@@ -46,6 +40,17 @@ const RATING_VALUES: DrillRatingValue[] = ["not_yet", "getting", "owns"];
 function ratingLabel(value: DrillRatingValue): string {
   return value.replace(/_/g, " ");
 }
+
+// The delete, in the same two steps Teddy's screen uses. It is the same
+// irreversible act and he taps it on a phone with one thumb straight after a
+// session, so one pattern, asked once, in both places.
+const DELETE_LABEL = "Delete this entry";
+const DELETE_QUESTION = "Delete this entry?";
+const DELETE_DETAIL =
+  "It comes off the app and out of the next export. The row itself keeps every word.";
+const DELETE_CONFIRM = "Yes, delete it";
+const DELETE_CANCEL = "Keep it";
+const DELETE_QUEUED_TEXT = "Deleted here. It will reach the server once you have a connection.";
 
 interface FormState {
   note: string;
@@ -85,21 +90,6 @@ function formFrom(entry: CoachEntry | null): FormState {
   };
 }
 
-// Whether a coach-entry write for this exact date is still sitting in the
-// outbox, waiting for a connection. SAVE_QUEUED clears the day's saving
-// flag the moment a write is off the app's hands and onto the outbox's (see
-// core's journal saga), which looks identical to nothing having been typed
-// at all unless something else says the write is still owed. The queue's
-// dedupeKey format ("coach:<date>") is not part of core's public surface,
-// so this reads the one thing every coach-entry write actually carries on
-// its own request instead: the session date inside its own request body.
-function isQueuedFor(queue: QueuedWrite[], date: string): boolean {
-  return queue.some((write) => {
-    const body = write.action.request.body as { coach_entry?: { session_date?: string } } | null;
-    return body?.coach_entry?.session_date === date;
-  });
-}
-
 export function CoachJournal() {
   const dispatch = useAppDispatch();
 
@@ -125,10 +115,31 @@ export function CoachJournal() {
   const [date, setDate] = useState(() => todayISODate());
   const existingEntry = useAppSelector(journalSelectors.selectCoachEntryFor(date));
   const saving = useAppSelector(journalSelectors.selectIsSaving(date));
-  const queue = useAppSelector(outboxSelectors.selectQueue);
-  const waitingToSend = !saving && isQueuedFor(queue, date);
+  // Whether a write for this exact date is still sitting in the outbox.
+  // SAVE_QUEUED clears the day's saving flag the moment a write is off the
+  // app's hands and onto the outbox's, which looks identical to nothing
+  // having been typed unless something says the write is still owed.
+  //
+  // This used to read the session date out of a queued write's request body.
+  // A delete has no body at all (DELETE /api/v1/coach_entries/:id carries
+  // nothing), so that reading said "nothing is queued" for exactly the write
+  // a person most needs told about. core's own selector matches on the
+  // dedupeKey every journal write carries, delete included, and asks in this
+  // screen's language rather than making it build the key itself.
+  const queued = useAppSelector(journalSelectors.selectIsEntryQueued("coach", date));
+  const waitingToSend = !saving && queued;
 
   const [form, setForm] = useState<FormState>(() => formFrom(existingEntry));
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [justDeleted, setJustDeleted] = useState(false);
+
+  // Every coach entry in this slice is his own: CoachEntryPolicy::Scope is
+  // `scope.kept.where(user_id: user.id)`, so there is no such thing here as
+  // somebody else's entry to guard against, which is why this asks only
+  // whether there is a saved entry at all and not who wrote it. Teddy never
+  // reaches this screen (routes.tsx, roles ["coach"]), and if he typed the
+  // URL the API would refuse him anyway.
+  const entryId = existingEntry?.id ?? null;
 
   // Reopens the form for whichever date is on screen: the entry that date
   // already has, or a blank one when it has none. Runs again whenever the
@@ -137,6 +148,10 @@ export function CoachJournal() {
   // second visit to it.
   useEffect(() => {
     setForm(formFrom(existingEntry));
+    // An open question never survives the thing it was asking about. Change
+    // the date, or watch the entry go, and the confirm closes rather than
+    // sitting there pointed at something else.
+    setConfirmingDelete(false);
   }, [date, existingEntry]);
 
   // Fires once currentId resolves from null to a real id, and again only if
@@ -203,6 +218,14 @@ export function CoachJournal() {
       ratings: form.ratings,
     };
     dispatch(journalActions.saveCoachEntry(payload));
+  }
+
+  function handleDelete() {
+    // Addressed by id, the same as the athlete's: an entry that has only
+    // ever been a queued write has no row to delete and shows no control.
+    if (entryId === null) return;
+    setJustDeleted(true);
+    dispatch(journalActions.deleteEntry({ side: "coach", date, id: entryId }));
   }
 
   return (
@@ -328,6 +351,35 @@ export function CoachJournal() {
           Save
         </button>
       </form>
+
+      {/* Outside the form and last on the page, away from Save, and it asks
+          before it acts. Same reasoning as the athlete screen's: one tap
+          cannot be an accident when the tap that does the thing is a
+          different button that did not exist a moment ago. */}
+      {entryId !== null && (
+        <section className="coach-journal__delete">
+          {confirmingDelete ? (
+            <>
+              <p>{DELETE_QUESTION}</p>
+              <p>{DELETE_DETAIL}</p>
+              <button type="button" onClick={() => setConfirmingDelete(false)}>
+                {DELETE_CANCEL}
+              </button>
+              <button type="button" onClick={handleDelete} disabled={saving}>
+                {DELETE_CONFIRM}
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={() => setConfirmingDelete(true)}>
+              {DELETE_LABEL}
+            </button>
+          )}
+        </section>
+      )}
+
+      {justDeleted && existingEntry === null && queued && (
+        <p role="status">{DELETE_QUEUED_TEXT}</p>
+      )}
     </div>
   );
 }
