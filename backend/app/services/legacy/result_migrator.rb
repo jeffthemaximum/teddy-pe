@@ -58,6 +58,18 @@ module Legacy
         return false
       end
 
+      value = row.value.to_s.strip
+      if value.empty?
+        # api/results.js deleted the row when someone cleared a value, so a
+        # blank in the old table means no measurement was recorded, not a
+        # data problem. That is an ordinary fact about a partly filled test
+        # sheet and does not belong in :failed, which exists to tell Jeff
+        # which rows he cannot yet trust the counts around.
+        @skipped << { window: row.test_window, test_id: row.test_id,
+                      reason: "the value was cleared, so there is nothing to migrate" }
+        return false
+      end
+
       existing = TestResult.find_by(program_year: year, test_date: date, battery_measure: measure)
       if existing
         @conflicts << { window: row.test_window, test_id: row.test_id,
@@ -68,7 +80,7 @@ module Legacy
       begin
         TestResult.create!(program_year: year, athlete: year.athlete, test_date: date,
                            battery_measure: measure, recorded_by_user: @coach,
-                           raw_value: row.value.to_s.strip, recorded_at: row.recorded_at)
+                           raw_value: value, recorded_at: row.recorded_at)
         true
       rescue StandardError => e
         # A legacy value with no digit in it (or anything else a validation

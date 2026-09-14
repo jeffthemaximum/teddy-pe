@@ -100,6 +100,25 @@ RSpec.describe Legacy::ResultMigrator, :legacy do
     ])
   end
 
+  # api/results.js deleted the row when someone cleared a value, so a blank
+  # value in the old table means no measurement was recorded, not a data
+  # problem. It must not land in :failed, which is the block that tells
+  # Jeff the migration is not yet safe to follow with a deletion: a routine
+  # cleared value diluting that signal is the failure mode being guarded
+  # against here. The legacy value column is not null, so a whitespace
+  # string, not NULL, is the realistic shape of a cleared value.
+  it "skips a cleared value and says so, instead of failing it" do
+    insert_result(window: "2026-09", test_id: "t1", value: "   ")
+
+    report = described_class.new(coach: coach).run!
+
+    expect(TestResult.count).to eq(0)
+    expect(report[:skipped]).to eq([
+      { window: "2026-09", test_id: "t1", reason: "the value was cleared, so there is nothing to migrate" },
+    ])
+    expect(report[:failed]).to eq([])
+  end
+
   it "can be run twice without making a second copy" do
     insert_result(window: "2026-09", test_id: "t1", value: "4.6")
 
