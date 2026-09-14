@@ -420,3 +420,13 @@ Thursday is Wall Day, low intent by design, and its dad note already said high-i
 - **Tuesday stays inside its fixed range.** Rings Day is fixed at 75 to 90 minutes. Its blocks drop from 86 to 78, still inside, so the declared range is unchanged. Thursday's blocks go from 117 to 125 and its range moves from 110-120 to 115-125.
 - **The dad note gained a line.** A card that quietly grows a test its note never mentions is a worse card. Thursday now opens with what to watch on the rope, and the tennis and basketball notes follow unchanged.
 - **The move is pinned by a test that can fail.** `plan_seeder_spec.rb` asserts the rope is on Thursday and absent from Tuesday, both ends. A one-sided check would pass a card that gained the test while Tuesday kept it, which would hand Teddy the same test twice in one week. It was run against the old content first and failed there.
+
+## 2026-09-14: deploying the API is a manual step, and the docs said it was not
+
+**What happened.** The jump rope test was still showing on Tuesday two hours after the move to Thursday was merged. The content was correct on `main` and pinned by a test. The API had simply never been deployed: the newest Fly release was v8 at 14:43, running an image built around 14:27, and the merge landed at 15:13. The plan YAML ships inside the image and the release command seeds from the image, so every release since had been seeding the old card.
+
+**The sentence that hid it.** `CLAUDE.md` and `README.md` both claimed a merge to `main` seeds production on its own. `.github/workflows/ci.yml` scans, lints and tests, and never talks to Fly. Both files now say the deploy is manual, give the command, and warn that a Vercel rebuild moves no program content because the cards come from the API's database.
+
+**`fly deploy` ships the current directory, not `main`.** The build context is whatever is on disk, and the plan YAML is inside it. A deploy from the worktree at `.claude/worktrees/feature+rails-react-rewrite`, which sits on `docs/tennis-subtarget-decision`, would have put the rope back on Tuesday. That is now written next to the command in both files.
+
+**No auto-deploy on merge was added.** It would prevent a repeat and it is not a docs decision: it points a GitHub Action at a production database holding Teddy's journal, and it is Jeff's call. The content changes a few times a month, which is the argument for leaving the deploy as something someone runs on purpose.
