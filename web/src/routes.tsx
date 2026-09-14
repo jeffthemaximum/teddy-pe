@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import type { Role } from "@teddy-pe/core";
 import { Year } from "./screens/Year";
 import { Month } from "./screens/Month";
+import { ThisWeek } from "./screens/ThisWeek";
 
 // A screen a person can tap that always answers 403 is worse than no screen
 // at all: it teaches them the app is broken. This table is not a guess, it
@@ -41,10 +42,10 @@ export interface NavItem {
   element: JSX.Element;
 }
 
-// Later tasks (6 and 7) replace these placeholders with the real This Week
-// and Glossary screens, and Phase 2c adds the journal forms and the test
-// sheet. Task 4 already replaced /year with the real screen, and Task 5
-// replaced /month.
+// Task 7 replaces the remaining placeholders with the real Glossary
+// screen, and Phase 2c adds the journal forms and the test sheet. Task 4
+// already replaced /year with the real screen, Task 5 replaced /month, and
+// Task 6 replaced /week.
 function Placeholder({ title }: { title: string }) {
   return <p className="placeholder">{title} is coming soon.</p>;
 }
@@ -58,7 +59,7 @@ function Placeholder({ title }: { title: string }) {
 export const NAV_ITEMS: NavItem[] = [
   { to: "/year", label: "Year", roles: "any", element: <Year /> },
   { to: "/month", label: "Month", roles: "any", element: <Month /> },
-  { to: "/week", label: "This Week", roles: "any", element: <Placeholder title="This Week" /> },
+  { to: "/week", label: "This Week", roles: "any", element: <ThisWeek /> },
   { to: "/glossary", label: "Glossary", roles: "any", element: <Placeholder title="Glossary" /> },
   { to: "/progress", label: "Progress", roles: "any", element: <Placeholder title="Progress" /> },
   { to: "/tests", label: "Tests", roles: "any", element: <Placeholder title="Tests" /> },
