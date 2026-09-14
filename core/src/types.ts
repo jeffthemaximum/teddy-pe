@@ -187,14 +187,65 @@ export interface Drill {
   video: string | null;
 }
 
+// ranks, battery and drills were unknown[] because production had no awards
+// or results yet and nobody was going to invent a shape nobody had seen.
+// Typed here instead from backend/app/services/progression_payload.rb itself
+// (the models and serialisers it touches: RankAward, TestResult,
+// BatteryMeasure, DrillRating, Drill), then proven against a real payload
+// captured from a locally seeded database — see
+// .superpowers/sdd/2026-09-14-phase-2c-writing-screens/progression-payload.json
+// and progression-shape-report.md for how.
+//
+// Three things a chart needs to know, established from the producer:
+//
+// - Every entry in `battery` carries `direction`: "lower" or "higher", never
+//   "growth" (growth is height, filtered out of `battery` and reported
+//   separately below with no direction of its own, since a pace is never
+//   read as worse). BatteryMeasure#direction is a NOT-NULL enum column, so
+//   this is guaranteed, not just observed.
+// - Every numeric value the payload sends — `first`, `latest`, `change` (a
+//   verdict word, not a number) and every `series[].value`, including
+//   height's — is a string or null, from `numeric_value&.to_s`, the same
+//   deliberate choice test_results_controller.rb makes. None of these are
+//   numbers on the wire; a chart parses them.
+// - A battery_measure with zero TestResults is not a card with an empty
+//   series: `battery` groups only over rows that exist, so that measure's
+//   whole entry is absent from the array. A chart cannot assume one card
+//   per defined measure. `height` is the one exception with a fixed shape:
+//   it is always present, `{ series: [], cm_per_year: null }` when nothing
+//   is recorded yet, because it is a single named key rather than a
+//   group-by result.
 export interface Progression {
   years: { id: number; label: string; starts_on: string; ends_on: string; status: string }[];
-  // Production has no awards or results yet. Nobody here invents a shape
-  // nobody has seen; these stay unknown[] until the API sends real ones.
-  ranks: unknown[];
-  battery: unknown[];
-  height: { series: { window: string; value: number }[]; cm_per_year: number | null };
-  drills: unknown[];
+  ranks: {
+    block_key: string;
+    block_name: string;
+    awarded_on: string;
+    patch_count: number;
+    year_label: string;
+  }[];
+  battery: {
+    test_id: string;
+    label: string;
+    unit: string;
+    direction: "lower" | "higher";
+    first: string | null;
+    latest: string | null;
+    change: "better" | "worse" | "same" | null;
+    series: { window: string; value: string | null; recorded_at: string; year_label: string }[];
+  }[];
+  height: {
+    series: { window: string; value: string | null; recorded_at: string; year_label: string }[];
+    cm_per_year: number | null;
+  };
+  // Mastery comes out of the coach's journal, so a viewer's request gets []
+  // regardless of what is actually recorded (ProgressionPayload#drills).
+  drills: {
+    slug: string;
+    name: string;
+    latest: DrillRatingValue;
+    history: { session_date: string; rating: DrillRatingValue; year_label: string }[];
+  }[];
 }
 
 // Test-battery shapes belong to the testResults duck (Task 8), declared here
