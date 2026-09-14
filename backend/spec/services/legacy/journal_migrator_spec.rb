@@ -1,0 +1,150 @@
+require "rails_helper"
+
+RSpec.describe Legacy::JournalMigrator, :legacy do
+  let(:coach) { create(:user, :coach) }
+  let(:year) { create(:program_year, starts_on: "2026-09-14", ends_on: "2027-08-15") }
+
+  # NOTE: the brief's own version of this helper opens the bind-values array
+  # on the same line as the exec_query heredoc marker ("exec_query(<<~SQL,
+  # "diary", ["), then spreads the array elements across the lines that
+  # Ruby actually treats as the heredoc's body. That does not parse: the
+  # heredoc swallows everything up to the "SQL" terminator as string
+  # content, so the "[" never finds its "]" as real Ruby, which is a plain
+  # SyntaxError (confirmed with `ruby -c`), not something the constant
+  # being undefined could explain. Binding the array to a local first keeps
+  # every value, order, and the SQL text itself identical; only the
+  # placement of the array literal changes.
+  def insert_diary(date:, **attrs)
+    row = { note: nil, pain_note: nil, overall: nil, energy: nil, flag_pain: false,
+            challenge_num: nil, ratings: {}, created_at: "2026-09-14 08:00:00+00",
+            dow: "Mon", plan_month: "2026-09", week: 1, device: "iPhone" }.merge(attrs)
+    binds = [
+      date, row[:note], row[:pain_note], row[:overall], row[:energy], row[:flag_pain],
+      row[:challenge_num], row[:ratings].to_json, row[:created_at], row[:dow],
+      row[:plan_month], row[:week], row[:device],
+    ]
+    ActiveRecord::Base.connection.exec_query(<<~SQL, "diary", binds)
+      insert into diary_entry
+        (id, session_date, note, pain_note, overall, energy, flag_pain,
+         challenge_num, ratings, created_at, dow, plan_month, week, device)
+      values ('e-' || $1::text, $1::date, $2, $3, $4, $5, $6, $7, $8::jsonb,
+              $9::timestamptz, $10, $11, $12, $13)
+    SQL
+  end
+
+  it "puts the entry on the coach's account in the year that contains its date" do
+    year
+    insert_diary(date: "2026-09-16", note: "Sharp on the wall today.")
+
+    described_class.new(coach: coach).run!
+
+    entry = CoachEntry.sole
+    expect(entry.user).to eq(coach)
+    expect(entry.program_year).to eq(year)
+    expect(entry.athlete).to eq(year.athlete)
+    expect(entry.session_date).to eq(Date.new(2026, 9, 16))
+    expect(entry.note).to eq("Sharp on the wall today.")
+  end
+
+  # Each field written out by hand. Reading them off the legacy row in a loop
+  # would pass against a migrator that copied nothing but the column names.
+  it "carries every field the new schema has a home for" do
+    year
+    insert_diary(date: "2026-09-16", overall: 4, energy: 3, flag_pain: true,
+                 pain_note: "Left ankle, mild.", note: "Good session.",
+                 challenge_num: "3")
+
+    described_class.new(coach: coach).run!
+
+    entry = CoachEntry.sole
+    expect(entry.overall).to eq(4)
+    expect(entry.energy).to eq(3)
+    expect(entry.flag_pain).to be(true)
+    expect(entry.pain_note).to eq("Left ankle, mild.")
+    expect(entry.note).to eq("Good session.")
+    expect(entry.challenge_num).to eq("3")
+  end
+
+  it "keeps the day the entry was written, not the day it was migrated" do
+    year
+    insert_diary(date: "2026-09-16", created_at: "2026-09-16 19:30:00+00")
+
+    described_class.new(coach: coach).run!
+
+    expect(CoachEntry.sole.created_at).to be_within(1.second).of(Time.utc(2026, 9, 16, 19, 30))
+  end
+
+  it "explodes the ratings json into drill ratings" do
+    year
+    skip_drill = create(:drill, slug: "a-skip")
+    wall = create(:drill, slug: "wall-rally")
+    insert_diary(date: "2026-09-16", ratings: { "a-skip" => "owns", "wall-rally" => "getting" })
+
+    described_class.new(coach: coach).run!
+
+    ratings = DrillRating.order(:drill_id).pluck(:drill_id, :rating)
+    expect(ratings).to match_array([[skip_drill.id, "owns"], [wall.id, "getting"]])
+    expect(DrillRating.first.session_date).to eq(Date.new(2026, 9, 16))
+    expect(DrillRating.first.program_year).to eq(year)
+  end
+
+  # CoachEntry#replace_ratings! does `Drill.find_by(slug:) or next`, which is
+  # right for a live form and wrong for a migration: a slug renamed since the
+  # rating was written would vanish with no trace. The migrator reports it.
+  it "reports a rating whose drill no longer exists instead of dropping it in silence" do
+    year
+    create(:drill, slug: "a-skip")
+    insert_diary(date: "2026-09-16", ratings: { "a-skip" => "owns", "renamed-drill" => "getting" })
+
+    report = described_class.new(coach: coach).run!
+
+    expect(report[:dropped_ratings]).to eq([
+      { session_date: Date.new(2026, 9, 16), slug: "renamed-drill" },
+    ])
+    expect(DrillRating.count).to eq(1)
+  end
+
+  it "links the day card when the date has one" do
+    year
+    card = create(:day_card, date: "2026-09-16", program_year: year)
+
+    insert_diary(date: "2026-09-16")
+    described_class.new(coach: coach).run!
+
+    expect(CoachEntry.sole.day_card).to eq(card)
+  end
+
+  it "skips a date that belongs to no program year and says so" do
+    year
+    insert_diary(date: "2020-01-01")
+
+    report = described_class.new(coach: coach).run!
+
+    expect(CoachEntry.count).to eq(0)
+    expect(report[:skipped]).to eq([
+      { session_date: Date.new(2020, 1, 1), reason: "no program year contains this date" },
+    ])
+  end
+
+  it "can be run twice without making a second copy" do
+    year
+    insert_diary(date: "2026-09-16", note: "Good session.")
+
+    described_class.new(coach: coach).run!
+    second = described_class.new(coach: coach).run!
+
+    expect(CoachEntry.count).to eq(1)
+    expect(second[:migrated]).to eq(1)
+  end
+
+  it "leaves the legacy rows exactly as it found them" do
+    year
+    insert_diary(date: "2026-09-16", note: "Good session.")
+    before = ActiveRecord::Base.connection.select_all("select * from diary_entry").to_a
+
+    described_class.new(coach: coach).run!
+
+    after = ActiveRecord::Base.connection.select_all("select * from diary_entry").to_a
+    expect(after).to eq(before)
+  end
+end
