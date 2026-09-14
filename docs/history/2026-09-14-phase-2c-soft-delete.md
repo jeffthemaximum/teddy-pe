@@ -45,7 +45,16 @@ Both directions were checked by breaking them: neutering `kept` fails 13 of the 
 
 The two packages were then checked against each other rather than against an idea of each other. The path strings `core/` builds, `/api/v1/athlete_entries/77` and `/api/v1/coach_entries/77`, were handed to the real Rails router, which recognises both as `destroy` on their own controllers. An end-to-end test in `core/` drives the real store and the real sagas with only `fetch` mocked, and asserts the URL and the method that actually go out.
 
+## The one thing that came back for a fix
+
+A queued delete that 404s on replay was reported with the words a refused save gets: "That entry did not save." The realistic cause of that 404 is the row already being gone, which is what the delete asked for. Teddy deletes an entry at a court with no signal, it queues, the replay fires at home, the row is already gone, and he is told his entry did not save about a delete that worked perfectly.
+
+Two fixes were considered and both declined. Threading the method through the outbox's failure action for the journal's benefit puts journal semantics in a duck that must not know what a journal is. Giving deletes their own key prefix gives up the dedupe the whole design rests on.
+
+The fix taken is that the replay path applies the same rule the live path already applied: a 404 in response to a DELETE means the thing is gone, so the write succeeded. That is a property of DELETE rather than anything about journals, and the queued action already carries its own `request.method`, so the outbox can see it is a delete without knowing what was deleted. Everything else keeps its behaviour: a 404 to anything else is still a permanent rejection, a 401 still stops the queue and signs out, and offline still leaves every write where it is.
+
+Two fixtures, because a single queued delete that 404s proves nothing on its own: the queue empties whether the write was treated as a success or dropped and forgotten. One asserts the duck that queued it is told it succeeded and is not told it failed; the other asserts a 404 to a POST is still permanent. Proved by widening the rule to every 404 regardless of method and watching the POST test fail.
+
 ## Left open
 
-- A queued delete that is permanently refused on replay is reported with the words a refused save gets ("That entry did not save."), because the outbox's failure action carries a dedupe key and a message and nothing that says which kind of write it was. The realistic cause is a 404, which means the entry is already gone, so the message would be wrong about something that actually worked. The live path already treats a 404 as success; the replay path does not.
 - Nothing recovers a deleted entry from inside the app. That is deliberate and it is Jeff's console.
