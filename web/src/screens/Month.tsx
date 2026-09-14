@@ -8,7 +8,23 @@ import { ErrorNote } from "../components/ErrorNote";
 // blank month reads as broken; "waking up" reads as slow.
 const WAKING_LABEL = "Waking up the server. The month can take a few seconds to load.";
 
+// Shown while the id itself is still unknown, the same gap Year.tsx already
+// names with FINDING_YEAR_LABEL. selectCurrentProgramYearId is null both
+// while /api/v1/me is still in flight right after sign-in, and, more
+// lastingly, when a restore succeeded on a cached session because /me could
+// not answer for a reason that says nothing about the token (a cold server,
+// no connection): core deliberately lets that restore succeed rather than
+// sign someone out over a slow tunnel, so a signed-in person can genuinely
+// sit at this screen with no id yet. Saying so, in the same waking voice as
+// everywhere else, beats a content area that just stays empty with no
+// explanation.
+const FINDING_MONTH_LABEL = "Waking up the server. Finding this month can take a few seconds too.";
+
 const DOW_ORDER = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+function byNumber(weeks: WeekPayload[]): WeekPayload[] {
+  return [...weeks].sort((a, b) => a.number - b.number);
+}
 
 function byWeekday(days: DayCard[]): DayCard[] {
   return [...days].sort((a, b) => DOW_ORDER.indexOf(a.dow) - DOW_ORDER.indexOf(b.dow));
@@ -54,6 +70,13 @@ export function Month() {
   }, [dispatch, yearId]);
 
   if (!data) {
+    if (yearId === null) {
+      return (
+        <main className="month">
+          <Loading label={FINDING_MONTH_LABEL} />
+        </main>
+      );
+    }
     if (loading) {
       return (
         <main className="month">
@@ -68,10 +91,14 @@ export function Month() {
         </main>
       );
     }
-    // Nothing has loaded and nothing has failed yet. There is nothing true
-    // to say about the month, so there is nothing to render.
+    // The id is known, nothing has loaded and nothing has failed: the fetch
+    // above has been dispatched but the store has not caught up in this
+    // render yet. Every screen can be asked to render before its own data
+    // arrives.
     return null;
   }
+
+  const weeks = byNumber(data.weeks);
 
   return (
     <main className="month">
@@ -81,7 +108,7 @@ export function Month() {
       <h1>{data.label}</h1>
       <p className="month__range">{data.range_display}</p>
 
-      {data.weeks.map((week) => (
+      {weeks.map((week) => (
         <WeekSection key={week.number} week={week} />
       ))}
     </main>

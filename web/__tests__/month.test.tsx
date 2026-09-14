@@ -16,7 +16,12 @@ import { stubMe, ME_PROGRAM_YEAR_ID } from "../vitest.setup";
 // times; weeks 1 and 2 here rule that out on their own.
 //
 // Each week's seven days are listed out of weekday order on purpose, so a
-// component that forgot to sort them can fail the ordering test.
+// component that forgot to sort them can fail the ordering test. The three
+// weeks themselves are also handed to the store out of `number` order (see
+// MONTH_PLAN below), the same reasoning: `MonthPlan.has_many :weeks, ->
+// { order(:number) }` makes the backend's own order reliable today, but
+// nothing here should depend on that surviving a future refactor with
+// silence as the failure mode.
 
 function day(overrides: Partial<DayCard> & Pick<DayCard, "id" | "dow" | "date" | "name" | "role">): DayCard {
   return {
@@ -122,15 +127,35 @@ const MONTH_PLAN: MonthPlan = {
   label: "Cub block, weeks 1 to 3",
   range_display: "Sep 14 to Oct 4",
   block_key: "cub",
-  weeks: [WEEK_1, WEEK_2, WEEK_3],
+  // Out of number order on purpose: see the comment above WEEK_1.
+  weeks: [WEEK_3, WEEK_1, WEEK_2],
 };
 
 function weekRegion(name: RegExp) {
   return screen.getByRole("region", { name });
 }
 
-function renderMonth() {
+// Seeds the auth slice the way a real restore does, in one action, so a
+// rendering test does not have to run the sign-in or restore saga just to
+// get a program year id in front of Month. `auth/RESTORE_FINISHED` is the
+// same action core's own restoreSessionSaga dispatches once /api/v1/me
+// answers (or, with current_program_year_id null, once it could not) — the
+// same helper year.test.tsx uses for the same reason.
+function seedAuth(store: ReturnType<typeof createCoreStore>, currentProgramYearId: number | null) {
+  store.dispatch({
+    type: "auth/RESTORE_FINISHED",
+    payload: {
+      jwt: "a.b.c",
+      user: { id: 1, email: "frey.maxim@gmail.com", name: "Jeff", role: "coach" },
+      athlete: null,
+      current_program_year_id: currentProgramYearId,
+    },
+  });
+}
+
+function renderMonth(currentProgramYearId: number | null = 42) {
   const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
+  seedAuth(store, currentProgramYearId);
   return {
     store,
     ...render(
@@ -193,6 +218,26 @@ describe("the Month view", () => {
     expect(monthFetches()).toHaveLength(1);
   });
 
+  it("shows a waiting message rather than a blank panel while the current year id is not known yet", () => {
+    // selectCurrentProgramYearId is null both while /api/v1/me is still in
+    // flight right after sign-in, and, more lastingly, when a restore
+    // succeeded on a cached session because /me could not answer for a
+    // reason that says nothing about the token (a cold server, no
+    // connection). core deliberately lets that restore succeed rather than
+    // sign someone out over a slow tunnel, so a signed-in person can sit
+    // here with no id yet, and this screen must say something rather than
+    // leave the content area empty.
+    //
+    // Before this test existed, the component fell straight through to
+    // `return null` for this exact case: no fetch is ever dispatched
+    // (nothing to dispatch it with), so data/loading/error all stay falsy
+    // forever, and a signed-in person got a blank panel with no
+    // explanation, indefinitely, if /me never recovered.
+    renderMonth(null);
+
+    expect(screen.getByRole("status")).toHaveTextContent(/waking/i);
+  });
+
   it("says the server may be waking rather than showing a blank panel", () => {
     const { store } = renderMonth();
     act(() => {
@@ -229,19 +274,52 @@ describe("the Month view", () => {
   });
 
   it("renders every week with its own theme and dates", () => {
+    // Scoped to each week's own region, both ways: theme and dates_display
+    // are asserted together inside the region that week's own heading names,
+    // and each week's dates are asserted absent from the other two regions.
+    // The earlier, unscoped version of this test (plain screen.getByText,
+    // no `within`) would still pass content that leaked into the wrong
+    // week's section, since it only ever checked presence anywhere on the
+    // page.
     const { store } = renderMonth();
     act(() => {
       store.dispatch({ type: "plan/SUCCEEDED", payload: MONTH_PLAN });
     });
 
-    expect(screen.getByRole("heading", { name: /week 1: baseline & land/i })).toBeInTheDocument();
-    expect(screen.getByText("Sep 14 to Sep 20")).toBeInTheDocument();
+    const week1 = weekRegion(/week 1/i);
+    expect(within(week1).getByRole("heading", { name: /baseline & land/i })).toBeInTheDocument();
+    expect(within(week1).getByText("Sep 14 to Sep 20")).toBeInTheDocument();
 
-    expect(screen.getByRole("heading", { name: /week 2: build the touches/i })).toBeInTheDocument();
-    expect(screen.getByText("Sep 21 to Sep 27")).toBeInTheDocument();
+    const week2 = weekRegion(/week 2/i);
+    expect(within(week2).getByRole("heading", { name: /build the touches/i })).toBeInTheDocument();
+    expect(within(week2).getByText("Sep 21 to Sep 27")).toBeInTheDocument();
 
-    expect(screen.getByRole("heading", { name: /week 3: trials/i })).toBeInTheDocument();
-    expect(screen.getByText("Sep 28 to Oct 4")).toBeInTheDocument();
+    const week3 = weekRegion(/week 3/i);
+    expect(within(week3).getByRole("heading", { name: /trials/i })).toBeInTheDocument();
+    expect(within(week3).getByText("Sep 28 to Oct 4")).toBeInTheDocument();
+
+    expect(within(week1).queryByText("Sep 21 to Sep 27")).not.toBeInTheDocument();
+    expect(within(week1).queryByText("Sep 28 to Oct 4")).not.toBeInTheDocument();
+    expect(within(week2).queryByText("Sep 14 to Sep 20")).not.toBeInTheDocument();
+    expect(within(week2).queryByText("Sep 28 to Oct 4")).not.toBeInTheDocument();
+    expect(within(week3).queryByText("Sep 14 to Sep 20")).not.toBeInTheDocument();
+    expect(within(week3).queryByText("Sep 21 to Sep 27")).not.toBeInTheDocument();
+  });
+
+  it("renders the three weeks in number order, not the order they arrived", () => {
+    // MONTH_PLAN hands the store WEEK_3, WEEK_1, WEEK_2 in that order. This
+    // fails if the component does not sort by `number`.
+    const { store } = renderMonth();
+    act(() => {
+      store.dispatch({ type: "plan/SUCCEEDED", payload: MONTH_PLAN });
+    });
+
+    const headings = screen.getAllByRole("heading", { level: 2 }).map((el) => el.textContent);
+    expect(headings).toEqual([
+      "Week 1: Baseline & Land",
+      "Week 2: Build the Touches",
+      "Week 3: Trials",
+    ]);
   });
 
   it("shows each week's spend and its budget, and they are different numbers", () => {
@@ -343,7 +421,24 @@ describe("the Month view", () => {
   });
 
   it("renders nothing rather than throwing before the month has loaded", () => {
+    // Every screen can render before its data arrives. A component that
+    // throws on null data turns a slow server into a crash. The id is known
+    // here (so the effect fires and skips the "finding the month" branch),
+    // but the FETCH action it dispatches is intercepted before it can reach
+    // the reducer, freezing the component in the instant between "the id
+    // arrived" and "the resulting fetch updated loading" - the exact gap
+    // the component's own fallback (`return null`) is for. Without the
+    // intercept, this would only ever observe the FINDING_MONTH_LABEL
+    // branch above (yearId still null) or the WAKING_LABEL branch (loading
+    // already true), never the true empty case.
     const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
+    seedAuth(store, 42);
+    const realDispatch = store.dispatch;
+    store.dispatch = ((action: { type: string }) => {
+      if (action.type === "plan/FETCH") return action;
+      return realDispatch(action);
+    }) as typeof store.dispatch;
+
     const { container } = render(
       <Provider store={store}>
         <Month />
