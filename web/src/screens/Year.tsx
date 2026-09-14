@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from "react";
-import { programYear, programYears, useAppDispatch, useAppSelector } from "@teddy-pe/core";
+import { useEffect } from "react";
+import { authSelectors, programYear, useAppDispatch, useAppSelector } from "@teddy-pe/core";
 import { Loading } from "../components/Loading";
 import { ErrorNote } from "../components/ErrorNote";
 
@@ -9,6 +9,17 @@ import { ErrorNote } from "../components/ErrorNote";
 // felt right here. Same 6.6 to 7.6 second wake as sign in (see SignIn.tsx).
 const WAKING_LABEL = "Waking up the server. The year can take a few seconds to load.";
 
+// Shown while the id itself is still unknown. `selectCurrentProgramYearId`
+// is null both while /api/v1/me is still in flight right after sign-in (it
+// is fetched in the background, not waited on) and, more lastingly, when a
+// restore succeeded on a cached session because /me could not answer for a
+// reason that says nothing about the token (a cold server, no connection).
+// core deliberately lets that restore succeed rather than sign someone out
+// over a slow tunnel, so a signed-in person can genuinely sit at this
+// screen with no id yet. Saying so, in the same waking voice as everywhere
+// else, beats a content area that just stays empty with no explanation.
+const FINDING_YEAR_LABEL = "Waking up the server. Finding this year can take a few seconds too.";
+
 function byPosition<T extends { position: number }>(items: T[]): T[] {
   return [...items].sort((a, b) => a.position - b.position);
 }
@@ -16,29 +27,19 @@ function byPosition<T extends { position: number }>(items: T[]): T[] {
 export function Year() {
   const dispatch = useAppDispatch();
 
-  // core has no notion of "the current program year id" on its own public
-  // surface. The auth duck's User is only { id, email, name, role }: it
-  // never calls /api/v1/me, and authSelectors has no year id to read
-  // (checked ducks/auth/selectors.ts, reducer.ts and types.ts directly).
-  // The backend's MeController does send `current_program_year_id`, but
-  // nothing in core fetches or exposes it, and this task cannot change
-  // core. The one place "current" does appear on core's exported surface
-  // is ProgramYearSummary.is_current, on the programYears (plural) list
-  // duck, so that is what this screen uses to find the id, rather than
-  // reaching around core with a raw request of its own or guessing one.
-  const yearsData = useAppSelector(programYears.selectors.selectData);
-  const currentId = useMemo(() => {
-    const list = yearsData?.program_years ?? [];
-    return list.find((year) => year.is_current)?.id ?? null;
-  }, [yearsData]);
+  // core now carries the current program year id itself, read at sign-in
+  // and at restore from /api/v1/me (see core/src/ducks/auth). This used to
+  // be a gap: core had no such id on its exported surface, so this screen
+  // fetched the whole programYears list and picked out the one marked
+  // is_current, a second full round trip against a server that measured
+  // 6.6 to 7.6 seconds cold. authSelectors.selectCurrentProgramYearId
+  // exists now precisely because that was reported, so this reads it
+  // directly instead.
+  const currentId = useAppSelector(authSelectors.selectCurrentProgramYearId);
 
   const data = useAppSelector(programYear.selectors.selectData);
   const loading = useAppSelector(programYear.selectors.selectIsLoading);
   const error = useAppSelector(programYear.selectors.selectError);
-
-  useEffect(() => {
-    dispatch(programYears.actions.fetch());
-  }, [dispatch]);
 
   // Fires once currentId is known, and again only if it ever changes. A
   // screen that asked again on every render would hammer a server that
@@ -50,6 +51,13 @@ export function Year() {
   }, [dispatch, currentId]);
 
   if (!data) {
+    if (currentId === null) {
+      return (
+        <main className="year">
+          <Loading label={FINDING_YEAR_LABEL} />
+        </main>
+      );
+    }
     if (loading) {
       return (
         <main className="year">
@@ -64,9 +72,10 @@ export function Year() {
         </main>
       );
     }
-    // Nothing has loaded and nothing has failed. There is nothing true to
-    // say about the year yet, so there is nothing to render. Every screen
-    // can be asked to render before its own data arrives.
+    // The id is known, nothing has loaded and nothing has failed: the
+    // fetch above has been dispatched but the store has not caught up in
+    // this render yet. Every screen can be asked to render before its own
+    // data arrives.
     return null;
   }
 
@@ -102,10 +111,26 @@ export function Year() {
             <li key={block.key}>
               <strong>{block.name}</strong>
               {block.current && <span> Current block</span>}
+              <span className="year__block-dates">
+                {" "}
+                {block.starts_on} to {block.ends_on}
+              </span>
               <p>{block.focus}</p>
             </li>
           ))}
         </ol>
+      </section>
+
+      <section aria-labelledby="year-area-list-heading">
+        <h2 id="year-area-list-heading">The nine areas</h2>
+        <dl>
+          {areas.map((area) => (
+            <div key={area.slug}>
+              <dt>{area.name}</dt>
+              <dd>{area.summary}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       <section aria-labelledby="year-areas-heading">
@@ -152,6 +177,10 @@ export function Year() {
           {gates.map((gate) => (
             <li key={gate.position}>
               <strong>{gate.label}</strong>
+              <span>
+                {" "}
+                {gate.from_ball} to {gate.to_ball}.
+              </span>
               <span> Status: {gate.status}.</span>
               {gate.status === "active" && <span> Working on this now.</span>}
               <p>{gate.requirement}</p>
@@ -165,7 +194,7 @@ export function Year() {
         <ul>
           {testDates.map((testDate) => (
             <li key={testDate.id}>
-              {testDate.label}: {testDate.display}
+              {testDate.label}: {testDate.display} ({testDate.window})
             </li>
           ))}
         </ul>
@@ -177,6 +206,11 @@ export function Year() {
           {dayRoles.map((role) => (
             <li key={role.dow}>
               <strong>{role.name}</strong>
+              <span>
+                {" "}
+                {role.minutes} minutes, intensity {role.intensity}
+              </span>
+              {role.organized.length > 0 && <p>{role.organized.join(", ")}</p>}
               <p>{role.note}</p>
             </li>
           ))}

@@ -150,20 +150,26 @@ const YEAR: ProgramYearDetail = {
   rank_awards: [],
 };
 
-// Wraps a list of years for the programYears (plural) list duck: the only
-// place "current" appears on core's exported surface (see Year.tsx's own
-// comment). is_current true for id 42 is what lets Year resolve the id it
-// asks programYear for.
-function yearsListPayload(currentId: number) {
-  return {
-    program_years: [
-      { id: currentId, label: "2026-27", starts_on: "2026-09-14", ends_on: "2027-08-15", status: "active", is_current: true },
-    ],
-  };
+// Seeds the auth slice the way a real restore does, in one action, so a
+// test does not have to run the sign-in or restore saga just to get a
+// program year id in front of Year. `auth/RESTORE_FINISHED` is the same
+// action core's own restoreSessionSaga dispatches once /api/v1/me answers
+// (or, with current_program_year_id null, once it could not).
+function seedAuth(store: ReturnType<typeof createCoreStore>, currentProgramYearId: number | null) {
+  store.dispatch({
+    type: "auth/RESTORE_FINISHED",
+    payload: {
+      jwt: "a.b.c",
+      user: { id: 1, email: "frey.maxim@gmail.com", name: "Jeff", role: "coach" },
+      athlete: null,
+      current_program_year_id: currentProgramYearId,
+    },
+  });
 }
 
-function renderYear() {
+function renderYear(currentProgramYearId: number | null = 42) {
   const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
+  seedAuth(store, currentProgramYearId);
   const dispatched: { type: string; payload?: unknown }[] = [];
   const realDispatch = store.dispatch;
   store.dispatch = ((action: never) => {
@@ -178,29 +184,11 @@ function renderYear() {
   return { store, dispatched, ...utils };
 }
 
-function seedCurrentYear(store: ReturnType<typeof createCoreStore>, currentId = 42) {
-  store.dispatch({ type: "programYears/SUCCEEDED", payload: yearsListPayload(currentId) });
-}
-
 describe("the Year view", () => {
   it("asks for the current year once on mount", () => {
     // Not twice. A screen that refetches on every render hammers a server
     // that takes seven seconds to wake.
-    const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
-    seedCurrentYear(store, 42);
-
-    const dispatched: { type: string; payload?: unknown }[] = [];
-    const realDispatch = store.dispatch;
-    store.dispatch = ((action: never) => {
-      dispatched.push(action as { type: string; payload?: unknown });
-      return realDispatch(action);
-    }) as typeof store.dispatch;
-
-    const { rerender } = render(
-      <Provider store={store}>
-        <Year />
-      </Provider>,
-    );
+    const { store, dispatched, rerender } = renderYear(42);
 
     const yearFetches = () => dispatched.filter((a) => a.type === "programYear/FETCH");
     expect(yearFetches()).toHaveLength(1);
@@ -214,6 +202,20 @@ describe("the Year view", () => {
       </Provider>,
     );
     expect(yearFetches()).toHaveLength(1);
+  });
+
+  it("shows a waiting message rather than a blank panel while the current year id is not known yet", () => {
+    // selectCurrentProgramYearId is null both while /api/v1/me is still in
+    // flight right after sign-in, and, more lastingly, when a restore
+    // succeeded on a cached session because /me could not answer for a
+    // reason that says nothing about the token (a cold server, no
+    // connection). core deliberately lets that restore succeed rather than
+    // sign someone out over a slow tunnel, so a signed-in person can sit
+    // here with no id yet, and this screen must say something rather than
+    // leave the content area empty.
+    renderYear(null);
+
+    expect(screen.getByRole("status")).toHaveTextContent(/waking/i);
   });
 
   it("says the server may be waking rather than showing a blank panel", () => {
@@ -287,6 +289,24 @@ describe("the Year view", () => {
     expect(marked[0].textContent).toMatch(/coyote/i);
   });
 
+  it("shows when each block runs, not just its name and focus", () => {
+    const { store } = renderYear();
+    act(() => { store.dispatch({ type: "programYear/SUCCEEDED", payload: YEAR }); });
+
+    const region = screen.getByRole("region", { name: /the six blocks/i });
+    const items = within(region).getAllByRole("listitem");
+    const cub = items.find((el) => el.textContent?.includes("Cub"));
+    expect(cub?.textContent).toMatch(/2026-09-14 to 2026-10-25/);
+  });
+
+  it("shows what each area covers, not just its name", () => {
+    const { store } = renderYear();
+    act(() => { store.dispatch({ type: "programYear/SUCCEEDED", payload: YEAR }); });
+
+    expect(screen.getByText("Rally and racquet skill.")).toBeInTheDocument();
+    expect(screen.getByText("Acceleration and top end.")).toBeInTheDocument();
+  });
+
   it("shows each area's cell for each block, matched by block_key", () => {
     // The cells are not in block order either. Give one area cells listed
     // backwards and assert the cell text lands under the right block.
@@ -326,6 +346,16 @@ describe("the Year view", () => {
     expect(others.some((el) => /\blocked\b/i.test(el.textContent ?? ""))).toBe(true);
   });
 
+  it("names each ball gate's ball change, not just its label", () => {
+    const { store } = renderYear();
+    act(() => { store.dispatch({ type: "programYear/SUCCEEDED", payload: YEAR }); });
+
+    const region = screen.getByRole("region", { name: /tennis ball gates/i });
+    const items = within(region).getAllByRole("listitem");
+    const active = items.find((el) => /working on this now/i.test(el.textContent ?? ""));
+    expect(active?.textContent).toMatch(/green to yellow mini/i);
+  });
+
   it("shows the north star", () => {
     const { store } = renderYear();
     act(() => { store.dispatch({ type: "programYear/SUCCEEDED", payload: YEAR }); });
@@ -355,10 +385,41 @@ describe("the Year view", () => {
     ]);
   });
 
+  it("shows each day role's minutes, intensity and what it organizes, not just its name", () => {
+    const { store } = renderYear();
+    act(() => { store.dispatch({ type: "programYear/SUCCEEDED", payload: YEAR }); });
+
+    const region = screen.getByRole("region", { name: /seven day roles/i });
+    const items = within(region).getAllByRole("listitem");
+    const wall = items.find((el) => el.textContent?.includes("Wall Day"));
+    expect(wall?.textContent).toMatch(/60 to 90 minutes/);
+    expect(wall?.textContent).toMatch(/intensity 3/);
+    expect(wall?.textContent).toMatch(/tennis, basketball skill/);
+  });
+
+  it("shows each test date's window alongside its label", () => {
+    const { store } = renderYear();
+    act(() => { store.dispatch({ type: "programYear/SUCCEEDED", payload: YEAR }); });
+
+    expect(screen.getByText("Baseline: Mid September (2026-09)")).toBeInTheDocument();
+  });
+
   it("renders nothing about a year that has not loaded rather than throwing", () => {
     // Every screen can render before its data arrives. A component that
-    // throws on null data turns a slow server into a crash.
+    // throws on null data turns a slow server into a crash. The id is
+    // known here (so the effect fires and skips the "waiting for an id"
+    // branch), but the FETCH action it dispatches is intercepted before it
+    // can reach the reducer, freezing the component in the instant between
+    // "the id arrived" and "the resulting fetch updated loading" - the
+    // exact gap the component's own fallback (`return null`) is for.
     const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
+    seedAuth(store, 42);
+    const realDispatch = store.dispatch;
+    store.dispatch = ((action: { type: string }) => {
+      if (action.type === "programYear/FETCH") return action;
+      return realDispatch(action);
+    }) as typeof store.dispatch;
+
     const { container } = render(
       <Provider store={store}>
         <Year />
