@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import type { Role } from "@teddy-pe/core";
+import { Today } from "./screens/Today";
 import { Year } from "./screens/Year";
 import { Month } from "./screens/Month";
 import { ThisWeek } from "./screens/ThisWeek";
@@ -35,7 +36,7 @@ import { Tests } from "./screens/Tests";
 // never seen. That is a real possibility, not a hypothetical: the API sends
 // role as a plain string in the JWT payload, TypeScript's Role type does not
 // check it at runtime, and a role this app does not recognize is either a
-// bug in the API or a new account type somebody added. The five "any" items
+// bug in the API or a new account type somebody added. The "any" items
 // below are exactly the ones that answer 200 for all three known roles, so
 // there is no reason to believe a role we cannot name would be refused
 // either; showing the read-only program is more useful than showing nothing
@@ -45,6 +46,18 @@ import { Tests } from "./screens/Tests";
 // which is the direction a guess should fail in when the guess might be
 // wrong (403 is what a stranger swiping this tab would get, so hiding the
 // tab is never worse than what already happens if it is tapped).
+// Where a person lands: signing in, hitting "/", and being turned away from
+// a route their role may not read. It was "/year" until Today existed; both
+// are "any" routes, so this is the same guarantee, pointed at the screen he
+// actually opens mid-session instead of the one that used to be first. One
+// constant, used everywhere below that means "home", the nav item's own
+// `to` included: a route table entry that spelled "/today" out a second
+// time instead of reading HOME could drift from it, and a drift here is
+// not cosmetic, it is a redirect loop (`*` sends you to whatever HOME says,
+// and if that string matches no route in this table, there is nowhere for
+// the browser to land).
+export const HOME = "/today";
+
 export type RoleTier = Role[] | "any";
 
 export interface NavItem {
@@ -68,6 +81,12 @@ function Placeholder({ title }: { title: string }) {
 // role here and watch a nav test and a route test fail together, not one
 // at a time.
 export const NAV_ITEMS: NavItem[] = [
+  // First, so it is what a person taps back to and, per HOME above, what
+  // signing in and a stray URL both land on. Every role gets it: the day
+  // card, the note under it and the test sheet each gate themselves to
+  // what that role's own screen shows (Today.tsx), the same way this table
+  // already trusts Year, Month, This Week, Glossary and Progress to.
+  { to: HOME, label: "Today", roles: "any", element: <Today /> },
   { to: "/year", label: "Year", roles: "any", element: <Year /> },
   { to: "/month", label: "Month", roles: "any", element: <Month /> },
   { to: "/week", label: "This Week", roles: "any", element: <ThisWeek /> },
@@ -104,7 +123,7 @@ export function navItemsFor(role: Role | null): NavItem[] {
 // screen that will answer 403 or a screen that no longer exists.
 function Guarded({ item, role }: { item: NavItem; role: Role | null }) {
   if (!isAllowed(item.roles, role)) {
-    return <Navigate to="/year" replace />;
+    return <Navigate to={HOME} replace />;
   }
   return item.element;
 }
@@ -120,12 +139,12 @@ const GLOSSARY_ITEM = NAV_ITEMS.find((item) => item.to === "/glossary")!;
 export function AppRoutes({ role }: { role: Role | null }) {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/year" replace />} />
+      <Route path="/" element={<Navigate to={HOME} replace />} />
       {NAV_ITEMS.map((item) => (
         <Route key={item.to} path={item.to} element={<Guarded item={item} role={role} />} />
       ))}
       <Route path="/glossary/:slug" element={<Guarded item={GLOSSARY_ITEM} role={role} />} />
-      <Route path="*" element={<Navigate to="/year" replace />} />
+      <Route path="*" element={<Navigate to={HOME} replace />} />
     </Routes>
   );
 }

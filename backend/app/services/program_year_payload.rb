@@ -126,7 +126,9 @@ class ProgramYearPayload
 
   def test_dates
     @year.test_dates.map do |d|
-      { id: d.id, window: d.window, label: d.label, display: d.display, position: d.position }
+      { id: d.id, window: d.window, label: d.label, display: d.display,
+        starts_on: d.starts_on&.iso8601, ends_on: d.ends_on&.iso8601,
+        position: d.position }
     end
   end
 

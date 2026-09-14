@@ -14,7 +14,11 @@ require "date"
 # assertion stronger. It makes the absence of one loud.
 RSpec.describe "content integrity" do
   CONTENT = File.expand_path("../content/program_years/2026-27", __dir__)
-  PROGRAM = YAML.load_file(File.join(CONTENT, "program.yml"))
+  # permitted_classes: [ Date ] matches content_seeder.rb's own loader. Every
+  # other date in this file is a quoted string parsed by hand with Date.parse;
+  # test_dates is the first place the YAML carries a real date literal, so
+  # the safe loader needs telling it is allowed.
+  PROGRAM = YAML.load_file(File.join(CONTENT, "program.yml"), permitted_classes: [ Date ])
   DRILLS  = YAML.load_file(File.join(CONTENT, "drills.yml"))["drills"]
   PLANS   = Dir[File.join(CONTENT, "plans/*.yml")].sort.map { |f| YAML.load_file(f) }
 
@@ -31,6 +35,7 @@ RSpec.describe "content integrity" do
   SATURDAYS     = ALL_DAYS.count { |d| d["dow"] == "sat" }
   HIE_CAPPED    = ALL_DAYS.count { |d| %w[sun mon fri].include?(d["dow"]) }
   HOME_PAIRS    = [ ALL_DAYS.count { |d| d["dow"] != "sat" } - 1, 0 ].max
+  TEST_DATES    = PROGRAM["test_dates"].size
 
   DAY_ROLES = {
     "mon" => "Floor Day", "tue" => "Rings Day", "wed" => "Fast Day",
@@ -193,6 +198,49 @@ RSpec.describe "content integrity" do
     it "has unique test ids" do
       ids = PROGRAM["battery_measures"].map { |m| m["test_id"] }
       expect(ids.uniq.size).to eq(ids.size)
+    end
+  end
+
+  describe "test windows" do
+    # The five windows are what the Today screen reads to decide whether a
+    # test is due, so a window with no dates is a window Today cannot see.
+    it "gives every window a start and an end" do
+      checked = 0
+      PROGRAM["test_dates"].each do |d|
+        expect(d["starts_on"]).to be_a(Date), "#{d['window']} has no starts_on"
+        expect(d["ends_on"]).to be_a(Date), "#{d['window']} has no ends_on"
+        checked += 1
+      end
+      expect(checked).to eq(TEST_DATES)
+    end
+
+    it "never ends a window before it starts" do
+      checked = 0
+      PROGRAM["test_dates"].each do |d|
+        expect(d["ends_on"]).to be >= d["starts_on"], "#{d['window']} ends before it starts"
+        checked += 1
+      end
+      expect(checked).to eq(TEST_DATES)
+    end
+
+    it "opens every window inside the month its key names" do
+      checked = 0
+      PROGRAM["test_dates"].each do |d|
+        expect(d["starts_on"].strftime("%Y-%m")).to eq(d["window"]),
+          "#{d['window']} starts in a different month from its key"
+        checked += 1
+      end
+      expect(checked).to eq(TEST_DATES)
+    end
+
+    it "states the range once, as dates" do
+      checked = 0
+      PROGRAM["test_dates"].each do |d|
+        expect(d).not_to have_key("display"),
+          "#{d['window']} still hand-writes display; the seeder generates it from the dates"
+        checked += 1
+      end
+      expect(checked).to eq(TEST_DATES)
     end
   end
 

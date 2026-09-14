@@ -1,0 +1,157 @@
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import type { DayCard, DayBlock } from "@teddy-pe/core";
+import { TodayCard } from "../src/components/TodayCard";
+
+// Three blocks, so "one open at a time" can be told apart from "the one you
+// tapped opens". A two-block fixture cannot: closing the first and opening
+// the second looks the same either way.
+function block(id: number, name: string, body: string): DayBlock {
+  return {
+    id,
+    position: id,
+    minutes: "10",
+    name,
+    tag: null,
+    name_tokens: [{ text: name, type: "text", style: "plain" }],
+    body_tokens: [{ text: body, type: "text", style: "plain" }],
+    drill_slugs: [],
+  };
+}
+
+const DAY: DayCard = {
+  id: 1,
+  dow: "thu",
+  date: "2026-09-17",
+  name: "Wall Day",
+  role: "Wall Day",
+  minutes: "100 to 120",
+  intensity: 3,
+  hie: 8,
+  summary_lines: ["Tennis heaviest."],
+  drill_slugs: [],
+  dad_note: "Watch his contact point.",
+  blocks: [block(1, "Wake Up", "Animal walks."), block(2, "New Thing", "Cartwheel."), block(3, "Play", "His pick.")],
+};
+
+describe("TodayCard", () => {
+  it("opens the first block on arrival", () => {
+    render(<TodayCard day={DAY} onSelectDrill={() => {}} />);
+    expect(screen.getByText("Animal walks.")).toBeInTheDocument();
+    expect(screen.queryByText("Cartwheel.")).toBeNull();
+  });
+
+  // The week's theme, which the card is handed rather than reaching for: it
+  // belongs to the week, not to the day, and this component is meant to be
+  // liftable into the Phase 4 native app with nothing but props.
+  it("shows the week's theme when it is given one", () => {
+    render(<TodayCard day={DAY} theme="Baseline & Land" onSelectDrill={() => {}} />);
+    expect(screen.getByText(/Baseline & Land/)).toBeInTheDocument();
+  });
+
+  it("says nothing about a theme when it has none", () => {
+    // A month payload carries no week around it, so a card can legitimately
+    // be rendered without one. An empty line where the theme goes would read
+    // as a week with no theme, which is a different thing.
+    const { container } = render(<TodayCard day={DAY} onSelectDrill={() => {}} />);
+    expect(container.querySelector(".today-card__theme")).toBeNull();
+  });
+
+  it("lists every block whether open or not", () => {
+    render(<TodayCard day={DAY} onSelectDrill={() => {}} />);
+    expect(screen.getAllByRole("button")).toHaveLength(3);
+  });
+
+  it("opens the one tapped and closes the one that was open", async () => {
+    render(<TodayCard day={DAY} onSelectDrill={() => {}} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /New Thing/ }));
+
+    expect(screen.getByText("Cartwheel.")).toBeInTheDocument();
+    expect(screen.queryByText("Animal walks.")).toBeNull();
+    expect(screen.queryByText("His pick.")).toBeNull();
+  });
+
+  it("closes a block tapped a second time", async () => {
+    render(<TodayCard day={DAY} onSelectDrill={() => {}} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Wake Up/ }));
+
+    expect(screen.queryByText("Animal walks.")).toBeNull();
+  });
+
+  it("says which block is open, for a screen reader", async () => {
+    render(<TodayCard day={DAY} onSelectDrill={() => {}} />);
+    const wakeUp = screen.getByRole("button", { name: /Wake Up/ });
+    expect(wakeUp).toHaveAttribute("aria-expanded", "true");
+
+    await userEvent.click(screen.getByRole("button", { name: /New Thing/ }));
+    expect(wakeUp).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("shows the dad note and the summary lines", () => {
+    render(<TodayCard day={DAY} onSelectDrill={() => {}} />);
+    expect(screen.getByText(/Watch his contact point/)).toBeInTheDocument();
+    expect(screen.getByText("Tennis heaviest.")).toBeInTheDocument();
+  });
+
+  // Game Day: the home program is off, the card carries no blocks at all,
+  // and the summary lines are the whole answer.
+  it("shows a card with no blocks as its summary alone", () => {
+    render(<TodayCard day={{ ...DAY, blocks: [], dad_note: undefined }} onSelectDrill={() => {}} />);
+    expect(screen.getByText("Tennis heaviest.")).toBeInTheDocument();
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+  });
+
+  it("hands a tapped drill token back to its caller", async () => {
+    const opened: string[] = [];
+    const withDrill: DayCard = {
+      ...DAY,
+      blocks: [
+        {
+          ...block(1, "Wake Up", "Do the "),
+          body_tokens: [
+            { text: "Do the ", type: "text", style: "plain" },
+            { text: "bear walk", type: "drill", style: "link", slug: "bear-walk" },
+          ],
+        },
+      ],
+    };
+    render(<TodayCard day={withDrill} onSelectDrill={(slug) => opened.push(slug)} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "bear walk" }));
+
+    expect(opened).toEqual(["bear-walk"]);
+  });
+
+  // A parent that swaps `day` in place (paging from today to tomorrow
+  // without a remount) is exactly the case a stale openId would survive:
+  // block ids are per-record, so yesterday's open id will not match any
+  // block on the new day, and every toggle would silently read closed.
+  it("opens the new day's first block when the day prop changes without remounting", () => {
+    const { rerender } = render(<TodayCard day={DAY} onSelectDrill={() => {}} />);
+    expect(screen.getByText("Animal walks.")).toBeInTheDocument();
+
+    const NEXT_DAY: DayCard = {
+      ...DAY,
+      id: 2,
+      date: "2026-09-18",
+      blocks: [block(11, "Warm Up", "Jump rope."), block(12, "Skill", "Volleys.")],
+    };
+    rerender(<TodayCard day={NEXT_DAY} onSelectDrill={() => {}} />);
+
+    expect(screen.getByText("Jump rope.")).toBeInTheDocument();
+    expect(screen.queryByText("Volleys.")).toBeNull();
+  });
+
+  // The month payload omits `blocks` entirely rather than sending an empty
+  // array (DayBlock is optional on DayCard for exactly this reason), so a
+  // day that never carried the field has to read the same as one that did
+  // and came back empty.
+  it("treats a day with no blocks field the same as one with none", () => {
+    const { blocks, ...withoutBlocksField } = DAY;
+    render(<TodayCard day={{ ...withoutBlocksField, dad_note: undefined }} onSelectDrill={() => {}} />);
+    expect(screen.getByText("Tennis heaviest.")).toBeInTheDocument();
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+  });
+});

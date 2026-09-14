@@ -15,7 +15,8 @@ RSpec.describe "progression", type: :request do
                         ends_on: Date.new(2028, 8, 13), status: "draft", ball_now: "green").tap do |y|
       y.battery_measures.create!(test_id: "t1", position: 1, label: "20m sprint", unit: "s", direction: "lower")
       y.battery_measures.create!(test_id: "h", position: 15, label: "Height", unit: "cm", direction: "growth")
-      y.test_dates.create!(window: "2027-09", label: "Baseline", display: "Sep 13-17", position: 1)
+      y.test_dates.create!(window: "2027-09", label: "Baseline", display: "Sep 13-17", position: 1,
+                           starts_on: Date.new(2027, 9, 13), ends_on: Date.new(2027, 9, 17))
     end
   end
 
@@ -196,7 +197,8 @@ RSpec.describe "progression", type: :request do
     third_year = ProgramYear.create!(athlete: athlete, label: "2028-29", starts_on: Date.new(2028, 9, 11),
                                      ends_on: Date.new(2029, 8, 12), status: "draft", ball_now: "green")
     third_year.battery_measures.create!(test_id: "t1", position: 1, label: "20m sprint", unit: "s", direction: "lower")
-    third_year.test_dates.create!(window: "2028-09", label: "Baseline", display: "Sep 11-15", position: 1)
+    third_year.test_dates.create!(window: "2028-09", label: "Baseline", display: "Sep 11-15", position: 1,
+                                  starts_on: Date.new(2028, 9, 11), ends_on: Date.new(2028, 9, 15))
     record(third_year, "2028-09", "t1", "3.90", on: Time.zone.local(2028, 9, 12))
 
     third_entry = create(:coach_entry, user: coach, program_year: third_year, session_date: Date.new(2028, 9, 12))

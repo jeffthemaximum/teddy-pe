@@ -109,6 +109,20 @@ RSpec.describe "program years", type: :request do
       )
     end
 
+    it "sends each test window's range as dates" do
+      windows = payload["test_dates"]
+      expect(windows).not_to be_empty
+      checked = 0
+      windows.each do |w|
+        # ISO strings, not Date objects and not the prose in `display`. This
+        # is what core parses to decide whether a test is due today.
+        expect(w["starts_on"]).to match(/\A\d{4}-\d{2}-\d{2}\z/)
+        expect(w["ends_on"]).to match(/\A\d{4}-\d{2}-\d{2}\z/)
+        checked += 1
+      end
+      expect(checked).to eq(windows.size)
+    end
+
     it "orders the nine patches by their area's position, not merely returning nine" do
       patches = payload["patches"]
       expect(patches.size).to eq(9)

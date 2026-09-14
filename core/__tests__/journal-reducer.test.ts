@@ -199,15 +199,56 @@ describe("the journal reducer", () => {
     expect(not.athlete["2026-09-17"]!.shared).toBe(false);
   });
 
-  it("does not write an optimistic `shared` into state on SET_SHARED itself: only a server response may", () => {
-    // The switch is Teddy's to flip, but the API is the one that gets to say
-    // it actually moved. SET_SHARED only marks the day as saving; whatever
-    // `shared` currently reads stays exactly what the last real response
-    // said, until a new response arrives to replace it.
-    const saved = reducer(undefined, actions.athleteEntrySaved({ ...mine, shared: false }));
-    const s = reducer(saved, actions.setShared({ programYearId: 1, date: "2026-09-17", shared: true }));
+  it("marks the entry the instant he taps, so nothing goes on sending the value he just changed", () => {
+    // This asserted the opposite until 14 September 2026: SET_SHARED set the
+    // saving flag and nothing else, on the reasoning that the API owns
+    // `shared` and the client only displays it. Autosave turned that
+    // reasoning into the loss of the one control Teddy has over who reads
+    // his words. Between the tap and the server answering, a screen reading
+    // `shared` off this entry still read the old value, and any save in that
+    // gap carried it back. Offline it is not even a race: both writes queue
+    // under one dedupeKey and the outbox lets the later save replace the
+    // un-share in place, so the un-share never leaves the device while the
+    // screen goes on saying "Dad can see this too".
+    //
+    // The API still decides. This write keeps the entry's own `updated_at`,
+    // so a real response carries a later one and wins the fold above,
+    // whichever way the server actually went.
+    const saved = reducer(undefined, actions.athleteEntrySaved({ ...mine, shared: true }));
+    const s = reducer(
+      saved,
+      actions.setShared({ programYearId: 1, date: "2026-09-17", shared: false }),
+    );
     expect(s.athlete["2026-09-17"]!.shared).toBe(false);
+    expect(s.athlete["2026-09-17"]!.updated_at).toBe(mine.updated_at);
     expect(selectors.selectIsSaving("2026-09-17")({ journal: s })).toBe(true);
+    // Nothing else on the row moves. The tap is about one field.
+    expect(s.athlete["2026-09-17"]!.note).toBe(mine.note);
+
+    // A day with no entry on record has nothing to mark. The save this
+    // toggle fires is what creates the row, carrying the intent on it.
+    const none = reducer(
+      undefined,
+      actions.setShared({ programYearId: 1, date: "2026-09-17", shared: true }),
+    );
+    expect(none.athlete["2026-09-17"]).toBeUndefined();
+    expect(selectors.selectIsSaving("2026-09-17")({ journal: none })).toBe(true);
+  });
+
+  it("lets a later answer from the server overrule what the tap wrote", () => {
+    // The tap is an intent, not a fact. If the write never landed and the
+    // server says the row is still shared, that is what the screen shows.
+    const saved = reducer(undefined, actions.athleteEntrySaved({ ...mine, shared: true }));
+    const tapped = reducer(
+      saved,
+      actions.setShared({ programYearId: 1, date: "2026-09-17", shared: false }),
+    );
+    const answered = reducer(
+      tapped,
+      actions.athleteEntrySaved({ ...mine, shared: true, updated_at: "2026-09-17T19:05:00Z" }),
+    );
+    expect(answered.athlete["2026-09-17"]!.shared).toBe(true);
+    expect(selectors.selectIsSaving("2026-09-17")({ journal: answered })).toBe(false);
   });
 
   // --- The reads, and the one rule about which copy of an entry wins ---

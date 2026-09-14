@@ -153,9 +153,19 @@ class ContentSeeder
     prune(year.ball_gates, gates.map(&:id))
   end
 
+  # `display` is generated rather than read. The YAML states the range once,
+  # as dates; TestDate.display_for turns them into the prose the sheet and
+  # the exporter show, so the two can never disagree.
   def seed_test_dates(rows)
     rows.each do |row|
-      upsert(year.test_dates, { window: row.fetch("window") }, row.slice("label", "display", "position"))
+      starts_on = row.fetch("starts_on")
+      ends_on = row.fetch("ends_on")
+      upsert(year.test_dates, { window: row.fetch("window") },
+             row.slice("label", "position").merge(
+               "starts_on" => starts_on,
+               "ends_on" => ends_on,
+               "display" => TestDate.display_for(starts_on, ends_on)
+             ))
     end
   end
 

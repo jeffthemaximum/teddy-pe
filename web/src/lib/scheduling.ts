@@ -42,6 +42,23 @@ export function todayISODate(now: Date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
+// A day's `date` ("2026-09-17") read as prose, for Today's own date line.
+// Built from the local parts and handed to a local-time Date constructor
+// (year, monthIndex, day), never `new Date(iso)`: that constructor parses a
+// bare "YYYY-MM-DD" as UTC midnight, and toLocaleDateString then renders
+// whatever *that* instant is in the viewer's zone, which is the wrong day
+// near midnight west of Greenwich, the identical hazard todayISODate's own
+// comment documents for toISOString.
+export function formatFullDate(iso: string): string {
+  const [year, month, day] = iso.split("-").map(Number);
+  return new Date(year!, month! - 1, day!).toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 // There is no "/plans/current" the way weeks has "/weeks/current": a month
 // is addressed by its literal "YYYY-MM" key, so this, not the payload,
 // decides which month "the month" means: today's, off the clock.

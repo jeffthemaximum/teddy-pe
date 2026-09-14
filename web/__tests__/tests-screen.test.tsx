@@ -7,7 +7,10 @@ import { Tests } from "../src/screens/Tests";
 
 // Three measures, deliberately out of position order (position 3 listed
 // first): a fixture already in order passes against a component that never
-// sorts, which is the defect this project keeps finding.
+// sorts, which is the defect this project keeps finding. What reads the trap
+// is "lists the measures in the order the battery runs them" below; without
+// that example the shuffle proves nothing, because every other assertion in
+// this file finds its row by label.
 const MEASURES: ProgramYearDetail["battery"]["measures"] = [
   {
     id: 3,
@@ -128,16 +131,23 @@ const RESULTS: TestResult[] = [
   },
 ];
 
-// Puts a known current program year id and a known signed-in coach in front
-// of Tests without a real /me round trip, the same way every other screen's
-// test file seeds it. `auth/RESTORE_FINISHED` is the same action core's own
-// restoreSessionSaga dispatches once /api/v1/me answers.
-function seedAuth(store: ReturnType<typeof createCoreStore>, currentProgramYearId: number | null) {
+// Puts a known current program year id and a known signed-in person in
+// front of Tests without a real /me round trip, the same way every other
+// screen's test file seeds it. `auth/RESTORE_FINISHED` is the same action
+// core's own restoreSessionSaga dispatches once /api/v1/me answers.
+//
+// `role` defaults to "coach" so every existing call in this file, none of
+// which passes a third argument, keeps seeding exactly what it always has.
+function seedAuth(
+  store: ReturnType<typeof createCoreStore>,
+  currentProgramYearId: number | null,
+  role: "coach" | "athlete" | "viewer" = "coach",
+) {
   store.dispatch({
     type: "auth/RESTORE_FINISHED",
     payload: {
       jwt: "a.b.c",
-      user: { id: 1, email: "coach@example.com", name: "Jeff", role: "coach" },
+      user: { id: 1, email: "coach@example.com", name: "Jeff", role },
       athlete: null,
       current_program_year_id: currentProgramYearId,
     },
@@ -184,6 +194,23 @@ function trackDispatch(store: ReturnType<typeof createCoreStore>) {
 function windowSelect(): HTMLSelectElement {
   return screen.getByLabelText(/test date/i) as HTMLSelectElement;
 }
+
+// The measures as they actually render, top to bottom. Read off the list's
+// own children rather than by label, because the question here is order and
+// getByLabelText answers a different one.
+function measureLabels(): string[] {
+  const list = screen.queryByRole("list", { name: "Measures" });
+  if (!list) return [];
+  return Array.from(list.querySelectorAll("li > label")).map((el) => el.textContent ?? "");
+}
+
+// Position order, which is the order the battery runs them in and not the
+// order MEASURES above lists them.
+const MEASURES_IN_ORDER = [
+  "10-yard sprint (sec)",
+  "Broad jump (in)",
+  "Balance hold, left (sec)",
+];
 
 function measureInput(label: RegExp): HTMLInputElement {
   return screen.getByLabelText(label) as HTMLInputElement;
@@ -299,6 +326,19 @@ describe("the test sheet", () => {
     expect(screen.getByLabelText(/10-yard sprint \(sec\)/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/broad jump \(in\)/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/balance hold, left \(sec\)/i)).toBeInTheDocument();
+  });
+
+  // TestSheet deliberately does not sort (see its own comment): the caller
+  // hands it measures already in order. This is the assertion that says so
+  // for this screen, and the only one here that can fail if Tests.tsx drops
+  // its byPosition().
+  it("lists the measures in the order the battery runs them", async () => {
+    const { store } = renderTests(42);
+    loadYear(store);
+    loadResults(store);
+    await settle();
+
+    expect(measureLabels()).toEqual(MEASURES_IN_ORDER);
   });
 
   it("gives the box a keyboard that can type a range, not a numbers-only pad", async () => {
@@ -501,5 +541,61 @@ describe("the test sheet", () => {
     await settle();
 
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("what is left to measure", () => {
+  // The battery runs across three days, so what is still blank is the thing
+  // worth knowing while standing on a court with a stopwatch.
+  it("counts the measures with no result yet", async () => {
+    const { store } = renderTests();
+    loadYear(store);
+
+    expect(await screen.findByText(/still blank/i)).toHaveTextContent("3 still blank");
+  });
+
+  // Counted off the store, which is the point. RESULTS fills two of the
+  // three measures in the active window, so the count has to drop to one.
+  it("counts down as results arrive", async () => {
+    const { store } = renderTests();
+    loadYear(store);
+    await screen.findByText(/still blank/i);
+
+    loadResults(store);
+
+    expect(screen.getByText(/still blank/i)).toHaveTextContent("1 still blank");
+  });
+
+  // Nothing left to say once every box is filled, rather than "0 still
+  // blank", which is a sentence nobody needs to read.
+  it("says nothing when every measure has a result", async () => {
+    const { store } = renderTests();
+    loadYear(store);
+    loadResults(store, [
+      ...RESULTS,
+      {
+        id: 503,
+        test_id: "balance_l",
+        window: "2026-09",
+        raw_value: "12",
+        numeric_value: "12",
+        recorded_at: "2026-09-14T10:00:00.000Z",
+        updated_at: "2026-09-14T10:00:00.000Z",
+      },
+    ]);
+
+    expect(screen.queryByText(/still blank/i)).toBeNull();
+  });
+
+  // A number typed and not blurred has not been saved. Telling him it had
+  // is the one lie this screen must not tell.
+  it("does not count a number that has been typed but not committed", async () => {
+    const { store } = renderTests();
+    loadYear(store);
+    await screen.findByText(/still blank/i);
+
+    await userEvent.type(screen.getByLabelText("Balance hold, left (sec)"), "12");
+
+    expect(screen.getByText(/still blank/i)).toHaveTextContent("3 still blank");
   });
 });

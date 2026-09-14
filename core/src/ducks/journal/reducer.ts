@@ -111,8 +111,37 @@ export function reducer(
     }
 
     case t.SET_SHARED: {
-      const { date } = (action as Extract<JournalAction, { type: typeof t.SET_SHARED }>).payload;
-      return { ...state, saving: { ...state.saving, [date]: true } };
+      // Optimistic, on purpose, and the one place this reducer writes a
+      // field the server has not confirmed yet.
+      //
+      // Without it, `shared` went on reading the OLD value for the whole
+      // second or two the request was out, and everything downstream read it
+      // from here: the sentence telling Teddy who can see the day, and the
+      // `shared` that every autosave of that day carries. So tapping "Keep
+      // this to yourself" and then writing one more line sent `shared: true`
+      // straight back. Online those two writes race. Offline they do not:
+      // both queue under `athlete:<date>`, the outbox's supersedes rule lets
+      // the later save replace the un-share in place (see ducks/outbox/
+      // reducer.ts), and the un-share never reaches the server at all, with
+      // the screen saying "Dad can see this too" throughout. This is the one
+      // control Teddy has over who reads his words. Do not make it wait.
+      //
+      // `updated_at` is deliberately left as it was, so this never outranks
+      // a real server copy: the answer to this very write carries a later
+      // stamp and replaces it by the fold rule above, whichever way the
+      // server actually went.
+      //
+      // A day with no entry on record is left alone rather than invented:
+      // there is no row to mark, and the save this toggle fires (see the
+      // setShared saga) is what creates one, carrying the intent on it.
+      const { date, shared } = (action as Extract<JournalAction, { type: typeof t.SET_SHARED }>)
+        .payload;
+      const held = state.athlete[date];
+      return {
+        ...state,
+        athlete: held ? { ...state.athlete, [date]: { ...held, shared } } : state.athlete,
+        saving: { ...state.saving, [date]: true },
+      };
     }
 
     case t.DELETE_ENTRY: {
