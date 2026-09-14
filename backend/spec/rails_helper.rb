@@ -21,6 +21,11 @@ RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
   config.include ActiveSupport::Testing::TimeHelpers
 
+  # The login throttle counts into Rails.cache. Without this, one example's
+  # attempts push the next one over the limit and the failure lands somewhere
+  # unrelated.
+  config.before(:each) { Rails.cache.clear }
+
   config.before(:suite) { DatabaseCleaner.clean_with(:truncation) }
   config.before(:each) { DatabaseCleaner.strategy = :transaction }
   config.around(:each) { |example| DatabaseCleaner.cleaning { example.run } }

@@ -14,6 +14,44 @@ RSpec.describe "auth", type: :request do
       expect(body["user"]).not_to have_key("password_digest")
     end
 
+    # Three accounts, a public URL, and passwords nobody is rotating. bcrypt at
+    # the default cost and three Puma threads hold a guessing run to roughly
+    # ten a second by accident. This holds it to ten every three minutes on
+    # purpose, which is generous for a family of three on one home address and
+    # useless to anyone working through a list.
+    it "stops answering after ten wrong guesses in a row" do
+      10.times do
+        post "/api/v1/auth/login", params: { email: "jeff@example.com", password: "wrong" }
+        expect(response).to have_http_status(:unauthorized)
+      end
+
+      post "/api/v1/auth/login", params: { email: "jeff@example.com", password: "wrong" }
+      expect(response).to have_http_status(:too_many_requests)
+      expect(JSON.parse(response.body)).to eq(
+        "error" => { "code" => "too_many_requests",
+                     "message" => "Too many sign in attempts. Wait a few minutes and try again." }
+      )
+    end
+
+    # The throttle counts attempts, not failures, so the right password does
+    # not reopen the door for the next thousand guesses.
+    it "counts a correct password towards the limit too" do
+      11.times { post "/api/v1/auth/login", params: { email: "jeff@example.com", password: "a-long-enough-password" } }
+      expect(response).to have_http_status(:too_many_requests)
+    end
+
+    # It has to let go. A throttle that never expires locks Jeff out of his own
+    # son's program for good over one bad afternoon.
+    it "lets the family back in once the window passes" do
+      11.times { post "/api/v1/auth/login", params: { email: "jeff@example.com", password: "wrong" } }
+      expect(response).to have_http_status(:too_many_requests)
+
+      travel_to(4.minutes.from_now) do
+        post "/api/v1/auth/login", params: { email: "jeff@example.com", password: "a-long-enough-password" }
+      end
+      expect(response).to have_http_status(:ok)
+    end
+
     it "ignores the case of the email" do
       post "/api/v1/auth/login", params: { email: "JEFF@Example.COM", password: "a-long-enough-password" }
       expect(response).to have_http_status(:ok)

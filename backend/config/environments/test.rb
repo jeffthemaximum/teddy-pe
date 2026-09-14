@@ -20,7 +20,12 @@ Rails.application.configure do
 
   # Show full error reports.
   config.consider_all_requests_local = true
-  config.cache_store = :null_store
+
+  # memory_store, not the generated null_store. The login throttle counts into
+  # Rails.cache, and on a null store every count comes back nil and the
+  # throttle never trips, so the suite would have proved nothing about it.
+  # rails_helper clears this between examples so no count crosses over.
+  config.cache_store = :memory_store
 
   # Render exception templates for rescuable exceptions and raise for other exceptions.
   config.action_dispatch.show_exceptions = :rescuable
