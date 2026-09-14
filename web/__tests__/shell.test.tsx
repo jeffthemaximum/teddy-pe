@@ -55,11 +55,67 @@ afterEach(() => {
 describe("the shell", () => {
   it("shows Jeff every tab, including his own notes", async () => {
     await renderAs("coach");
-    for (const name of [/year/i, /month/i, /this week/i, /glossary/i, /progress/i, /tests/i]) {
+    for (const name of [
+      /today/i,
+      /year/i,
+      /month/i,
+      /this week/i,
+      /glossary/i,
+      /progress/i,
+      /tests/i,
+    ]) {
       expect(tab(name)).toBeInTheDocument();
     }
     expect(tab(/journal/i)).toBeInTheDocument();
     expect(tab(/notes/i)).toBeInTheDocument();
+  });
+
+  it("lands every role on Today", async () => {
+    for (const role of ["coach", "athlete", "viewer"] as const) {
+      const storage = memoryStorage();
+      await storage.setItem(
+        "teddy-pe.session",
+        JSON.stringify({ jwt: "a.b.c", user: USERS[role] }),
+      );
+      stubMe(USERS[role]);
+      const store = createAppStore({ baseUrl: "https://api.test", storage });
+      const { unmount } = render(
+        <Provider store={store}>
+          <App />
+        </Provider>,
+      );
+      await screen.findByRole("navigation");
+      // "/" resolves to Today for all three roles (routes.tsx's HOME).
+      // Today's own waking label is the proof it is Today and not the old
+      // landing screen: Year's reads "The year can take a few seconds",
+      // a different sentence for a different screen.
+      expect(await screen.findByText(/today can take a few seconds/i)).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it("puts Today first in the nav", async () => {
+    await renderAs("coach");
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    const links = within(nav).getAllByRole("link");
+    expect(links[0]).toHaveTextContent("Today");
+  });
+
+  it("keeps every tab that was there before", async () => {
+    await renderAs("coach");
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    const labels = within(nav).getAllByRole("link").map((l) => l.textContent);
+    expect(labels).toEqual([
+      "Today",
+      "Year",
+      "Month",
+      "This Week",
+      "Glossary",
+      "Progress",
+      "Tests",
+      "Journal",
+      "Notes",
+    ]);
   });
 
   it("shows Teddy his journal and not his dad's notes", async () => {

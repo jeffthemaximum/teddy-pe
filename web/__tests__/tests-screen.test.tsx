@@ -128,16 +128,23 @@ const RESULTS: TestResult[] = [
   },
 ];
 
-// Puts a known current program year id and a known signed-in coach in front
-// of Tests without a real /me round trip, the same way every other screen's
-// test file seeds it. `auth/RESTORE_FINISHED` is the same action core's own
-// restoreSessionSaga dispatches once /api/v1/me answers.
-function seedAuth(store: ReturnType<typeof createCoreStore>, currentProgramYearId: number | null) {
+// Puts a known current program year id and a known signed-in person in
+// front of Tests without a real /me round trip, the same way every other
+// screen's test file seeds it. `auth/RESTORE_FINISHED` is the same action
+// core's own restoreSessionSaga dispatches once /api/v1/me answers.
+//
+// `role` defaults to "coach" so every existing call in this file, none of
+// which passes a third argument, keeps seeding exactly what it always has.
+function seedAuth(
+  store: ReturnType<typeof createCoreStore>,
+  currentProgramYearId: number | null,
+  role: "coach" | "athlete" | "viewer" = "coach",
+) {
   store.dispatch({
     type: "auth/RESTORE_FINISHED",
     payload: {
       jwt: "a.b.c",
-      user: { id: 1, email: "coach@example.com", name: "Jeff", role: "coach" },
+      user: { id: 1, email: "coach@example.com", name: "Jeff", role },
       athlete: null,
       current_program_year_id: currentProgramYearId,
     },
