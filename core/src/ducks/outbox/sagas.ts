@@ -109,6 +109,37 @@ function* replay() {
         yield put(sessionExpired());
         return;
       }
+      // A DELETE answered 404 asked for a thing to be gone and found it
+      // already gone. That is the state the write wanted, so it succeeded.
+      //
+      // This is a property of DELETE, not of anything the outbox knows about
+      // what was deleted: the queued action carries its own `request.method`
+      // (see types.ts), which is the whole of what this reads. No duck's
+      // semantics are in here, and none can be, because nothing here can
+      // tell a journal entry from a test result.
+      //
+      // It matters because the alternative is the exact failure this outbox
+      // exists to prevent, told backwards. Teddy deletes an entry with no
+      // signal, it queues, the replay fires at home, the row is already gone,
+      // and the branch below would report a permanent rejection to whichever
+      // duck queued it, which reads on screen as "that did not save" about a
+      // delete that worked perfectly.
+      //
+      // `response` is undefined on purpose. A 404 carried an error envelope,
+      // not a result, and inventing a body here would be this duck deciding
+      // what a delete's answer looks like. Undefined is what apiRequest
+      // already resolves with for a successful response that has no body,
+      // and a duck reconciling this sees exactly what it would see then.
+      if (e instanceof ApiError && e.status === 404 && write.action.request.method === "DELETE") {
+        yield put(
+          actions.replaySucceeded({
+            id: write.id,
+            dedupeKey: write.action.dedupeKey,
+            response: undefined,
+          }),
+        );
+        continue;
+      }
       if (e instanceof ApiError && e.status !== 0) {
         // The server answered, and answered with a rejection that will be
         // identical on every retry (a 422, most often). Drop it and move on

@@ -30,6 +30,30 @@ function write(dedupeKey: string, note: string): QueueableAction {
   };
 }
 
+// The same stand-in, for a write that asks the server to remove something.
+// Still no journal and no test results: `method` and `path` are all the
+// outbox can see, and all it is allowed to act on.
+function deleteWrite(dedupeKey: string): QueueableAction {
+  return {
+    type: "TEST/DELETE",
+    payload: { id: 4 },
+    dedupeKey,
+    request: { path: "/athlete_entries/4", method: "DELETE" },
+  };
+}
+
+// And one that creates. Written out rather than spread from `write` above,
+// because the only thing these two fixtures exist to do is disagree about
+// the method, and a shared base is how they would quietly stop.
+function postWrite(dedupeKey: string): QueueableAction {
+  return {
+    type: "TEST/CREATE",
+    payload: { note: "n" },
+    dedupeKey,
+    request: { path: "/athlete_entries", method: "POST", body: { athlete_entry: { note: "n" } } },
+  };
+}
+
 // A queued write as it sits in state. `userId` is who typed it: every
 // fixture below says so explicitly rather than leaving it off, because "who
 // owns this write" is the thing most of these tests turn on and a field
@@ -171,6 +195,82 @@ describe("the outbox saga", () => {
     // And the next write still goes, rather than blocking behind the
     // rejected one.
     expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  // A DELETE that finds the thing already gone got what it asked for.
+  //
+  // Asserting only that the queue emptied would prove nothing, because it
+  // empties whether this is treated as a success or dropped as a permanent
+  // rejection. So both assertions are about what the duck that queued it is
+  // told: that it succeeded, and that it was not failed.
+  it("treats a 404 to a queued DELETE as the thing already being gone", async () => {
+    jest
+      .spyOn(client, "apiRequest")
+      .mockRejectedValue(new ApiError(404, "not_found", "Not found."));
+    const h = harness(
+      [
+        {
+          id: "1",
+          action: deleteWrite("athlete:2026-09-17"),
+          queuedAt: "2026-09-17T18:00:00Z",
+          attempts: 0,
+          userId: 3,
+        },
+      ],
+      { userId: 3 },
+    );
+
+    await h.run(outboxWorkers.replay);
+
+    expect(h.dispatched).toContainEqual(
+      actions.replaySucceeded({
+        id: "1",
+        dedupeKey: "athlete:2026-09-17",
+        // Nothing came back that means anything: a 404 carried an error
+        // envelope, not a result. This is what apiRequest resolves with for
+        // a successful response that has no body.
+        response: undefined,
+      }),
+    );
+    expect(
+      h.dispatched.filter((a) => (a as { type: string }).type === "outbox/REPLAY_FAILED"),
+    ).toHaveLength(0);
+  });
+
+  // The other direction, and the one that makes the rule above a rule about
+  // DELETE rather than a rule about 404. A POST that 404s reached a route
+  // that does not exist, which is a permanent rejection and nothing anyone
+  // asked for.
+  it("still fails a 404 to a queued POST for good", async () => {
+    jest
+      .spyOn(client, "apiRequest")
+      .mockRejectedValue(new ApiError(404, "not_found", "Not found."));
+    const h = harness(
+      [
+        {
+          id: "1",
+          action: postWrite("athlete:2026-09-17"),
+          queuedAt: "2026-09-17T18:00:00Z",
+          attempts: 0,
+          userId: 3,
+        },
+      ],
+      { userId: 3 },
+    );
+
+    await h.run(outboxWorkers.replay);
+
+    expect(h.dispatched).toContainEqual(
+      actions.replayFailed({
+        id: "1",
+        dedupeKey: "athlete:2026-09-17",
+        permanent: true,
+        message: "Not found.",
+      }),
+    );
+    expect(
+      h.dispatched.filter((a) => (a as { type: string }).type === "outbox/REPLAY_SUCCEEDED"),
+    ).toHaveLength(0);
   });
 
   it("stops on an expired session without dropping the write, and signs the app out", async () => {
