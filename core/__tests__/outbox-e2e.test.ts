@@ -100,8 +100,10 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
 
     // Nothing reached the server: the attempt was made and failed, and
     // nothing about it is recorded as saved. One call for the sign-in, one
-    // for the failed save.
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    // for the /me check the sign-in saga now makes right after (it fails
+    // offline too, the same as everything else here, and signs no one out
+    // for it), and one for the failed save.
+    expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(journalSelectors.selectAthleteEntryFor("2026-09-17")(store.getState())).toBeNull();
 
     // The entry is queued rather than lost, and it is Teddy's.
@@ -255,24 +257,32 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
 
   it("an online athlete save names its program year, unwraps what comes back, stops the day spinning, and goes out under the signed-in athlete's own token", async () => {
     const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
-    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation((input) =>
-      String(input).endsWith("/api/v1/auth/login")
-        ? respond(200, TEDDY_LOGIN)
-        : respond(201, {
-            athlete_entry: {
-              id: 77,
-              session_date: "2026-09-17",
-              program_year_id: 1,
-              day_card_id: null,
-              felt: null,
-              best: null,
-              hard: null,
-              note: "Beat my own record on the ladder.",
-              shared: true,
-              updated_at: "2026-09-17T19:05:00Z",
-            },
-          }),
-    );
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url.endsWith("/api/v1/auth/login")) return respond(200, TEDDY_LOGIN);
+      // The sign-in saga's own /me check, right after login. A distinct
+      // branch on purpose: answering it with the save's own response body
+      // (as a single catch-all branch would) folds a made-up athlete and
+      // current_program_year_id into state, and hides the real save behind
+      // the wrong call index below.
+      if (url.endsWith("/api/v1/me")) {
+        return respond(200, { user: TEDDY_LOGIN.user, athlete: null, current_program_year_id: 1 });
+      }
+      return respond(201, {
+        athlete_entry: {
+          id: 77,
+          session_date: "2026-09-17",
+          program_year_id: 1,
+          day_card_id: null,
+          felt: null,
+          best: null,
+          hard: null,
+          note: "Beat my own record on the ladder.",
+          shared: true,
+          updated_at: "2026-09-17T19:05:00Z",
+        },
+      });
+    });
     await signInFor(store, TEDDY_LOGIN);
 
     store.dispatch(
@@ -288,7 +298,9 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
       "the saved entry to reach the slice under its own date",
     );
 
-    const [url, init] = fetchMock.mock.calls[1]!;
+    // Call 0 is login, call 1 is the sign-in saga's own /me check; the save
+    // itself is call 2.
+    const [url, init] = fetchMock.mock.calls[2]!;
     expect(String(url)).toBe("https://api.test/api/v1/athlete_entries");
     const headers = (init as RequestInit).headers as Record<string, string>;
     // A save with nobody signed in is a bug in the calling screen (see
@@ -318,26 +330,31 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
 
   it("an online coach save sends ratings beside the entry, not inside it, lands in the coach map, and goes out under the signed-in coach's own token", async () => {
     const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
-    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation((input) =>
-      String(input).endsWith("/api/v1/auth/login")
-        ? respond(200, JEFF_LOGIN)
-        : respond(201, {
-            coach_entry: {
-              id: 9,
-              session_date: "2026-09-17",
-              program_year_id: 1,
-              day_card_id: 12,
-              overall: 4,
-              energy: 3,
-              flag_pain: false,
-              pain_note: null,
-              note: "Balance drill needs another week.",
-              challenge_num: "2",
-              ratings: { "cartwheel-prep": "getting" },
-              updated_at: "2026-09-17T19:10:00Z",
-            },
-          }),
-    );
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url.endsWith("/api/v1/auth/login")) return respond(200, JEFF_LOGIN);
+      // See the athlete-save test above for why /me gets its own branch
+      // rather than falling into the save's response.
+      if (url.endsWith("/api/v1/me")) {
+        return respond(200, { user: JEFF_LOGIN.user, athlete: null, current_program_year_id: 1 });
+      }
+      return respond(201, {
+        coach_entry: {
+          id: 9,
+          session_date: "2026-09-17",
+          program_year_id: 1,
+          day_card_id: 12,
+          overall: 4,
+          energy: 3,
+          flag_pain: false,
+          pain_note: null,
+          note: "Balance drill needs another week.",
+          challenge_num: "2",
+          ratings: { "cartwheel-prep": "getting" },
+          updated_at: "2026-09-17T19:10:00Z",
+        },
+      });
+    });
     await signInFor(store, JEFF_LOGIN);
 
     store.dispatch(
@@ -358,7 +375,9 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
       "the saved coach entry to reach the slice",
     );
 
-    const [, init] = fetchMock.mock.calls[1]!;
+    // Call 0 is login, call 1 is the sign-in saga's own /me check; the save
+    // itself is call 2.
+    const [, init] = fetchMock.mock.calls[2]!;
     const headers = (init as RequestInit).headers as Record<string, string>;
     expect(headers.Authorization).toBe(`Bearer ${JEFF_LOGIN.jwt}`);
     // `ratings` sits at the top level of the request, not inside
@@ -431,6 +450,16 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
           user: { id: 1, email: "jeff@example.com", name: "Jeff", role: "coach" },
         });
       }
+      // The sign-in saga's own check, right after login: a distinct branch
+      // so it does not fall into the coach_entries catch-all below and get
+      // counted as one of "the endpoints below" in the assertions past it.
+      if (url.endsWith("/api/v1/me")) {
+        return respond(200, {
+          user: { id: 1, email: "jeff@example.com", name: "Jeff", role: "coach" },
+          athlete: null,
+          current_program_year_id: 1,
+        });
+      }
       if (url.includes("/api/v1/athlete_entries")) {
         return respond(200, { athlete_entries: [athleteEntry] });
       }
@@ -452,14 +481,17 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
       "both journals to fill from their own endpoint",
     );
 
-    const urls = fetchMock.mock.calls.slice(1).map(([input]) => String(input));
+    // Skip login (call 0) and the sign-in saga's own /me check (call 1):
+    // neither is one of "the endpoints" these two assertions are about.
+    const urls = fetchMock.mock.calls.slice(2).map(([input]) => String(input));
     // No query on the athlete index: the controller takes no parameters and
     // the Pundit scope alone decides what comes back. Both dates on the
     // coach index, because `between` only runs when it has both.
     expect(urls).toContain("https://api.test/api/v1/athlete_entries");
     expect(urls).toContain("https://api.test/api/v1/coach_entries?from=2026-09-14&to=2026-09-20");
 
-    // Every fetch went out with the signed-in token, not anonymously.
+    // Every fetch went out with the signed-in token, not anonymously. /me
+    // included, this time, since it carries the same token.
     for (const [, init] of fetchMock.mock.calls.slice(1)) {
       expect((init as RequestInit).headers).toMatchObject({ Authorization: "Bearer JEFF-TOKEN" });
     }

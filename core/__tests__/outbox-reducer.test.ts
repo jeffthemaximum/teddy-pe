@@ -281,8 +281,22 @@ describe("the outbox's idea of who is signed in", () => {
     [authActionTypes.SIGN_IN_FAILED]: authActions.signInFailed("Sign-in failed."),
     [authActionTypes.SIGN_OUT]: authActions.signOut(),
     [authActionTypes.RESTORE_SESSION]: authActions.restoreSession(),
-    [authActionTypes.RESTORE_FINISHED]: authActions.restoreFinished({ jwt: "j", user: jeff }),
+    [authActionTypes.RESTORE_FINISHED]: authActions.restoreFinished({
+      jwt: "j",
+      user: jeff,
+      athlete: null,
+      current_program_year_id: null,
+    }),
     [authActionTypes.SESSION_EXPIRED]: authActions.sessionExpired(),
+    // Enriches an already-signed-in session with /me's athlete and
+    // current-year data; who is signed in does not change, so the outbox
+    // reducer has no case for it and this sample proves that agreement
+    // rather than assuming it.
+    [authActionTypes.ME_SUCCEEDED]: authActions.meSucceeded({
+      user: teddy,
+      athlete: null,
+      current_program_year_id: null,
+    }),
   };
 
   it("covers every auth action the auth duck has", () => {

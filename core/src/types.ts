@@ -38,6 +38,24 @@ export interface LoginResponse {
   user: User;
 }
 
+// GET /api/v1/me. Read from backend/app/controllers/api/v1/me_controller.rb,
+// not guessed from the one payload captured in production: `athlete` is
+// null whenever `athlete_for(current_user)` finds none, and
+// `current_program_year_id` is null whenever `ProgramYear.current_for`
+// finds no current year for that athlete, so both are nullable here even
+// though Teddy's own account has never sent either null.
+export interface Athlete {
+  id: number;
+  name: string;
+  birthday: string;
+}
+
+export interface MeResponse {
+  user: User;
+  athlete: Athlete | null;
+  current_program_year_id: number | null;
+}
+
 // Program-year, month, week, drill glossary and progression shapes. Captured
 // from the live API on 2026-09-13; these are facts about what the server
 // sends, not a proposal to redesign.

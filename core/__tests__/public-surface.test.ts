@@ -183,6 +183,7 @@ const EXPECTED_TYPES = [
   "User",
   "Role",
   "LoginResponse",
+  "Athlete",
   "OutboxState",
   "QueueableAction",
   "QueuedWrite",

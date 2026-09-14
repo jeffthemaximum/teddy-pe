@@ -186,6 +186,8 @@ describe("the root reducer's reset on session expiry", () => {
       status: "anonymous",
       user: null,
       token: null,
+      athlete: null,
+      currentProgramYearId: null,
       error: "You were signed out. Sign in again.",
     });
     expect(state.auth).not.toEqual(initialAuth);

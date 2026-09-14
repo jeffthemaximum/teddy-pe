@@ -11,10 +11,18 @@ export type { RootState } from "./store/rootReducer";
 // be imported directly.
 //
 // authActions is deliberately narrowed to the three actions an app is
-// allowed to dispatch. signInSucceeded, signInFailed and restoreFinished are
-// dispatched only by the saga: an app that could dispatch signInSucceeded
-// itself could put the store in a signed-in state holding a token the server
-// never issued.
+// allowed to dispatch. signInSucceeded, signInFailed, restoreFinished and
+// meSucceeded are dispatched only by the saga: an app that could dispatch
+// signInSucceeded or meSucceeded itself could put the store in a signed-in
+// state holding a token, an athlete or a program year the server never
+// sent.
+//
+// authSelectors carries selectAthlete and selectCurrentProgramYearId
+// alongside the selectors that predate GET /api/v1/me. Both apps need
+// them: the Year screen used to fetch the whole program-years list and
+// pick out the one marked current, two round trips against a server that
+// measured 6.6 to 7.6 seconds cold, purely to learn what this duck now
+// already asked for once, at sign-in and at restore.
 import { actions as authDuckActions, selectors as authSelectors } from "./ducks/auth";
 
 export const authActions = {
@@ -24,7 +32,7 @@ export const authActions = {
 };
 export { authSelectors };
 export type { AuthState } from "./ducks/auth";
-export type { User, Role, LoginResponse } from "./types";
+export type { User, Role, LoginResponse, Athlete } from "./types";
 
 // The outbox's public surface is deliberately narrow, the same reasoning as
 // authActions above: `replay()` is the only action an app ever dispatches
