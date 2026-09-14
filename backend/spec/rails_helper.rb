@@ -26,6 +26,12 @@ RSpec.configure do |config|
   # unrelated.
   config.before(:each) { Rails.cache.clear }
 
+  # Only covers the legacy tables while Legacy::Record rides the primary
+  # connection. Once LEGACY_DATABASE_URL names a real separate database, the
+  # per-example transaction below no longer reaches these rows, so they would
+  # otherwise pile up across examples and make later specs order-dependent.
+  config.before(:each, :legacy) { LegacyTables.truncate! }
+
   config.before(:suite) { DatabaseCleaner.clean_with(:truncation) }
   config.before(:suite) { LegacyTables.create! }
   config.before(:each) { DatabaseCleaner.strategy = :transaction }

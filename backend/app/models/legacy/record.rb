@@ -21,7 +21,7 @@ module Legacy
     def self.connect!
       return if @connected
       url = ENV["LEGACY_DATABASE_URL"].presence
-      establish_connection(url) if url && url != ENV["DATABASE_URL"]
+      establish_connection(legacy_url) if url && url != ENV["DATABASE_URL"]
       @connected = true
     end
 

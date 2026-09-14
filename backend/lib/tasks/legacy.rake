@@ -11,15 +11,19 @@ namespace :legacy do
 
       puts
       puts "#{label} (#{items.size}): #{items.join(', ')}"
-      puts "  #{explain}"
+      Array(explain).each { |line| puts "  #{line}" }
     end
 
     section.call("drill slugs with no drill", report[:unmapped_drill_slugs],
                  "These ratings have nowhere to go. Add the drill to backend/content or accept losing the rating.")
-    section.call("test ids with no measure", report[:unmapped_test_ids],
-                 "These results have nowhere to go.")
-    section.call("windows with no test date", report[:unmapped_windows],
-                 "These results have nowhere to go.")
+    section.call("test ids with no measure", report[:unmapped_test_ids], [
+      "A test id like this means the old battery had a row this year's does not.",
+      "Add it to backend/content/program_years/2026-27/program.yml and re-seed, or accept that these results do not come across."
+    ])
+    section.call("windows with no test date", report[:unmapped_windows], [
+      "A window like this means the old data names a test window this program year does not have.",
+      "Add it to backend/content/program_years/2026-27/program.yml and re-seed, or accept that these results do not come across."
+    ])
     section.call("session dates in no program year", report[:dates_outside_any_year].map(&:to_s),
                  "These entries predate the program year or fall after it.")
 
