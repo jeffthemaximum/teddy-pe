@@ -316,3 +316,22 @@ It had never failed locally because `core/node_modules` is always there, install
 - **`--include=dev`, deliberately.** Vercel sets `NODE_ENV=production`, which drops devDependencies, and core's `@types/react` lives there. The typecheck needs it.
 - **The test asserts the watch list by hand.** `missingCoreDeps` returns what is missing, which is the empty list on any healthy checkout, so a guard that read no dependencies at all would pass every test about it. `requiredCoreDeps` is asserted separately against the four names written out longhand. Same shape as Ruling 72: the expectation needs a different source from the behaviour.
 - **Verified by reproducing the failure, not by reasoning about it.** `core/node_modules` was moved aside, `tsc` produced all 72 errors with the same first lines as the Vercel log, and `npm run build` then went green from empty. The 68 cascade errors were the reassuring part: none of them were real, and the same tree typechecks clean the moment four packages exist.
+
+## 2026-09-14 (Phase 2c, deploy): what the live site did, and what it did not do
+
+The web app is up at `https://teddy-pe-mlfs.vercel.app`, built from `main`, serving `web/dist` with `VITE_API_URL` pointing at `https://teddy-pe-api.fly.dev`. Three checks were run against the running site rather than against a local build, because those are different claims.
+
+**What held.**
+
+- **Nothing about Teddy or his program is in what is served.** The deployed JavaScript, stylesheet and HTML were downloaded and run through the same denylist `bundle-privacy.test.ts` uses, including the word-boundary block names and the four allowed shapes of his own name. Clean. The page title is "Program" and the HTML carries no name, no date of birth and no vocabulary.
+- **The API base URL is compiled in correctly**, with no `http://localhost:5173` fallback left behind, which would have been the quiet failure: a site that looks right and can never sign anyone in.
+- **The response headers arrived**: `X-Frame-Options: DENY`, `Referrer-Policy: same-origin`, `X-Content-Type-Options: nosniff`, plus Vercel's HSTS.
+
+**What did not.**
+
+- **Every path below the root answered 404.** `cleanUrls: true` sat beside the catch-all rewrite and disabled it: it redirects `/index.html` to `/`, so the rewrite's destination stopped resolving and nothing fell back to the single page. The site looked healthy because the app redirects `/` to `/year` in the browser through the history API, with no server request, so a first visit worked and every refresh, bookmark and shared link did not. `cleanUrls` exists for multi-page static sites, which is what the old site at the repo root still is; a one-page app has no `.html` to clean. Removed.
+- **CORS still refuses the site.** `WEB_ORIGIN` is unset on the Fly app, so `config/initializers/cors.rb` falls back to its `http://localhost:5173` default and the preflight from the Vercel origin comes back 200 with no `Access-Control-Allow-Origin`. The browser then blocks every request. This is Jeff's to set; it is a write to the production app.
+
+**A decision inside that.** `WEB_ORIGIN` names the production origin only. Vercel gives each preview deployment its own hostname, so previews will not be able to reach the API, and that is the intended answer rather than a gap to close: every preview URL is public and unguessable only by obscurity, and the list of origins allowed to call an API holding a child's journal should be one entry long.
+
+**A note on what a test can be asked to prove.** `web/__tests__/hosting-config.test.ts` cannot show the rewrite works. That rule lives in the host and only a request to the deployed site answers it. The test holds the config to the shape that was verified against the real host, which is a smaller claim honestly stated, and it names the `cleanUrls` interaction in a comment so the combination cannot come back quietly.
