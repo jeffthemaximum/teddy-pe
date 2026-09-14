@@ -503,3 +503,59 @@ describe("the test sheet", () => {
     expect(container).toBeEmptyDOMElement();
   });
 });
+
+describe("what is left to measure", () => {
+  // The battery runs across three days, so what is still blank is the thing
+  // worth knowing while standing on a court with a stopwatch.
+  it("counts the measures with no result yet", async () => {
+    const { store } = renderTests();
+    loadYear(store);
+
+    expect(await screen.findByText(/still blank/i)).toHaveTextContent("3 still blank");
+  });
+
+  // Counted off the store, which is the point. RESULTS fills two of the
+  // three measures in the active window, so the count has to drop to one.
+  it("counts down as results arrive", async () => {
+    const { store } = renderTests();
+    loadYear(store);
+    await screen.findByText(/still blank/i);
+
+    loadResults(store);
+
+    expect(screen.getByText(/still blank/i)).toHaveTextContent("1 still blank");
+  });
+
+  // Nothing left to say once every box is filled, rather than "0 still
+  // blank", which is a sentence nobody needs to read.
+  it("says nothing when every measure has a result", async () => {
+    const { store } = renderTests();
+    loadYear(store);
+    loadResults(store, [
+      ...RESULTS,
+      {
+        id: 503,
+        test_id: "balance_l",
+        window: "2026-09",
+        raw_value: "12",
+        numeric_value: "12",
+        recorded_at: "2026-09-14T10:00:00.000Z",
+        updated_at: "2026-09-14T10:00:00.000Z",
+      },
+    ]);
+
+    expect(screen.queryByText(/still blank/i)).toBeNull();
+  });
+
+  // A number typed and not blurred has not been saved. Telling him it had
+  // is the one lie this screen must not tell.
+  it("does not count a number that has been typed but not committed", async () => {
+    const { store } = renderTests();
+    loadYear(store);
+    await screen.findByText(/still blank/i);
+
+    await userEvent.type(screen.getByLabelText("Balance hold, left (sec)"), "12");
+
+    expect(screen.getByText(/still blank/i)).toHaveTextContent("3 still blank");
+  });
+});
