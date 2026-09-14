@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/ensure-core-deps.mjs && vite",
+    "prebuild": "node scripts/ensure-core-deps.mjs",
     "build": "tsc --noEmit && NODE_ENV=production vite build",
     "preview": "vite preview",
     "test": "vitest run"
