@@ -16,12 +16,13 @@ export function storedConfig(store: object): CoreConfig {
 }
 
 export function createCoreStore(deps: CoreDeps) {
-  if (!deps.baseUrl) {
+  const baseUrl = deps.baseUrl.trim();
+  if (!baseUrl) {
     throw new Error("core needs a baseUrl");
   }
 
   const config: CoreConfig = {
-    baseUrl: deps.baseUrl.replace(/\/$/, ""),
+    baseUrl: baseUrl.replace(/\/$/, ""),
     storage: deps.storage,
     logger: deps.logger ?? silentLogger,
     timeoutMs: deps.timeoutMs ?? 15000,
