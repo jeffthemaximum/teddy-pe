@@ -511,6 +511,25 @@ describe("the journal saga", () => {
     expect(h.dispatched).toContainEqual(actions.athleteEntriesFetched([savedAthleteEntry]));
   });
 
+  it("drops a row that has a session_date and a note but no updated_at, since the fold rule has nothing to order it by", async () => {
+    // Neither of the two fixtures above reaches this: `{id: 3}` fails on
+    // session_date, and the plausible-looking stub below fails on note. This
+    // one has everything isEntry otherwise asks for and only fails on
+    // `updated_at`, which is the one check nothing else pins: deleting it
+    // from isEntry (api.ts) leaves every other test in the suite green,
+    // because a stampless copy would then compare as `held.updated_at >
+    // undefined` (false) and always win the fold in reducer.ts, replacing a
+    // real entry with a stub that has no date to prove it wrong.
+    jest.spyOn(client, "apiRequest").mockResolvedValue({
+      athlete_entries: [savedAthleteEntry, { session_date: "2026-09-20", note: "no stamp at all" }],
+    });
+    const h = harness();
+
+    await h.run(journalWorkers.fetchAthleteEntries, actions.fetchAthleteEntries());
+
+    expect(h.dispatched).toContainEqual(actions.athleteEntriesFetched([savedAthleteEntry]));
+  });
+
   it("never fetches with nobody signed in, and puts the loading flag back when it does not", async () => {
     // Nothing about Teddy is fetchable unauthenticated, so an anonymous
     // fetch is a bug in the calling screen. It must not leave a spinner
