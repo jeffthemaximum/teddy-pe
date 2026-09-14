@@ -9,11 +9,23 @@ const config = {
   timeoutMs: 15000,
 };
 
+// The client reads response.text() rather than response.json(), so it can
+// tell an empty body (a 204 delete) apart from a body that is actually
+// broken. These mocks match that: text() is the one method every case here
+// needs.
 function respond(status: number, body: unknown) {
   return Promise.resolve({
     status,
     ok: status >= 200 && status < 300,
-    json: () => Promise.resolve(body),
+    text: () => Promise.resolve(JSON.stringify(body)),
+  } as Response);
+}
+
+function respondWithText(status: number, text: string) {
+  return Promise.resolve({
+    status,
+    ok: status >= 200 && status < 300,
+    text: () => Promise.resolve(text),
   } as Response);
 }
 
@@ -71,16 +83,14 @@ describe("apiRequest", () => {
     expect(isUnauthorized(err)).toBe(true);
   });
 
-  it("still produces a usable error when the body is not the envelope", async () => {
-    // A proxy 502 is HTML, and a caller that crashes on it looks like a bug in
-    // the app rather than a sleeping server.
-    jest.spyOn(globalThis, "fetch").mockImplementation(() =>
-      Promise.resolve({
-        status: 502,
-        ok: false,
-        json: () => Promise.reject(new SyntaxError("Unexpected token <")),
-      } as unknown as Response),
-    );
+  it("falls back to unreadable_response when the error body is valid JSON but not the envelope", async () => {
+    // A CDN or proxy in front of the API can return its own JSON body (a
+    // load balancer's "Bad Gateway" object, say) that parses fine but has no
+    // "error" key to unwrap. This must still produce a usable ApiError
+    // rather than crash on `envelope.code`.
+    jest
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(() => respond(502, { message: "Bad Gateway" }));
 
     const err = await apiRequest<never>(config, { path: "/api/v1/me" }).catch(
       (e) => e,
@@ -90,6 +100,39 @@ describe("apiRequest", () => {
     expect(err.status).toBe(502);
     expect(err.code).toBe("unreadable_response");
     expect(isUnauthorized(err)).toBe(false);
+  });
+
+  it("still produces a usable error when a successful response's body cannot be parsed at all", async () => {
+    // A sleeping server or a misconfigured proxy can answer a 200 with HTML
+    // instead of JSON. response.ok being true must not make this look like
+    // a successful, empty response: there is a body here, and it is broken.
+    jest
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(() => respondWithText(200, "<html>not json</html>"));
+
+    const err = await apiRequest<never>(config, { path: "/api/v1/me" }).catch(
+      (e) => e,
+    );
+
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err.status).toBe(200);
+    expect(err.code).toBe("unreadable_response");
+  });
+
+  it("resolves rather than throws on a successful response with an empty body", async () => {
+    // The API answers a delete with a 204 and nothing else. response.text()
+    // resolving to "" is not a parse failure: there was never a body to
+    // parse, and the request still succeeded.
+    jest
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(() => respondWithText(204, ""));
+
+    const result = await apiRequest(config, {
+      path: "/api/v1/journal/1",
+      method: "DELETE",
+    });
+
+    expect(result).toBeUndefined();
   });
 
   it("gives up after the configured timeout and says so", async () => {
@@ -114,5 +157,22 @@ describe("apiRequest", () => {
     expect(err).toBeInstanceOf(ApiError);
     expect(err.code).toBe("timeout");
     jest.useRealTimers();
+  });
+
+  it("reports a genuine network failure as offline, not timeout", async () => {
+    // The way a dead connection actually presents to fetch: a plain
+    // rejection with no AbortError, no abort signal ever firing. An
+    // implementation that mapped every fetch rejection to "timeout" would
+    // still pass the timeout test above; this is the case that catches it.
+    jest
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(() => Promise.reject(new TypeError("Failed to fetch")));
+
+    const err = await apiRequest<never>(config, { path: "/api/v1/me" }).catch(
+      (e) => e,
+    );
+
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err.code).toBe("offline");
   });
 });

@@ -58,22 +58,56 @@ export async function apiRequest<T>(
     if (hasName(e, "AbortError")) {
       throw new ApiError(0, "timeout", "That took too long. Try again.");
     }
-    throw new ApiError(0, "offline", "No connection. Check the network and try again.");
+    throw new ApiError(
+      0,
+      "offline",
+      "No connection. Check the network and try again.",
+    );
   }
   clearTimeout(timer);
 
-  let body: unknown;
+  // Read as text first, not response.json() directly, so an empty body (a
+  // 204 delete, most often) can be told apart from a body that is actually
+  // broken. response.json() rejects on both, which is exactly the bug: a
+  // successful, empty delete looked identical to a sleeping proxy handing
+  // back garbage.
+  let text: string;
   try {
-    body = await response.json();
+    text = await response.text();
   } catch {
-    // A proxy 502 or a sleeping server can hand back HTML instead of JSON.
-    // Whether or not response.ok is true, we have nothing usable to parse,
-    // so there is exactly one way to fail here, not two.
     throw new ApiError(
       response.status,
       "unreadable_response",
       "Something went wrong. Try again.",
     );
+  }
+
+  let body: unknown;
+  if (text === "") {
+    // Nothing to parse and nothing wrong. Resolves to undefined rather than
+    // null: T is whatever the caller declared for a body-less response (void
+    // most often), and `undefined` is what "there is no value" already means
+    // in TypeScript, so callers don't need a null check they wouldn't
+    // otherwise have.
+    if (response.ok) {
+      return undefined as T;
+    }
+    // An error status with an empty body has no envelope to unwrap. Leave
+    // body empty and fall through to the same fallback code and message an
+    // unparseable error body gets below.
+  } else {
+    try {
+      body = JSON.parse(text);
+    } catch {
+      // A proxy 502 or a sleeping server can hand back HTML instead of JSON.
+      // Whether or not response.ok is true, there is nothing usable to
+      // parse, so there is exactly one way to fail here, not two.
+      throw new ApiError(
+        response.status,
+        "unreadable_response",
+        "Something went wrong. Try again.",
+      );
+    }
   }
 
   if (!response.ok) {
