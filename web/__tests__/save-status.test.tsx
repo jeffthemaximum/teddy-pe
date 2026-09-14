@@ -36,4 +36,20 @@ describe("SaveStatus", () => {
     render(<SaveStatus saving={false} queued={false} savedAt="not a date" />);
     expect(screen.queryByRole("status")).toBeNull();
   });
+
+  // waitingText is optional so the six cases above, none of which pass it,
+  // stay exactly as they were. This is the one case that does pass it, and
+  // it exists for Teddy's form: his screen already spoke to a 7-year-old
+  // in his own words, and this default line is written for his dad.
+  it("says the waiting line a form passes in, not its own default", () => {
+    render(
+      <SaveStatus
+        saving={false}
+        queued
+        savedAt={null}
+        waitingText="This is saved on your device and will send once you're back online."
+      />,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(/saved on your device/i);
+  });
 });

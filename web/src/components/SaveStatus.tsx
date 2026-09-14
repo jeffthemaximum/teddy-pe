@@ -11,12 +11,18 @@ export function SaveStatus({
   saving,
   queued,
   savedAt,
+  waitingText = WAITING_TEXT,
 }: {
   saving: boolean;
   queued: boolean;
   // An entry's `updated_at`, or null when the server holds no entry for
   // this date yet.
   savedAt: string | null;
+  // What to say while a write is waiting on the outbox. Optional because
+  // most forms are fine with the default, adult phrasing above; Teddy's
+  // form passes its own sentence, already written in his language, rather
+  // than have this default speak to a 7-year-old as if he were his dad.
+  waitingText?: string;
 }) {
   // Saving wins over queued: both are true for the moment between a write
   // leaving the form and the outbox taking it, and "Saving." is the truer
@@ -25,7 +31,7 @@ export function SaveStatus({
   // A queued write has not reached the server, so whatever `savedAt` says
   // was last stored is older than what he is looking at. Say the honest
   // thing rather than the reassuring one.
-  if (queued) return <p role="status">{WAITING_TEXT}</p>;
+  if (queued) return <p role="status">{waitingText}</p>;
   if (!savedAt) return null;
 
   const at = new Date(savedAt);

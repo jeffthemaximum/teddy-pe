@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import {
@@ -265,11 +265,22 @@ describe("the athlete journal", () => {
     await user.type(screen.getByLabelText(/what went best today/i), "The wall rally");
     await user.type(screen.getByLabelText(/what was hard today/i), "Staying low");
     await user.type(screen.getByLabelText(/tell me about today/i), "Good day at the wall.");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    // Matched against "sav" rather than the full word: the felt tap above
+    // already fired an autosave, so by the time this line runs the button
+    // may already read "Saving..." rather than "Save", and "Saving..." does
+    // not contain "save" as a substring.
+    await user.click(screen.getByRole("button", { name: /sav/i }));
 
+    // Autosave already fired its own save on the felt tap and on each text
+    // field's blur as focus moved to the next one, so more than one
+    // SAVE_ATHLETE_ENTRY goes out before Save is ever clicked. Clicking
+    // Save blurs the note field he was still in, and that blur (not Save's
+    // own submit, which lands disabled by the time it reaches the handler)
+    // is what actually fires the last save, carrying the whole entry as it
+    // stood by then.
     const saves = dispatched.filter((a) => a.type === "journal/SAVE_ATHLETE_ENTRY");
-    expect(saves).toHaveLength(1);
-    const payload = saves[0]!.payload as SavePayload;
+    expect(saves.length).toBeGreaterThan(0);
+    const payload = saves.at(-1)!.payload as SavePayload;
     expect(payload.felt).toBe(4);
     expect(payload.best).toBe("The wall rally");
     expect(payload.hard).toBe("Staying low");
@@ -295,9 +306,12 @@ describe("the athlete journal", () => {
     await user.type(screen.getByLabelText(/tell me about today/i), " And again.");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
+    // Clicking Save blurs the note field he was still typing in, and its
+    // text changed, so that blur is what actually fires the save; read the
+    // last one rather than assume there was only ever one.
     const saves = dispatched.filter((a) => a.type === "journal/SAVE_ATHLETE_ENTRY");
-    expect(saves).toHaveLength(1);
-    expect((saves[0]!.payload as SavePayload).shared).toBe(false);
+    expect(saves.length).toBeGreaterThan(0);
+    expect((saves.at(-1)!.payload as SavePayload).shared).toBe(false);
   });
 
   it("keeps a day he has shared shared when he saves it again", async () => {
@@ -312,9 +326,11 @@ describe("the athlete journal", () => {
     await user.type(screen.getByLabelText(/tell me about today/i), " And again.");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
+    // Same reasoning as the unshared case above: Save's own blur of the
+    // note field is what fires the save, so read the last one.
     const saves = dispatched.filter((a) => a.type === "journal/SAVE_ATHLETE_ENTRY");
-    expect(saves).toHaveLength(1);
-    expect((saves[0]!.payload as SavePayload).shared).toBe(true);
+    expect(saves.length).toBeGreaterThan(0);
+    expect((saves.at(-1)!.payload as SavePayload).shared).toBe(true);
   });
 
   it("can save just one thing, leaving the others empty", async () => {
@@ -328,9 +344,12 @@ describe("the athlete journal", () => {
     await user.type(screen.getByLabelText(/what was hard today/i), "Staying low");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
+    // Clicking Save blurs the hard field, and its text changed, so that
+    // blur fires the save; read the last one on the same reasoning as the
+    // tests above.
     const saves = dispatched.filter((a) => a.type === "journal/SAVE_ATHLETE_ENTRY");
-    expect(saves).toHaveLength(1);
-    const payload = saves[0]!.payload as SavePayload;
+    expect(saves.length).toBeGreaterThan(0);
+    const payload = saves.at(-1)!.payload as SavePayload;
     // Empty must be null, not the empty string a careless default would
     // send: "" is a real (if odd) thing he could type, and would be
     // indistinguishable from "he wrote nothing" on the other end.
@@ -784,6 +803,76 @@ describe("the athlete journal", () => {
       expect(screen.getByText("What went best")).toBeInTheDocument();
       expect(screen.getByText("What was hard")).toBeInTheDocument();
     });
+  });
+
+  // ---- saving as he writes -------------------------------------------------
+  //
+  // Autosave is the whole reason this form changed. He is seven and on a
+  // phone; the app cannot bank on him remembering to press Save before he
+  // wanders off to the next thing.
+  describe("saving as he writes", () => {
+    it("saves a text field when it loses focus", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const { store, dispatched } = renderJournalRecording();
+      hydrateEmpty(store);
+      dispatched.length = 0;
+      const best = screen.getByLabelText(/what went best today/i);
+
+      await user.type(best, "I did a cartwheel.");
+      fireEvent.blur(best);
+
+      const saves = dispatched.filter((a) => a.type === "journal/SAVE_ATHLETE_ENTRY");
+      expect(saves).toHaveLength(1);
+      expect((saves[0]!.payload as SavePayload).best).toBe("I did a cartwheel.");
+    });
+
+    // The same guard the test sheet's own boxes use (MeasureRow.commit). A
+    // field tabbed through and never touched is not an edit, and firing a
+    // save for it would put a request on the wire for every box he walks
+    // past.
+    it("does not save a field he only passed through", () => {
+      const { store, dispatched } = renderJournalRecording();
+      hydrateEmpty(store);
+      dispatched.length = 0;
+      const best = screen.getByLabelText(/what went best today/i);
+
+      fireEvent.focus(best);
+      fireEvent.blur(best);
+
+      expect(dispatched.filter((a) => a.type === "journal/SAVE_ATHLETE_ENTRY")).toHaveLength(0);
+    });
+
+    it("saves the moment he picks how it felt", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const { store, dispatched } = renderJournalRecording();
+      hydrateEmpty(store);
+      dispatched.length = 0;
+
+      await user.click(screen.getByRole("button", { name: "5" }));
+
+      const saves = dispatched.filter((a) => a.type === "journal/SAVE_ATHLETE_ENTRY");
+      expect(saves).toHaveLength(1);
+      expect((saves[0]!.payload as SavePayload).felt).toBe(5);
+      expect(screen.getByRole("button", { name: "5" })).toHaveAttribute("aria-pressed", "true");
+    });
+
+    // Save is the retry autosave cannot be: a write the outbox gave up on
+    // does not go again until a field is touched, so this has to send even
+    // when nothing changed.
+    it("re-sends on Save when nothing has changed", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const { store, dispatched } = renderJournalRecording();
+      hydrateEmpty(store);
+      dispatched.length = 0;
+
+      await user.click(screen.getByRole("button", { name: "Save" }));
+
+      expect(dispatched.filter((a) => a.type === "journal/SAVE_ATHLETE_ENTRY")).toHaveLength(1);
+    });
+
+    // The share toggle's own invariant ("dispatches setShared when he taps
+    // to share, and changes nothing else", above) already covers this on
+    // an empty day; nothing here repeats it.
   });
 
   it("renders nothing rather than throwing before anything has loaded", () => {

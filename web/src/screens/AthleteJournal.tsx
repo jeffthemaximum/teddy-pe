@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   authSelectors,
   journalActions,
@@ -9,6 +9,7 @@ import {
 import { Loading } from "../components/Loading";
 import { ErrorNote } from "../components/ErrorNote";
 import { WaitingForYearId } from "../components/WaitingForYearId";
+import { AthleteNoteForm } from "../components/AthleteNoteForm";
 import { todayISODate } from "../lib/scheduling";
 
 // Same cold-Fly-machine wait as every other screen: 6.6 to 7.6 seconds.
@@ -18,14 +19,6 @@ const WAKING_LABEL = "Waking up the server. Opening today can take a few seconds
 // Year.tsx, Month.tsx and ThisWeek.tsx all cover the same way (see their own
 // comments on authSelectors.selectCurrentProgramYearId).
 const FINDING_YEAR_LABEL = "Waking up the server. Finding today can take a few seconds too.";
-
-const FELT_VALUES = [1, 2, 3, 4, 5];
-
-// The two states the toggle can be in, in his own words rather than the
-// column name. "Only you can see this" is what a 7-year-old reads; "shared"
-// or "unshared" is not.
-const PRIVATE_TEXT = "Only you can see this.";
-const SHARED_TEXT = "Dad can see this too.";
 
 // The delete, in his words and honest about what it does. It takes the entry
 // off this screen and out of everything the app shows; the row itself keeps
@@ -111,14 +104,15 @@ export function AthleteJournal() {
   // son, because the API falls back to the only athlete on record when the
   // signed-in user is not one; it is what already gives him a program year.
   const athlete = useAppSelector(authSelectors.selectAthlete);
-  const queued = useAppSelector(journalSelectors.selectIsEntryQueued("athlete", today));
   // Whether today was deleted with no signal and has not been written again
-  // since. It is a different question from `queued`, and the difference is
-  // the whole of the fix: a queued delete and a queued save both leave the
-  // slice with no entry for today and a write pending, so from here they
-  // look identical. With no entry, `shared` below reads as false and the
-  // toggle offers to show Dad a day that is not there any more, which is
-  // exactly what he tapped, and the save it fired queued behind the delete.
+  // since. It is a different question from whether a save is merely queued,
+  // and the difference is the whole of the fix: a queued delete and a
+  // queued save both leave the slice with no entry for today and a write
+  // pending, so from here they look identical. With no entry,
+  // AthleteNoteForm's own `shared` would read as false and its toggle would
+  // offer to show Dad a day that is not there any more, which is exactly
+  // what he tapped, and the save that fired would queue behind the delete.
+  // This gate is why that form never mounts to find out.
   const deleteQueued = useAppSelector(journalSelectors.selectIsDeleteQueued("athlete", today));
   const loading = useAppSelector(journalSelectors.selectIsLoadingAthleteEntries);
   const error = useAppSelector(journalSelectors.selectJournalError);
@@ -132,18 +126,15 @@ export function AthleteJournal() {
     }
   }, [dispatch, currentId]);
 
-  // Local, editable copies of what he is writing. Hydrated exactly once,
-  // the instant there is something to copy in or, failing that, the moment
-  // the fetch has actually finished and there is genuinely nothing: never
-  // re-synced after that, because a fetch or a save landing later must not
-  // overwrite a letter he is mid-way through typing.
+  // Whether a fetch has actually told this screen something about today, one
+  // way or the other. AthleteNoteForm hydrates its own fields the instant it
+  // mounts, off whatever `entry` already is; this is only about when it is
+  // safe to mount it at all; showing a blank form before the fetch answers
+  // would read as "he wrote nothing today" for a day the server has not
+  // actually confirmed that about yet.
   const hydratedRef = useRef(false);
   const wasLoadingRef = useRef(loading);
   const [hydrated, setHydrated] = useState(false);
-  const [felt, setFelt] = useState<number | null>(null);
-  const [best, setBest] = useState("");
-  const [hard, setHard] = useState("");
-  const [note, setNote] = useState("");
 
   useEffect(() => {
     if (!hydratedRef.current) {
@@ -156,10 +147,6 @@ export function AthleteJournal() {
       if (entry !== null || justFinishedCleanly) {
         hydratedRef.current = true;
         setHydrated(true);
-        setFelt(entry?.felt ?? null);
-        setBest(entry?.best ?? "");
-        setHard(entry?.hard ?? "");
-        setNote(entry?.note ?? "");
       }
     }
     wasLoadingRef.current = loading;
@@ -171,31 +158,16 @@ export function AthleteJournal() {
   // the question.
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  // When the entry he was looking at goes away, the form goes back to blank.
-  // Tied to the entry actually leaving state rather than to the tap, so a
-  // delete the server refuses leaves his words on screen: the hydration
-  // effect above runs once and will never put them back.
+  // Closes a question the entry it was about no longer needs answered. Tied
+  // to the entry actually leaving state rather than to the tap, so a delete
+  // the server refuses leaves the confirm exactly where he left it.
   const hadEntryRef = useRef(entry !== null);
   useEffect(() => {
     if (hadEntryRef.current && entry === null) {
-      setFelt(null);
-      setBest("");
-      setHard("");
-      setNote("");
       setConfirmingDelete(false);
     }
     hadEntryRef.current = entry !== null;
   }, [entry]);
-
-  // Whether the last save is sitting in the outbox rather than actually gone
-  // to the server. This used to be guessed: `saving` clearing with the entry
-  // unchanged looked like a queued write, but it is really only a check that
-  // nothing changed. A save the server rejects for good changes nothing
-  // either, so a write that had just been thrown away told Teddy his words
-  // were safe on the device with the outbox empty. core's own selector knows
-  // for certain, and CoachJournal was moved onto it this phase; this is the
-  // same line, in the same shape.
-  const waitingToSend = !saving && queued;
 
   if (currentId === null) {
     return <WaitingForYearId label={FINDING_YEAR_LABEL} />;
@@ -290,10 +262,9 @@ export function AthleteJournal() {
     return null;
   }
 
-  const shared = entry?.shared ?? false;
   // A `const` carries its own inferred type (`number`, not `number | null`)
   // from this exact assignment onward, which is what makes it, unlike
-  // `currentId` itself, safe to read from inside the two closures below:
+  // `currentId` itself, safe to read from inside the closure below:
   // TypeScript's narrowing of `currentId` by the guard above does not
   // extend into a nested function, since either could in principle be
   // called long after this render.
@@ -303,29 +274,6 @@ export function AthleteJournal() {
   // Whose it is has already been settled above, since everything from here
   // down renders for the athlete alone.
   const canDelete = entryId !== null;
-
-  function handleSave(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    // Not annotated as SaveAthleteEntryPayload: that type is exactly the
-    // four fields core's own request builder reads today (programYearId,
-    // date, note, shared), and felt/best/hard ride along on the same
-    // object for the day this app can send them all the way through. See
-    // the task report for the gap that leaves in core today.
-    const payload = {
-      programYearId,
-      date: today,
-      note,
-      shared,
-      felt,
-      best: best.length === 0 ? null : best,
-      hard: hard.length === 0 ? null : hard,
-    };
-    dispatch(journalActions.saveAthleteEntry(payload));
-  }
-
-  function handleToggleShared() {
-    dispatch(journalActions.setShared({ programYearId, date: today, shared: !shared }));
-  }
 
   function handleDelete() {
     // `entryId` below is what makes this reachable at all: the route is
@@ -341,49 +289,7 @@ export function AthleteJournal() {
       <h1>Today</h1>
       {error && <ErrorNote message={error} />}
 
-      <form onSubmit={handleSave}>
-        <fieldset>
-          <legend>How did today feel? 1 is rough, 5 is great.</legend>
-          {FELT_VALUES.map((value) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={felt === value}
-              onClick={() => setFelt(value)}
-            >
-              {value}
-            </button>
-          ))}
-        </fieldset>
-
-        <label>
-          What went best today?
-          <input type="text" value={best} onChange={(event) => setBest(event.target.value)} />
-        </label>
-
-        <label>
-          What was hard today?
-          <input type="text" value={hard} onChange={(event) => setHard(event.target.value)} />
-        </label>
-
-        <label>
-          Tell me about today.
-          <textarea value={note} onChange={(event) => setNote(event.target.value)} />
-        </label>
-
-        <p className="athlete-journal__shared-state">{shared ? SHARED_TEXT : PRIVATE_TEXT}</p>
-        <button type="button" onClick={handleToggleShared}>
-          {shared ? "Keep this to yourself" : "Let Dad see this"}
-        </button>
-
-        {waitingToSend && (
-          <p role="status">This is saved on your device and will send once you're back online.</p>
-        )}
-
-        <button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save"}
-        </button>
-      </form>
+      <AthleteNoteForm programYearId={programYearId} date={today} />
 
       {/* Outside the form, and last on the page, so the tap that deletes is
           nowhere near the tap that saves. It asks first: this is the only
