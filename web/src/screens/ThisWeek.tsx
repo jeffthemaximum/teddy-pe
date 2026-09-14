@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   authSelectors,
   week,
@@ -8,10 +9,11 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "@teddy-pe/core";
-import type { DayCard as DayCardPayload } from "@teddy-pe/core";
 import { Loading } from "../components/Loading";
 import { ErrorNote } from "../components/ErrorNote";
 import { DayCard } from "../components/DayCard";
+import { WaitingForYearId } from "../components/WaitingForYearId";
+import { byWeekday, todayISODate } from "../lib/scheduling";
 
 // Same cold-Fly-machine wait as Year and Month: 6.6 to 7.6 seconds. This is
 // the screen Teddy opens, so a blank panel here is the worst place in the
@@ -25,27 +27,9 @@ const WAKING_LABEL = "Waking up the server. This week can take a few seconds to 
 // answer for a reason that says nothing about the token.
 const FINDING_YEAR_LABEL = "Waking up the server. Finding this week can take a few seconds too.";
 
-const DOW_ORDER = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-
-function byWeekday(days: DayCardPayload[]): DayCardPayload[] {
-  return [...days].sort((a, b) => DOW_ORDER.indexOf(a.dow) - DOW_ORDER.indexOf(b.dow));
-}
-
-// Exported for the same reason Month.tsx exports currentMonthKey: so a test
-// can ask the same clock this screen asks, by passing `now`, instead of
-// depending on whichever day the suite happens to run on. Local date parts
-// (not toISOString, which is UTC) because a day card's own `date` is a
-// local calendar date ("2026-09-17"), and toISOString can name the wrong
-// day near midnight in a timezone ahead of UTC.
-export function todayISODate(now: Date = new Date()): string {
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 export function ThisWeek() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   // core carries the current program year id itself, read at sign-in and
   // at restore (see Year.tsx's own comment on authSelectors
@@ -68,26 +52,36 @@ export function ThisWeek() {
     }
   }, [dispatch, currentId]);
 
+  // Handed down through DayCard to Tokens, which stays ignorant of how
+  // navigation happens (see Tokens.tsx and DayCard.tsx): this is the one
+  // place in that chain that knows a slug becomes a URL. A tap opens the
+  // glossary at that drill; the glossary reads the slug back off the URL,
+  // which is also what makes it bookmarkable and back-button-able (see
+  // Glossary.tsx for why that beats keeping it in local state).
+  function openDrill(slug: string) {
+    navigate(`/glossary/${slug}`);
+  }
+
   if (!data) {
     if (currentId === null) {
       return (
-        <main className="this-week">
-          <Loading label={FINDING_YEAR_LABEL} />
-        </main>
+        <div className="this-week">
+          <WaitingForYearId label={FINDING_YEAR_LABEL} />
+        </div>
       );
     }
     if (loading) {
       return (
-        <main className="this-week">
+        <div className="this-week">
           <Loading label={WAKING_LABEL} />
-        </main>
+        </div>
       );
     }
     if (error) {
       return (
-        <main className="this-week">
+        <div className="this-week">
           <ErrorNote message={error} />
-        </main>
+        </div>
       );
     }
     // The id is known, nothing has loaded and nothing has failed: the
@@ -100,7 +94,7 @@ export function ThisWeek() {
   const days = byWeekday(data.days);
 
   return (
-    <main className="this-week">
+    <div className="this-week">
       {loading && <Loading label={WAKING_LABEL} />}
       {error && <ErrorNote message={error} />}
 
@@ -110,13 +104,17 @@ export function ThisWeek() {
         Effort spent: {spend} of {budget}
       </p>
 
-      <ol aria-label="Days" className="this-week__days">
-        {days.map((day) => (
-          <li key={day.id}>
-            <DayCard day={day} isToday={day.date === today} />
-          </li>
-        ))}
-      </ol>
-    </main>
+      {days.length === 0 ? (
+        <p className="this-week__empty">Nothing has been planned for this week yet.</p>
+      ) : (
+        <ol aria-label="Days" className="this-week__days">
+          {days.map((day) => (
+            <li key={day.id}>
+              <DayCard day={day} isToday={day.date === today} onSelectDrill={openDrill} />
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
   );
 }

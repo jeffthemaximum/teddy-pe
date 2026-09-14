@@ -1,5 +1,7 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
+import { MemoryRouter, Route, Routes, useParams } from "react-router-dom";
 import { createCoreStore, memoryStorage } from "@teddy-pe/core";
 import type { WeekPayload, DayCard } from "@teddy-pe/core";
 import { ThisWeek } from "../src/screens/ThisWeek";
@@ -57,6 +59,10 @@ const TODAY_BLOCK = {
   body_tokens: [
     { text: "Hang and swing, ", type: "text", style: "plain" },
     { text: "both hands", type: "text", style: "plain" },
+    // A drill token, the one type Tokens.tsx renders as something tappable
+    // (see tokens.test.tsx). This is what "takes you to the glossary when
+    // you tap a drill token" below actually taps.
+    { text: "Rings Hang", type: "drill", style: "plain", slug: "rings-hang" },
   ],
   drill_slugs: ["rings-hang"],
 };
@@ -127,7 +133,9 @@ function renderThisWeek(currentProgramYearId: number | null = 555) {
     store,
     ...render(
       <Provider store={store}>
-        <ThisWeek />
+        <MemoryRouter>
+          <ThisWeek />
+        </MemoryRouter>
       </Provider>,
     ),
   };
@@ -173,7 +181,9 @@ describe("the This Week view", () => {
 
     const { rerender } = render(
       <Provider store={store}>
-        <ThisWeek />
+        <MemoryRouter>
+          <ThisWeek />
+        </MemoryRouter>
       </Provider>,
     );
 
@@ -187,10 +197,85 @@ describe("the This Week view", () => {
     // A rerender with nothing changed must not ask again.
     rerender(
       <Provider store={store}>
-        <ThisWeek />
+        <MemoryRouter>
+          <ThisWeek />
+        </MemoryRouter>
       </Provider>,
     );
     expect(weekFetches()).toHaveLength(1);
+  });
+
+  it("shows a waiting message rather than a blank panel while the current year id is not known yet", () => {
+    // Same gap Year.tsx and Month.tsx already cover, and the same reason:
+    // selectCurrentProgramYearId is null both while /api/v1/me is still in
+    // flight right after sign-in, and, more lastingly, when a restore
+    // succeeded on a cached session because /me could not answer for a
+    // reason that says nothing about the token. Before this test existed,
+    // ThisWeek had the identical branch Year.tsx and Month.tsx both had a
+    // test for, and no test of its own.
+    renderThisWeek(null);
+
+    expect(screen.getByRole("status")).toHaveTextContent(/waking/i);
+  });
+
+  it("lets you try again when the year id has not arrived", async () => {
+    // The null-id wait is not guaranteed to resolve on its own: core keeps
+    // a restored session signed in even when /me could not answer for a
+    // reason that says nothing about the token, and does not retry /me by
+    // itself. A person stuck here needs a way to ask again, not just a
+    // label promising it will only take a few seconds.
+    const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
+    seedAuth(store, null);
+    const dispatched: { type: string }[] = [];
+    const realDispatch = store.dispatch;
+    store.dispatch = ((action: never) => {
+      dispatched.push(action as { type: string });
+      return realDispatch(action);
+    }) as typeof store.dispatch;
+
+    render(
+      <Provider store={store}>
+        <MemoryRouter>
+          <ThisWeek />
+        </MemoryRouter>
+      </Provider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /try again/i }));
+
+    expect(dispatched.some((a) => a.type === "auth/RESTORE_SESSION")).toBe(true);
+  });
+
+  it("takes you to the glossary when you tap a drill token", async () => {
+    // GlossaryStub stands in for the real Glossary screen: this test is
+    // about ThisWeek handing off a slug through DayCard and Tokens into a
+    // URL, not about what the glossary itself then does with it (that is
+    // glossary.test.tsx's job).
+    function GlossaryStub() {
+      const { slug } = useParams<{ slug: string }>();
+      return <p>Glossary open on {slug}</p>;
+    }
+
+    const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
+    seedAuth(store, 555);
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={["/week"]}>
+          <Routes>
+            <Route path="/week" element={<ThisWeek />} />
+            <Route path="/glossary/:slug" element={<GlossaryStub />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>,
+    );
+
+    act(() => {
+      store.dispatch({ type: "week/SUCCEEDED", payload: WEEK });
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: /rings hang/i }));
+
+    expect(screen.getByText(/glossary open on rings-hang/i)).toBeInTheDocument();
   });
 
   it("says the server may be waking rather than showing a blank panel", () => {
@@ -356,10 +441,26 @@ describe("the This Week view", () => {
 
     const { container } = render(
       <Provider store={store}>
-        <ThisWeek />
+        <MemoryRouter>
+          <ThisWeek />
+        </MemoryRouter>
       </Provider>,
     );
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("says nothing was planned rather than showing an empty list", () => {
+    // A week payload with no days is not the transient "not caught up yet"
+    // gap above (data has arrived, and it says so), and it should not be
+    // possible to confuse with it: the "return null" case has no data at
+    // all, and this one has data whose own `days` array is empty.
+    const { store } = renderThisWeek();
+    act(() => {
+      store.dispatch({ type: "week/SUCCEEDED", payload: { ...WEEK, days: [] } });
+    });
+
+    expect(screen.queryByRole("list", { name: "Days" })).not.toBeInTheDocument();
+    expect(screen.getByText(/nothing has been planned/i)).toBeInTheDocument();
   });
 });

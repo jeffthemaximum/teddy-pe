@@ -1,9 +1,6 @@
 import type { DayCard as DayCardPayload } from "@teddy-pe/core";
 import { Tokens } from "./Tokens";
-
-function dowLabel(dow: string): string {
-  return dow.length ? dow[0]!.toUpperCase() + dow.slice(1) : dow;
-}
+import { dowLabel } from "../lib/scheduling";
 
 // This is the screen Teddy opens. One card, one day, his own cue language:
 // big targets, few words. The role and minutes come first because those
@@ -17,7 +14,20 @@ function dowLabel(dow: string): string {
 // renders). Rendering it here means Saturday shows why it is quiet instead
 // of showing nothing, without this file ever having to know which day of
 // the week that is.
-export function DayCard({ day, isToday }: { day: DayCardPayload; isToday: boolean }) {
+//
+// `onSelectDrill` only passes through to Tokens, the same plain callback
+// shape, for the same reason: this file has no more business calling
+// `useNavigate()` than Tokens does, and doing so here would be exactly as
+// unportable to the Phase 4 native app.
+export function DayCard({
+  day,
+  isToday,
+  onSelectDrill,
+}: {
+  day: DayCardPayload;
+  isToday: boolean;
+  onSelectDrill: (slug: string) => void;
+}) {
   const headingId = `day-card-${day.id}-heading`;
 
   return (
@@ -53,11 +63,11 @@ export function DayCard({ day, isToday }: { day: DayCardPayload; isToday: boolea
           {day.blocks.map((block) => (
             <li key={block.id}>
               <strong>
-                <Tokens tokens={block.name_tokens} />
+                <Tokens tokens={block.name_tokens} onSelectDrill={onSelectDrill} />
               </strong>
               <span className="day-card__block-minutes"> {block.minutes} min</span>
               <p>
-                <Tokens tokens={block.body_tokens} />
+                <Tokens tokens={block.body_tokens} onSelectDrill={onSelectDrill} />
               </p>
             </li>
           ))}

@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { Token } from "@teddy-pe/core";
 import { Tokens } from "../src/components/Tokens";
 
@@ -37,10 +38,31 @@ describe("Tokens", () => {
     expect(cue.className).not.toBe(warning.className);
   });
 
-  it("renders a drill token as something tappable carrying its slug", () => {
-    render(<Tokens tokens={FIXTURE} />);
+  it("opens a drill by its slug when its token is tapped", async () => {
+    // "Tappable" has to mean something happens on tap, not just that the
+    // element carrying the slug happens to be a <button>. Without an
+    // onSelectDrill call wired to onClick, a person can tap this all day
+    // and the glossary never hears about it: nothing before this test
+    // could tell that state apart from a working handler, because nothing
+    // ever tapped the button.
+    const onSelectDrill = vi.fn();
+    render(<Tokens tokens={FIXTURE} onSelectDrill={onSelectDrill} />);
     const drill = screen.getByRole("button", { name: "Split step" });
     expect(drill).toHaveAttribute("data-slug", "split-step");
+
+    await userEvent.click(drill);
+
+    expect(onSelectDrill).toHaveBeenCalledTimes(1);
+    expect(onSelectDrill).toHaveBeenCalledWith("split-step");
+  });
+
+  it("does not call onSelectDrill for a tap on plain text", async () => {
+    const onSelectDrill = vi.fn();
+    render(<Tokens tokens={FIXTURE} onSelectDrill={onSelectDrill} />);
+
+    await userEvent.click(screen.getAllByText("Ready")[0]);
+
+    expect(onSelectDrill).not.toHaveBeenCalled();
   });
 
   it("renders an unknown token type's text rather than dropping it", () => {

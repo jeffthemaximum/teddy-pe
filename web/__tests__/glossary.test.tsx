@@ -1,6 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { createCoreStore, memoryStorage } from "@teddy-pe/core";
 import type { Drill } from "@teddy-pe/core";
 import { Glossary } from "../src/screens/Glossary";
@@ -61,13 +62,32 @@ const BALANCE_BEAM_WALK: Drill = {
 
 const DRILLS: Drill[] = [STAR_JUMP, WALL_TAPS, BALANCE_BEAM_WALK];
 
-function renderGlossary() {
+// The open drill lives in the URL (see Glossary.tsx's own comment on why),
+// so a test that renders <Glossary /> with no Router at all cannot open
+// one: useNavigate/useParams both throw outside a Router, the same way a
+// real app rendering this screen with no route ever would. Both routes map
+// to the same screen (see routes.tsx's own two entries for "/glossary" and
+// "/glossary/:slug"), and LocationProbe is how a test proves an actual
+// navigation happened rather than a local toggle that merely looked like
+// one.
+function LocationProbe() {
+  const location = useLocation();
+  return <p data-testid="location">{location.pathname}</p>;
+}
+
+function renderGlossary(initialEntries: string[] = ["/glossary"]) {
   const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
   return {
     store,
     ...render(
       <Provider store={store}>
-        <Glossary />
+        <MemoryRouter initialEntries={initialEntries}>
+          <LocationProbe />
+          <Routes>
+            <Route path="/glossary" element={<Glossary />} />
+            <Route path="/glossary/:slug" element={<Glossary />} />
+          </Routes>
+        </MemoryRouter>
       </Provider>,
     ),
   };
@@ -97,7 +117,9 @@ describe("the drill glossary", () => {
 
     const { rerender } = render(
       <Provider store={store}>
-        <Glossary />
+        <MemoryRouter>
+          <Glossary />
+        </MemoryRouter>
       </Provider>,
     );
 
@@ -109,7 +131,9 @@ describe("the drill glossary", () => {
     // here that could change and legitimately trigger a second ask.
     rerender(
       <Provider store={store}>
-        <Glossary />
+        <MemoryRouter>
+          <Glossary />
+        </MemoryRouter>
       </Provider>,
     );
     expect(drillFetches()).toHaveLength(1);
@@ -244,6 +268,67 @@ describe("the drill glossary", () => {
     expect(screen.queryByText(STAR_JUMP.cue)).not.toBeInTheDocument();
   });
 
+  it("puts the open drill in the URL, not only in a local toggle", async () => {
+    // The distinguishing claim of "the open drill lives in the URL": tapping
+    // a drill actually navigates, rather than merely flipping a variable
+    // that happens to render the same panel. LocationProbe (inside
+    // renderGlossary) is a second, independent witness to that: it reads
+    // history through useLocation, not through anything Glossary itself
+    // exposes.
+    const { store } = renderGlossary();
+    act(() => {
+      store.dispatch({ type: "drills/SUCCEEDED", payload: { drills: DRILLS } });
+    });
+
+    expect(screen.getByTestId("location")).toHaveTextContent("/glossary");
+
+    await userEvent.click(screen.getByRole("button", { name: "Star Jump" }));
+
+    expect(screen.getByTestId("location")).toHaveTextContent("/glossary/star-jump");
+
+    await userEvent.click(screen.getByRole("button", { name: /back/i }));
+
+    expect(screen.getByTestId("location")).toHaveTextContent("/glossary");
+  });
+
+  it("opens the drill named in the URL directly, the way a bookmark would", () => {
+    // Nobody clicked anything to get here: this is what following a saved
+    // link, or hitting the browser's forward button, looks like.
+    const { store } = renderGlossary(["/glossary/wall-taps"]);
+    act(() => {
+      store.dispatch({ type: "drills/SUCCEEDED", payload: { drills: DRILLS } });
+    });
+
+    expect(screen.getByText(WALL_TAPS.cue)).toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Drills" })).not.toBeInTheDocument();
+  });
+
+  it("says so, rather than crashing or silently showing the list, when the URL names no real drill", () => {
+    const { store } = renderGlossary(["/glossary/not-a-real-drill"]);
+    act(() => {
+      store.dispatch({ type: "drills/SUCCEEDED", payload: { drills: DRILLS } });
+    });
+
+    expect(screen.getByText(/does not point to a drill/i)).toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Drills" })).not.toBeInTheDocument();
+  });
+
+  it("tells nothing having come back apart from nothing having matched", () => {
+    // The API answering with zero drills is not the same fact as a search
+    // for "xyzzyquux" turning up nothing (see the test above): one is
+    // about the whole list, the other about what was typed, and a person
+    // reading "no drill called that" over an empty query would be told to
+    // try another word for a search that was never run.
+    const { store } = renderGlossary();
+    act(() => {
+      store.dispatch({ type: "drills/SUCCEEDED", payload: { drills: [] } });
+    });
+
+    expect(screen.queryByRole("list", { name: "Drills" })).not.toBeInTheDocument();
+    expect(screen.getByText(/nothing has come back/i)).toBeInTheDocument();
+    expect(screen.queryByText(/no drill called that/i)).not.toBeInTheDocument();
+  });
+
   it("renders nothing rather than throwing before the drills have loaded", () => {
     // Every screen can render before its data arrives. The FETCH the
     // component dispatches on mount is intercepted before it can reach the
@@ -259,7 +344,9 @@ describe("the drill glossary", () => {
 
     const { container } = render(
       <Provider store={store}>
-        <Glossary />
+        <MemoryRouter>
+          <Glossary />
+        </MemoryRouter>
       </Provider>,
     );
 

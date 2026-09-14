@@ -91,6 +91,14 @@ function Guarded({ item, role }: { item: NavItem; role: Role | null }) {
   return item.element;
 }
 
+// The one drill token in a day card carries a slug, and tapping it needs to
+// land here already open at that drill. `/glossary/:slug` reuses the exact
+// NAV_ITEMS entry the plain `/glossary` route does (same element, same
+// roles guard) rather than restating either: a param does not change who
+// is allowed to read the glossary, so it does not get a second roles list
+// of its own to drift from the first.
+const GLOSSARY_ITEM = NAV_ITEMS.find((item) => item.to === "/glossary")!;
+
 export function AppRoutes({ role }: { role: Role | null }) {
   return (
     <Routes>
@@ -98,6 +106,7 @@ export function AppRoutes({ role }: { role: Role | null }) {
       {NAV_ITEMS.map((item) => (
         <Route key={item.to} path={item.to} element={<Guarded item={item} role={role} />} />
       ))}
+      <Route path="/glossary/:slug" element={<Guarded item={GLOSSARY_ITEM} role={role} />} />
       <Route path="*" element={<Navigate to="/year" replace />} />
     </Routes>
   );
