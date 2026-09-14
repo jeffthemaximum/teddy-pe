@@ -1,6 +1,7 @@
 import { createCoreStore, memoryStorage } from "../src";
 import { signInSucceeded, signOut, sessionExpired } from "../src/ducks/auth/actions";
 import * as journalActions from "../src/ducks/journal/actions";
+import { selectIsSaving } from "../src/ducks/journal/selectors";
 import * as outboxActions from "../src/ducks/outbox/actions";
 import { programYears } from "../src/ducks/programYears";
 import { drills } from "../src/ducks/drills";
@@ -44,6 +45,25 @@ function populate(store: ReturnType<typeof buildStore>) {
       note: "Landed three in a row. Don't tell Dad yet.",
       shared: false,
       updated_at: "2026-09-17T19:02:00Z",
+    }),
+  );
+
+  // A day in flight: dispatched and not yet answered by a save or a
+  // failure, the state a dead token catches it in mid-save. This is a
+  // second, independent claim about journal beyond "the saved entry is
+  // gone" — the entry above and this flag are cleared by different code
+  // paths inside the same reducer, so one clearing does not prove the
+  // other does.
+  store.dispatch(
+    journalActions.saveCoachEntry({
+      date: "2026-09-18",
+      note: null,
+      overall: null,
+      energy: null,
+      flag_pain: false,
+      pain_note: null,
+      challenge_num: null,
+      ratings: {},
     }),
   );
 
@@ -104,6 +124,7 @@ function expectPopulated(state: ReturnType<ReturnType<typeof buildStore>["getSta
   expect(state.auth.status).toBe("signedIn");
   expect(state.auth.token).toBe("jwt-123");
   expect(state.journal.athlete["2026-09-17"]).toBeDefined();
+  expect(selectIsSaving("2026-09-18")(state)).toBe(true);
   expect(state.programYears.data?.program_years).toHaveLength(1);
   expect(state.drills.data?.drills).toHaveLength(1);
   expect(state.outbox.queue).toHaveLength(1);
@@ -119,6 +140,11 @@ describe("the root reducer's reset on sign-out", () => {
     const state = store.getState();
 
     expect(state.journal).toEqual(initialJournal);
+    // Named explicitly, not just folded into the object equality above: a
+    // day left mid-save when the token dies must not spin forever with no
+    // error and no entry, which is what a `saving` flag that survives would
+    // do to whoever signs in next.
+    expect(selectIsSaving("2026-09-18")(state)).toBe(false);
     expect(state.programYears).toEqual(initialProgramYears);
     expect(state.drills).toEqual(initialDrills);
     expect(state.auth).toEqual(initialAuth);
@@ -148,6 +174,7 @@ describe("the root reducer's reset on session expiry", () => {
     const state = store.getState();
 
     expect(state.journal).toEqual(initialJournal);
+    expect(selectIsSaving("2026-09-18")(state)).toBe(false);
     expect(state.programYears).toEqual(initialProgramYears);
     expect(state.drills).toEqual(initialDrills);
 
