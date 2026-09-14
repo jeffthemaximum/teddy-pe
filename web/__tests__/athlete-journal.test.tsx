@@ -391,6 +391,62 @@ describe("the athlete journal", () => {
     expect((saves.at(-1)!.payload as SavePayload).shared).toBe(true);
   });
 
+  // The two halves of the one control Teddy has over who reads his words.
+  // `shared` is read off the stored entry, so until SET_SHARED marked that
+  // entry the moment he tapped, the gap between the tap and the server
+  // answering re-sent the value he had just changed.
+  it("stops sending the old share value the moment he takes a day back", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { store, dispatched } = renderJournalRecording();
+    hydrateWith(store, SHARED_ENTRY);
+    expect(SHARED_ENTRY.shared).toBe(true);
+    dispatched.length = 0;
+
+    await user.click(screen.getByRole("button", { name: /keep this to yourself/i }));
+    // Said at once, not once the server has got round to agreeing. A screen
+    // still reading "Dad can see this too" is what gave him every reason to
+    // go on writing.
+    expect(screen.getByText(/only you can see this/i)).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/tell me about today/i), " And again.");
+    fireEvent.blur(screen.getByLabelText(/tell me about today/i));
+
+    const saves = dispatched.filter((a) => a.type === "journal/SAVE_ATHLETE_ENTRY");
+    expect(saves.length).toBeGreaterThan(0);
+    expect((saves.at(-1)!.payload as SavePayload).shared).toBe(false);
+  });
+
+  // The same thing offline, where it is not a race at all. Both writes queue
+  // under `athlete:<date>` and the outbox's supersedes rule lets the later
+  // save replace the un-share in place, so a save carrying the stale
+  // `shared: true` means the un-share never reaches the server: not late,
+  // never. Driven through the real store, the real sagas and the real outbox
+  // with only fetch mocked.
+  it("never re-shares a day he took back with no signal", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    // No connection: every request fails the way a dead one does.
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"));
+
+    const { store } = renderJournal();
+    hydrateWith(store, SHARED_ENTRY);
+
+    await user.click(screen.getByRole("button", { name: /keep this to yourself/i }));
+    await settle();
+    await user.type(screen.getByLabelText(/tell me about today/i), " And again.");
+    fireEvent.blur(screen.getByLabelText(/tell me about today/i));
+    await settle();
+
+    // One write owed for the day, because the second collapsed into the
+    // first, and what it carries is the day taken back.
+    const queue = store.getState().outbox.queue;
+    expect(queue).toHaveLength(1);
+    const body = queue[0]!.action.request.body as { athlete_entry: SavePayload };
+    expect(body.athlete_entry.shared).toBe(false);
+    // And his words are on it: the un-share must not have cost him the line
+    // he wrote after it either.
+    expect(body.athlete_entry.note).toBe("Good day at the wall. And again.");
+  });
+
   it("can save just one thing, leaving the others empty", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { store, dispatched } = renderJournalRecording();
