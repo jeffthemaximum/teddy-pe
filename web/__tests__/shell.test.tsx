@@ -220,26 +220,32 @@ describe("direct navigation to a route the role cannot use", () => {
   it("does not render the coach's notes for the athlete", async () => {
     window.history.pushState({}, "", "/notes");
     await renderAs("athlete");
-    expect(screen.queryByText(/notes is coming soon/i)).not.toBeInTheDocument();
+    expect(window.location.pathname).not.toBe("/notes");
   });
 
   it("does not render the coach's notes for the viewer", async () => {
     window.history.pushState({}, "", "/notes");
     await renderAs("viewer");
-    expect(screen.queryByText(/notes is coming soon/i)).not.toBeInTheDocument();
+    expect(window.location.pathname).not.toBe("/notes");
   });
 
   it("does not render the journal for the viewer", async () => {
     window.history.pushState({}, "", "/journal");
     await renderAs("viewer");
-    expect(screen.queryByText(/journal is coming soon/i)).not.toBeInTheDocument();
+    expect(window.location.pathname).not.toBe("/journal");
   });
 
   it("does render the coach's notes for the coach, so the guard is not just blocking everyone", async () => {
     // Without this, all three examples above would also pass against a
     // guard that redirects home unconditionally, which guards nothing.
+    //
+    // All four assert on the path rather than on what rendered. These
+    // routes used to hold placeholders and the tests read their text; the
+    // moment real screens replaced them, the three negative ones passed
+    // because that text was gone rather than because the guard worked.
+    // A path cannot be hollowed out by a screen changing its markup.
     window.history.pushState({}, "", "/notes");
     await renderAs("coach");
-    expect(screen.getByText(/notes is coming soon/i)).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/notes");
   });
 });

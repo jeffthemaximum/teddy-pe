@@ -4,6 +4,8 @@ import { Year } from "./screens/Year";
 import { Month } from "./screens/Month";
 import { ThisWeek } from "./screens/ThisWeek";
 import { Glossary } from "./screens/Glossary";
+import { AthleteJournal } from "./screens/AthleteJournal";
+import { CoachJournal } from "./screens/CoachJournal";
 
 // A screen a person can tap that always answers 403 is worse than no screen
 // at all: it teaches them the app is broken. This table is not a guess, it
@@ -64,9 +66,9 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/progress", label: "Progress", roles: "any", element: <Placeholder title="Progress" /> },
   { to: "/tests", label: "Tests", roles: "any", element: <Placeholder title="Tests" /> },
   // athlete_entries: closed to a viewer, open to Teddy and Jeff.
-  { to: "/journal", label: "Journal", roles: ["coach", "athlete"], element: <Placeholder title="Journal" /> },
+  { to: "/journal", label: "Journal", roles: ["coach", "athlete"], element: <AthleteJournal /> },
   // coach_entries: Jeff's own notes, closed to everyone else.
-  { to: "/notes", label: "Notes", roles: ["coach"], element: <Placeholder title="Notes" /> },
+  { to: "/notes", label: "Notes", roles: ["coach"], element: <CoachJournal /> },
 ];
 
 function isAllowed(roles: RoleTier, role: Role | null): boolean {
