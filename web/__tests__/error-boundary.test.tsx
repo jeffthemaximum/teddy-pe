@@ -22,7 +22,14 @@ describe("the error boundary", () => {
   });
 
   it("renders its children when nothing throws", () => {
+    // Also checks the catch machinery stays dormant: a boundary that always
+    // renders its children (whether or not something upstream threw) would
+    // pass a check on the rendered text alone, so this also asserts nothing
+    // was ever caught.
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     render(<ErrorBoundary><p>fine</p></ErrorBoundary>);
     expect(screen.getByText("fine")).toBeInTheDocument();
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
   });
 });
