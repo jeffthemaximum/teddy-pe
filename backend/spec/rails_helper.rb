@@ -27,6 +27,7 @@ RSpec.configure do |config|
   config.before(:each) { Rails.cache.clear }
 
   config.before(:suite) { DatabaseCleaner.clean_with(:truncation) }
+  config.before(:suite) { LegacyTables.create! }
   config.before(:each) { DatabaseCleaner.strategy = :transaction }
   config.around(:each) { |example| DatabaseCleaner.cleaning { example.run } }
 end
