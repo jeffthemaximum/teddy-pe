@@ -4,6 +4,7 @@ import { Provider } from "react-redux";
 import { createCoreStore, memoryStorage, authActions } from "@teddy-pe/core";
 import type { Role } from "@teddy-pe/core";
 import { App } from "../src/App";
+import { stubMe } from "../vitest.setup";
 
 const USERS: Record<Role, { id: number; email: string; name: string; role: Role }> = {
   coach: { id: 1, email: "frey.maxim@gmail.com", name: "Jeff", role: "coach" },
@@ -28,6 +29,7 @@ async function renderAs(role: Role) {
     "teddy-pe.session",
     JSON.stringify({ jwt: "a.b.c", user: USERS[role] }),
   );
+  stubMe(USERS[role]);
   const store = createCoreStore({ baseUrl: "https://api.test", storage });
   store.dispatch(authActions.restoreSession());
   render(
@@ -103,6 +105,7 @@ describe("the shell", () => {
       "teddy-pe.session",
       JSON.stringify({ jwt: "a.b.c", user: USERS.coach }),
     );
+    stubMe(USERS.coach);
     const store = createCoreStore({ baseUrl: "https://api.test", storage });
     store.dispatch(authActions.restoreSession());
     const dispatched: unknown[] = [];
@@ -129,6 +132,7 @@ describe("the shell", () => {
       "teddy-pe.session",
       JSON.stringify({ jwt: "a.b.c", user: USERS.viewer }),
     );
+    stubMe(USERS.viewer);
     const store = createCoreStore({ baseUrl: "https://api.test", storage });
     store.dispatch(authActions.restoreSession());
 
@@ -169,6 +173,7 @@ describe("the shell", () => {
       "teddy-pe.session",
       JSON.stringify({ jwt: "z.y.x", user: USERS.coach }),
     );
+    stubMe(USERS.coach);
     store.dispatch(authActions.restoreSession());
     expect(await screen.findByRole("link", { name: /notes/i })).toBeInTheDocument();
   });
@@ -184,13 +189,12 @@ describe("the shell", () => {
     // are restricted by name, because a 403 tab is worse than no tab and a
     // guess should not be the one taking that risk.
     const storage = memoryStorage();
+    const guest = { id: 9, email: "guest@example.com", name: "Guest", role: "guest" };
     await storage.setItem(
       "teddy-pe.session",
-      JSON.stringify({
-        jwt: "a.b.c",
-        user: { id: 9, email: "guest@example.com", name: "Guest", role: "guest" },
-      }),
+      JSON.stringify({ jwt: "a.b.c", user: guest }),
     );
+    stubMe(guest);
     const store = createCoreStore({ baseUrl: "https://api.test", storage });
     store.dispatch(authActions.restoreSession());
     render(<Provider store={store}><App /></Provider>);

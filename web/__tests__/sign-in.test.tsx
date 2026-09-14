@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { createCoreStore, memoryStorage, authActions } from "@teddy-pe/core";
 import { SignIn } from "../src/screens/SignIn";
 import { App } from "../src/App";
+import { stubMe } from "../vitest.setup";
 
 function renderSignedOut() {
   const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
@@ -139,7 +140,9 @@ describe("restoring a stored session", () => {
     // from an effect and the real app still flashed on every launch. That
     // gap is real; the test below closes it.
     const storage = memoryStorage();
-    await storage.setItem("teddy-pe.session", JSON.stringify({ jwt: "a.b.c", user: { id: 1, email: "a@b.c", name: "Jeff", role: "coach" } }));
+    const user = { id: 1, email: "a@b.c", name: "Jeff", role: "coach" };
+    await storage.setItem("teddy-pe.session", JSON.stringify({ jwt: "a.b.c", user }));
+    stubMe(user);
     const store = createCoreStore({ baseUrl: "https://api.test", storage });
     store.dispatch(authActions.restoreSession());
     render(<Provider store={store}><App /></Provider>);
@@ -156,7 +159,9 @@ describe("restoring a stored session", () => {
     // and reads the DOM at the true first commit (see the comment further
     // down for how that point is found without racing the scheduler).
     const storage = memoryStorage();
-    await storage.setItem("teddy-pe.session", JSON.stringify({ jwt: "a.b.c", user: { id: 1, email: "a@b.c", name: "Jeff", role: "coach" } }));
+    const user = { id: 1, email: "a@b.c", name: "Jeff", role: "coach" };
+    await storage.setItem("teddy-pe.session", JSON.stringify({ jwt: "a.b.c", user }));
+    stubMe(user);
     const store = createCoreStore({ baseUrl: "https://api.test", storage });
 
     // The order main.tsx uses: dispatch before the tree renders at all.
