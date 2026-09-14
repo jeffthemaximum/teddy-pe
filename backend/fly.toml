@@ -8,6 +8,9 @@ primary_region = "ewr"
 # Runs in a throwaway machine before the new version serves traffic, so the
 # schema is in place before the first request and before the health check,
 # which asks the database a question and fails the deploy if it cannot answer.
+# That last part only became true once the database check was registered under
+# the name "default": /healthz is the OkComputer engine root, and the root runs
+# the check called "default" and no other. See config/initializers/okcomputer.rb.
 # content:seed is idempotent and keyed on natural keys, so running it on every
 # deploy is how a content change reaches production: edit the YAML, deploy.
 [deploy]
