@@ -20,3 +20,20 @@ export interface ApiErrorEnvelope {
     message: string;
   };
 }
+
+// Auth duck shapes. Shared here rather than in ducks/auth so a later duck can
+// describe a User without importing the auth duck's implementation.
+
+export type Role = "coach" | "athlete" | "viewer";
+
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  role: Role;
+}
+
+export interface LoginResponse {
+  jwt: string;
+  user: User;
+}

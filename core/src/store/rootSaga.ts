@@ -1,6 +1,6 @@
-import { all } from "redux-saga/effects";
+import { all, fork } from "redux-saga/effects";
+import { authSaga } from "../ducks/auth";
 
-// Every duck adds its watcher here. Empty until Task 3.
 export function* rootSaga() {
-  yield all([]);
+  yield all([fork(authSaga)]);
 }

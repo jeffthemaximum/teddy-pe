@@ -12,7 +12,7 @@ describe("the core store", () => {
       storage: memoryStorage(),
     });
 
-    expect(store.getState()).toEqual({});
+    expect(store.getState().auth.status).toBe("anonymous");
   });
 
   it("resolves the injected baseUrl and storage into config", () => {
