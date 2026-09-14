@@ -416,4 +416,61 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
     // Nothing went wrong, so nobody is told anything did.
     expect(journalSelectors.selectJournalError(store.getState())).toBeNull();
   });
+
+  it("tells the journal when a replayed entry is thrown away, rather than letting the queue quietly empty", async () => {
+    // The whole reason the outbox exists is that words typed at a court are
+    // not lost. A write the server rejects for good is lost anyway; what
+    // must not happen is losing it silently, with the pending count falling
+    // to zero and nothing on screen saying otherwise.
+    const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation(() =>
+      respond(200, {
+        jwt: "TEDDY-TOKEN",
+        user: { id: 2, email: "teddy@example.com", name: "Teddy", role: "athlete" },
+      }),
+    );
+
+    // Signed in first, so the queued write has an author and replay will
+    // actually send it (see ducks/outbox/types.ts).
+    store.dispatch(authActions.signIn({ email: "teddy@example.com", password: "hunter2" }));
+    await waitUntil(
+      () => authSelectors.selectIsSignedIn(store.getState()),
+      "the sign-in to finish",
+    );
+
+    fetchMock.mockReset();
+    fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
+    store.dispatch(
+      journalActions.saveAthleteEntry({
+        programYearId: 1,
+        date: "2026-09-17",
+        note: "",
+        shared: false,
+      }),
+    );
+    await waitUntil(
+      () => outboxSelectors.selectQueue(store.getState()).length === 1,
+      "the offline save to land in the outbox queue",
+    );
+
+    // The connection is back, and the server has an opinion about this entry
+    // that will be the same every time it is asked.
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(() =>
+      respond(422, { error: { code: "invalid", message: "A note cannot be blank." } }),
+    );
+
+    store.dispatch(outboxActions.replay());
+    await waitUntil(
+      () => outboxSelectors.selectQueue(store.getState()).length === 0,
+      "the replay to drop the rejected write",
+    );
+
+    // The queue is empty, so something has to be true on screen.
+    expect(journalSelectors.selectJournalError(store.getState())).toBe(
+      "That entry did not save. A note cannot be blank.",
+    );
+    // And no entry was invented for the day it failed on.
+    expect(journalSelectors.selectAthleteEntryFor("2026-09-17")(store.getState())).toBeNull();
+  });
 });

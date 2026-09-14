@@ -58,6 +58,17 @@ export function coachDedupeKey(date: string): string {
   return `${COACH_PREFIX}${date}`;
 }
 
+// The inverse, and it lives here beside the two builders on purpose: reading
+// a date back out of a key is the same format knowledge as writing one in,
+// and the whole point of the two functions above is that the format has one
+// home. Returns null for anything that is not this duck's key, which is how
+// the outbox's replay reports get filtered down to writes this duck queued.
+export function dateFromDedupeKey(dedupeKey: string): string | null {
+  if (dedupeKey.startsWith(ATHLETE_PREFIX)) return dedupeKey.slice(ATHLETE_PREFIX.length);
+  if (dedupeKey.startsWith(COACH_PREFIX)) return dedupeKey.slice(COACH_PREFIX.length);
+  return null;
+}
+
 // Both save actions are built as full `QueueableAction`s at the moment they
 // are created, not patched together later inside the saga. `dedupeKey` and
 // `request` are already right there on the action a component dispatches, so

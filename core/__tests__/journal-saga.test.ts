@@ -669,6 +669,89 @@ describe("the journal saga", () => {
     expect(h.dispatched).toHaveLength(0);
   });
 
+  // --- A replay the server rejected for good ---
+
+  it("says so when a replayed entry is rejected for good, instead of letting the pending count read as sent", async () => {
+    // The loss this guards against: Teddy queues a note at a court with no
+    // signal, the queue replays, the server rejects it permanently, the
+    // write is dropped, and the pending count falls to zero. Nothing else in
+    // the app distinguishes that from a successful send.
+    const h = harness();
+
+    await h.run(journalWorkers.reconcileReplayFailure, {
+      type: "outbox/REPLAY_FAILED",
+      payload: {
+        id: "1",
+        dedupeKey: "athlete:2026-09-17",
+        permanent: true,
+        message: "A note cannot be blank.",
+      },
+    });
+
+    expect(h.dispatched).toEqual([
+      actions.saveFailed({
+        date: "2026-09-17",
+        message: "That entry did not save. A note cannot be blank.",
+      }),
+    ]);
+  });
+
+  it("reports a rejected coach write against its own date too", async () => {
+    const h = harness();
+
+    await h.run(journalWorkers.reconcileReplayFailure, {
+      type: "outbox/REPLAY_FAILED",
+      payload: {
+        id: "1",
+        dedupeKey: "coach:2026-09-20",
+        permanent: true,
+        message: "Overall must be between 1 and 5.",
+      },
+    });
+
+    expect(h.dispatched).toEqual([
+      actions.saveFailed({
+        date: "2026-09-20",
+        message: "That entry did not save. Overall must be between 1 and 5.",
+      }),
+    ]);
+  });
+
+  it("says nothing when the write is still owed", async () => {
+    // Offline, a timeout, or a dead token: the write stays on the queue and
+    // goes out later. Telling somebody their entry failed when it is only
+    // waiting for signal is the same mistake `saveQueued` exists to avoid.
+    const h = harness();
+
+    await h.run(journalWorkers.reconcileReplayFailure, {
+      type: "outbox/REPLAY_FAILED",
+      payload: {
+        id: "1",
+        dedupeKey: "athlete:2026-09-17",
+        permanent: false,
+        message: "No connection. Check the network and try again.",
+      },
+    });
+
+    expect(h.dispatched).toHaveLength(0);
+  });
+
+  it("leaves another duck's rejected write to that duck", async () => {
+    const h = harness();
+
+    await h.run(journalWorkers.reconcileReplayFailure, {
+      type: "outbox/REPLAY_FAILED",
+      payload: {
+        id: "1",
+        dedupeKey: "result:2026-09:t1",
+        permanent: true,
+        message: "That value is not a number.",
+      },
+    });
+
+    expect(h.dispatched).toHaveLength(0);
+  });
+
   it("still accepts a real entry whose note is genuinely null", async () => {
     // The guard must reject a missing `note`, not merely a falsy one: a
     // coach entry saved before Jeff writes anything is `note: null` and is a

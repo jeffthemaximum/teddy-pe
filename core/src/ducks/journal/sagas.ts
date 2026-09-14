@@ -2,7 +2,7 @@ import { all, call, getContext, put, select, takeEvery, takeLatest } from "redux
 import * as t from "./actionTypes";
 import * as actions from "./actions";
 import type { JournalSide, SaveAthleteEntryPayload } from "./actions";
-import { athleteDedupeKey, ATHLETE_PREFIX, COACH_PREFIX } from "./actions";
+import { athleteDedupeKey, dateFromDedupeKey, ATHLETE_PREFIX, COACH_PREFIX } from "./actions";
 import * as journalApi from "./api";
 import { asEntry, unwrapEntry } from "./api";
 import { apiRequest, ApiError, isUnauthorized } from "../../services/apiClient";
@@ -231,6 +231,39 @@ function* reconcileReplay(action: {
   }
 }
 
+// The other end of a replay, and the one that matters most to a 7-year-old.
+// `outbox/REPLAY_FAILED` with `permanent: true` means the server answered and
+// answered with a rejection that will be identical every time, so the write
+// is off the queue for good. Until this worker existed, nothing reduced that
+// action at all: the pending count fell to zero, `journal.error` stayed null,
+// and Teddy read that as "sent" when his words had just been thrown away.
+//
+// Only a permanent failure is reported. A 401 is followed by a sign-out,
+// which resets this slice anyway and has its own message; offline and a
+// timeout leave the write exactly where it is, still owed, and telling
+// somebody a save failed when it is simply waiting for signal is the same
+// mistake `saveQueued` exists to avoid.
+//
+// It reports through `saveFailed`, the same action a live rejection uses, so
+// there is one way a rejected journal write reaches state. The message is the
+// server's own words with the one thing they cannot know added in front:
+// this was not a save happening now, it was one the person believed had
+// already gone.
+const REPLAY_REJECTED = "That entry did not save.";
+
+function* reconcileReplayFailure(action: {
+  type: string;
+  payload: { dedupeKey: string; permanent: boolean; message: string };
+}) {
+  const { dedupeKey, permanent, message } = action.payload;
+  if (!permanent) return;
+  const date = dateFromDedupeKey(dedupeKey);
+  // Not this duck's write. A test result's queued save replays through the
+  // same action and is reported by its own duck.
+  if (date === null) return;
+  yield put(actions.saveFailed({ date, message: `${REPLAY_REJECTED} ${message}` }));
+}
+
 // The week payload carries `coach_entry` and `athlete_entry` inline on every
 // day card, serialized by the same two serializers the entry endpoints use.
 // That is a second copy of a row this slice already owns, and two copies of
@@ -274,6 +307,7 @@ export function* journalSaga() {
     takeLatest(t.FETCH_ATHLETE_ENTRIES, fetchAthleteEntries),
     takeLatest(t.FETCH_COACH_ENTRIES, fetchCoachEntries),
     takeEvery(outboxActionTypes.REPLAY_SUCCEEDED, reconcileReplay),
+    takeEvery(outboxActionTypes.REPLAY_FAILED, reconcileReplayFailure),
     takeEvery(weekDuck.types.SUCCEEDED, foldWeekEntries),
   ]);
 }
@@ -288,5 +322,6 @@ export const journalWorkers = {
   fetchAthleteEntries,
   fetchCoachEntries,
   reconcileReplay,
+  reconcileReplayFailure,
   foldWeekEntries,
 };
