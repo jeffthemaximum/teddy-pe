@@ -39,11 +39,19 @@ function day(overrides: Partial<DayCard> & Pick<DayCard, "id" | "dow" | "date" |
   };
 }
 
+// `name` deliberately differs from what `name_tokens` renders. Both are
+// real columns on the block (backend/app/services/week_payload.rb tokenizes
+// `name` and `body` into `name_tokens` and `body_tokens` at read time, and
+// the raw column still carries whatever markup the tokenizer strips), so a
+// fixture where they read the same lets a component that renders the raw
+// `name` instead of `<Tokens tokens={name_tokens} />` pass by accident. The
+// body half of this block has no such trap: DayBlock carries no plain
+// `body` field to fall back to, only `body_tokens`.
 const TODAY_BLOCK = {
   id: 501,
   position: 1,
   minutes: "20",
-  name: "Rings Intro",
+  name: "<b>Rings Intro</b>",
   tag: null,
   name_tokens: [{ text: "Rings Intro", type: "text", style: "bold" }],
   body_tokens: [
@@ -284,7 +292,11 @@ describe("the This Week view", () => {
       store.dispatch({ type: "week/SUCCEEDED", payload: WEEK });
     });
 
-    expect(screen.getByText(/32 of 40/)).toBeInTheDocument();
+    // Tied to the label, not just the two numbers: "32 of 40" alone would
+    // still match if it turned up anywhere for an unrelated reason, and
+    // tying it to "Effort spent" is what ties it to spend-against-budget
+    // specifically rather than any two numbers in that order.
+    expect(screen.getByText(/effort spent:\s*32 of 40/i)).toBeInTheDocument();
   });
 
   it("shows Saturday as the home program being off, not as an empty day", () => {
@@ -306,7 +318,13 @@ describe("the This Week view", () => {
 
     const thursday = dayCards().find((li) => li.querySelector("h3")?.textContent?.startsWith("Thu"));
     const scoped = within(thursday as HTMLElement);
+    // The block's name comes off name_tokens ("Rings Intro"), not the raw
+    // `name` column ("<b>Rings Intro</b>"), which must not reach the screen
+    // at all: it is the un-tokenized field the tokenizer strips markup out
+    // of, and a component that rendered it directly would put literal tags
+    // in front of Teddy.
     expect(scoped.getByText("Rings Intro")).toBeInTheDocument();
+    expect(scoped.queryByText("<b>Rings Intro</b>")).not.toBeInTheDocument();
     expect(scoped.getByText("Hang and swing,")).toBeInTheDocument();
     expect(scoped.getByText("both hands")).toBeInTheDocument();
   });
