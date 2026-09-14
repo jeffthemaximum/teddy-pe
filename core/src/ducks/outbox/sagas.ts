@@ -175,6 +175,17 @@ export function* outboxSaga() {
   // Runs to completion before the watchers start, so the very first persist
   // they might trigger is never racing the read it depends on.
   yield call(restore);
+  // A write made while that read was still open reached the reducer before
+  // the persist watcher below existed, so nothing has written it to disk.
+  // QUEUE_RESTORED merges rather than replaces, so it is still in memory;
+  // this is what keeps it if the app is closed before the next queue
+  // change. Skipped on an empty queue, so a stored queue that was just
+  // cleared for being corrupt stays cleared rather than being replaced with
+  // an empty one.
+  const merged: QueuedWrite[] = yield select(selectAllQueuedWrites);
+  if (merged.length > 0) {
+    yield call(persist);
+  }
   yield all([
     takeEvery([t.ENQUEUE, t.REPLAY_SUCCEEDED, t.REPLAY_FAILED, t.QUEUE_RESTORED], persist),
     takeLatest(t.REPLAY, replay),

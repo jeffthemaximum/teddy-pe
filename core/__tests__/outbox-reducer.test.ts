@@ -1,5 +1,5 @@
 import { reducer, actions } from "../src/ducks/outbox";
-import type { QueueableAction } from "../src/ducks/outbox";
+import type { QueueableAction, QueuedWrite } from "../src/ducks/outbox";
 import * as authActions from "../src/ducks/auth/actions";
 import * as authActionTypes from "../src/ducks/auth/actionTypes";
 import { reducer as authReducer } from "../src/ducks/auth/reducer";
@@ -16,6 +16,20 @@ function testWrite(dedupeKey: string, note: string): QueueableAction {
     dedupeKey,
     request: { path: "/test", method: "POST", body: { note } },
   };
+}
+
+// A write as storage hands it back: it has an id and a `queuedAt` from a
+// previous run, which a write queued in this run cannot have. Every field is
+// named here rather than spread from a base, because what these fixtures
+// exist to do is differ from the in-memory writes beside them.
+function restoredWrite(
+  id: string,
+  dedupeKey: string,
+  note: string,
+  queuedAt: string,
+  userId: number | null,
+): QueuedWrite {
+  return { id, action: testWrite(dedupeKey, note), queuedAt, attempts: 0, userId };
 }
 
 const teddy: User = { id: 7, email: "teddy@example.test", name: "Teddy", role: "athlete" };
@@ -254,7 +268,11 @@ describe("the outbox reducer", () => {
     expect(dropped.queue[0]!.id).toBe(otherId);
   });
 
-  it("replaces the whole queue on restore, whatever storage handed back", () => {
+  it("takes the whole stored queue when nothing was queued before it landed", () => {
+    // The ordinary launch: an app opening with words on disk and nothing in
+    // memory yet. Every field comes back exactly as it was stored, attempts
+    // included, so a write that has already failed twice does not start
+    // over.
     const restored = [
       {
         id: "x",
@@ -266,6 +284,88 @@ describe("the outbox reducer", () => {
     ];
     const s = reducer(undefined, actions.queueRestored(restored));
     expect(s.queue).toEqual(restored);
+  });
+
+  it("keeps a write made while the restore was still in flight, under the writes from disk", () => {
+    // The race. Storage is read once, asynchronously, at boot, and Teddy can
+    // type an entry and save it before that read answers. A restore that
+    // replaced the queue erased his words with the older contents of disk,
+    // with nothing shown and nothing left owed.
+    const onDisk = [
+      restoredWrite("disk-1", "athlete:2026-09-16", "Landed one.", "2026-09-16T18:00:00Z", 7),
+      restoredWrite("disk-2", "athlete:2026-09-17", "Landed three.", "2026-09-17T18:00:00Z", 7),
+    ];
+    const typedNow = reducer(
+      reducer(undefined, signedIn(teddy)),
+      actions.enqueue(testWrite("athlete:2026-09-18", "Landed five.")),
+    );
+
+    const merged = reducer(typedNow, actions.queueRestored(onDisk));
+
+    // Written out as literals rather than assembled from `onDisk` and
+    // `typedNow`. An expectation built by the same concatenation the reducer
+    // performs would agree with it whichever way round it put them, which is
+    // the whole of what this test is here to decide.
+    expect(merged.queue.map((w) => w.action.dedupeKey)).toEqual([
+      "athlete:2026-09-16",
+      "athlete:2026-09-17",
+      "athlete:2026-09-18",
+    ]);
+    expect(merged.queue.map((w) => (w.action.payload as { note: string }).note)).toEqual([
+      "Landed one.",
+      "Landed three.",
+      "Landed five.",
+    ]);
+  });
+
+  it("discards a restored write the in-memory queue already holds a later edit of", () => {
+    // The other half of the merge, and the reason it cannot simply keep
+    // everything: two writes under one key replay twice to the same upsert
+    // endpoint, and the stale one from disk would land last and overwrite
+    // what Teddy typed a moment ago with what he typed yesterday.
+    const typedNow = reducer(
+      reducer(undefined, signedIn(teddy)),
+      actions.enqueue(testWrite("athlete:2026-09-17", "Landed five.")),
+    );
+
+    const merged = reducer(
+      typedNow,
+      actions.queueRestored([
+        restoredWrite("disk-1", "athlete:2026-09-17", "Landed three.", "2026-09-17T18:00:00Z", 7),
+      ]),
+    );
+
+    expect(merged.queue).toHaveLength(1);
+    // Which one survived, by its words. A length check alone passes whether
+    // the merge kept the right one or the wrong one.
+    expect((merged.queue[0]!.action.payload as { note: string }).note).toBe("Landed five.");
+    expect(merged.queue[0]!.id).not.toBe("disk-1");
+  });
+
+  it("keeps a restored write under the same key that somebody else typed", () => {
+    // `athlete:2026-09-17` is one key per day, not one key per day per
+    // person, and the schema already allows a second athlete. The merge
+    // matches on author as well as key for the same reason ENQUEUE does:
+    // collapsing these two would throw away Teddy's words because Jeff
+    // happened to write about the same day.
+    const jeffsWrite = reducer(
+      reducer(undefined, signedIn(jeff)),
+      actions.enqueue(testWrite("athlete:2026-09-17", "Jeff's words.")),
+    );
+
+    const merged = reducer(
+      jeffsWrite,
+      actions.queueRestored([
+        restoredWrite("disk-1", "athlete:2026-09-17", "Teddy's words.", "2026-09-17T18:00:00Z", 7),
+      ]),
+    );
+
+    expect(
+      merged.queue.map((w) => [w.userId, (w.action.payload as { note: string }).note]),
+    ).toEqual([
+      [7, "Teddy's words."],
+      [1, "Jeff's words."],
+    ]);
   });
 });
 

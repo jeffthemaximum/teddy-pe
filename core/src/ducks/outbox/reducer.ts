@@ -121,8 +121,37 @@ export function reducer(
     }
 
     case t.QUEUE_RESTORED: {
-      const queue = (action as Extract<OutboxAction, { type: typeof t.QUEUE_RESTORED }>).payload;
-      return { ...state, queue };
+      const restored = (action as Extract<OutboxAction, { type: typeof t.QUEUE_RESTORED }>).payload;
+      // Merged under whatever is already queued, never dropped on top of it.
+      // Storage is read once, asynchronously, at boot, and Teddy can type an
+      // entry and save it before that read answers: a tennis court with no
+      // signal is exactly where he does. Replacing the queue here erased the
+      // write he had just made, with no error and nothing left owed, which
+      // is the one failure this whole duck exists to prevent.
+      //
+      // Position decides the order, not `queuedAt`. Everything already in
+      // `state.queue` was typed during this launch, after the read of
+      // storage began; everything in `restored` was on disk before it. So
+      // disk first is oldest first by causality, which is what replay wants,
+      // and it stays right when a device's clock has moved. Sorting on
+      // `queuedAt` would also lean on a field the corruption guard never
+      // checks (see sagas.ts), letting a stored write that happens to be
+      // missing it decide replay order by accident.
+      //
+      // A collision keeps the in-memory write and discards the restored one:
+      // the restored one is an earlier edit of the same logical write, and
+      // the last edit is the one that should reach the server, the same
+      // ruling ENQUEUE makes above. Matched on author as well as key for the
+      // same reason ENQUEUE matches on both: `athlete:2026-09-17` is one key
+      // per day, not one key per day per person, so collapsing on the key
+      // alone would destroy one person's words in the name of deduping them.
+      const kept = restored.filter(
+        (r) =>
+          !state.queue.some(
+            (w) => w.action.dedupeKey === r.action.dedupeKey && w.userId === r.userId,
+          ),
+      );
+      return { ...state, queue: [...kept, ...state.queue] };
     }
 
     // The auth transitions, mirrored. Only who is signed in is read from

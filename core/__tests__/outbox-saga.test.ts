@@ -14,6 +14,7 @@ import {
   outboxActions,
   outboxSelectors,
 } from "../src";
+import type { Storage } from "../src";
 import { silentLogger } from "../src/services/logger";
 import type { User } from "../src/types";
 
@@ -632,5 +633,142 @@ describe("one iPad, two people: a queued write belongs to whoever typed it", () 
     expect(JSON.parse((init as RequestInit).body as string)).toEqual({
       athlete_entry: { session_date: "2026-09-17", note: SECRET, shared: false },
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The write made while the queue was still being read off disk.
+// ---------------------------------------------------------------------------
+
+// Storage whose queue read is held open until the test lets it answer. This
+// is the race in the shape it really happens: `getItem` is a promise, and
+// everything Teddy does between the store being created and that promise
+// resolving happens while what is on disk is still unknown. Only the queue
+// key is held, so the auth saga's own restore runs normally and the write
+// under test gets a real author.
+function storageHoldingTheQueueRead(): {
+  storage: Storage;
+  seed: (queue: unknown[]) => Promise<void>;
+  release: () => void;
+} {
+  const inner = memoryStorage();
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  return {
+    storage: {
+      async getItem(key) {
+        if (key === QUEUE_KEY) await held;
+        return inner.getItem(key);
+      },
+      setItem: (key, value) => inner.setItem(key, value),
+      removeItem: (key) => inner.removeItem(key),
+    },
+    seed: (queue) => inner.setItem(QUEUE_KEY, JSON.stringify(queue)),
+    release: () => release(),
+  };
+}
+
+describe("a write made before the stored queue had answered", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("survives the restore that lands on top of it, and goes out behind what was already on disk", async () => {
+    // Teddy opens the app at a court with no signal. The store is created,
+    // the read of the queue begins, and he types and saves before it
+    // answers. A restore that replaced the queue erased his words here: no
+    // error, nothing queued, nothing owed.
+    const held = storageHoldingTheQueueRead();
+    await held.seed([
+      {
+        id: "disk-1",
+        action: write("athlete:2026-09-16", "Landed one."),
+        queuedAt: "2026-09-16T18:00:00Z",
+        attempts: 0,
+        userId: TEDDY.id,
+      },
+    ]);
+    const fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockImplementation((input) =>
+        String(input).endsWith("/api/v1/auth/login")
+          ? respond(200, { jwt: "TEDDY-TOKEN", user: TEDDY })
+          : Promise.reject(new TypeError("Failed to fetch")),
+      );
+
+    const store = createCoreStore({ baseUrl: "https://api.test", storage: held.storage });
+
+    // Signed in first, so the write has a real author and can actually be
+    // replayed later. The queue read is still open throughout: the auth
+    // saga reads its own key, which this storage never holds.
+    store.dispatch(authActions.signIn({ email: TEDDY.email, password: "correct-horse" }));
+    await waitUntil(
+      () => authSelectors.selectUser(store.getState())?.id === TEDDY.id,
+      "Teddy to be signed in",
+    );
+
+    // The restore has not landed yet. Without this the dispatch below is an
+    // ordinary enqueue into an already restored queue, which is the case
+    // that passes whether QUEUE_RESTORED merges or replaces.
+    expect(store.getState().outbox.queue).toEqual([]);
+
+    store.dispatch(enqueue(secretWrite));
+    await waitUntil(
+      () => store.getState().outbox.queue.length === 1,
+      "the write typed during the restore to land in the queue",
+    );
+
+    held.release();
+    await waitUntil(
+      () => store.getState().outbox.queue.some((w: QueuedWrite) => w.id === "disk-1"),
+      "the stored queue to finish restoring",
+    );
+
+    // Both writes, oldest first, spelled out rather than derived from the
+    // fixtures: an expectation assembled the way the reducer assembles the
+    // queue would agree with it in either order.
+    const queue: QueuedWrite[] = store.getState().outbox.queue;
+    expect(queue.map((w) => w.action.dedupeKey)).toEqual([
+      "athlete:2026-09-16",
+      "athlete:2026-09-17",
+    ]);
+    expect(queue.map((w) => (w.action.payload as { note: string }).note)).toEqual([
+      "Landed one.",
+      SECRET,
+    ]);
+
+    // And on disk too. The write was enqueued before the persist watcher
+    // existed, so nothing had written it down; if the app closed here it
+    // would be gone from storage even though the merge kept it in memory.
+    const stored = JSON.parse((await held.storage.getItem(QUEUE_KEY))!) as QueuedWrite[];
+    expect(stored.map((w) => (w.action.payload as { note: string }).note)).toEqual([
+      "Landed one.",
+      SECRET,
+    ]);
+
+    // The connection comes back, and both go out in that order under
+    // Teddy's own token.
+    fetchMock.mockClear();
+    fetchMock.mockImplementation(() =>
+      respond(200, {
+        athlete_entry: {
+          id: 501,
+          session_date: "2026-09-17",
+          note: SECRET,
+          shared: false,
+          updated_at: "2026-09-17T19:05:00Z",
+        },
+      }),
+    );
+    store.dispatch(outboxActions.replay());
+    await waitUntil(
+      () => store.getState().outbox.queue.length === 0,
+      "both writes to reach the server",
+    );
+
+    const sent = fetchMock.mock.calls.map(
+      ([, init]) => JSON.parse((init as RequestInit).body as string).athlete_entry.note,
+    );
+    expect(sent).toEqual(["Landed one.", SECRET]);
   });
 });
