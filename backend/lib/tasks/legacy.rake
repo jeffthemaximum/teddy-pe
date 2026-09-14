@@ -81,8 +81,24 @@ namespace :legacy do
     end
 
     puts "diary entries written: #{journal[:migrated]}"
+    if journal[:already_migrated].positive?
+      puts "  #{journal[:already_migrated]} entry(s) were already there and already agree. Nothing was rewritten."
+    end
     journal[:skipped].each { |s| puts "  skipped #{s[:session_date]}: #{s[:reason]}" }
     journal[:dropped_ratings].each { |d| puts "  rating lost on #{d[:session_date]}: no drill '#{d[:slug]}'" }
+
+    # Its own block, because this is the one thing here that needs a decision
+    # from a person rather than a read. Nothing was written for these dates.
+    if journal[:conflicts].any?
+      puts
+      puts "Diary entries the new system already holds, where the old row says something different (#{journal[:conflicts].size}):"
+      journal[:conflicts].each do |c|
+        puts "  #{c[:session_date]}: #{c[:fields].join(', ')}"
+      end
+      puts "  The entry on the new site was kept and nothing on these dates was written."
+      puts "  Deleting the legacy table drops the old version of exactly those fields, so open each date"
+      puts "  on /journal and compare before anything is deleted."
+    end
 
     puts "test results written: #{results[:migrated]}"
     results[:skipped].each { |s| puts "  skipped #{s[:window]} #{s[:test_id]}: #{s[:reason]}" }

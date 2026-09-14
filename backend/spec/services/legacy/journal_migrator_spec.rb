@@ -164,15 +164,79 @@ RSpec.describe Legacy::JournalMigrator, :legacy do
     ])
   end
 
-  it "can be run twice without making a second copy" do
+  # The plan's global constraint: "The new system wins every collision.
+  # Conflicts are reported, never resolved automatically." It was implemented
+  # in Legacy::ResultMigrator and not here, so CoachEntry.upsert_for ran
+  # assign_attributes over a kept entry and replaced every carried field with
+  # the legacy value, nil included, over a note Jeff typed on the new site.
+  it "never overwrites an entry the new system already holds, and names what disagrees" do
     year
-    insert_diary(date: "2026-09-16", note: "Good session.")
+    existing = create(:coach_entry, user: coach, program_year: year,
+                                    session_date: "2026-09-16",
+                                    note: "Jeff typed this on the new site.",
+                                    overall: 4, energy: 4)
+    insert_diary(date: "2026-09-16", note: nil, overall: 2)
+
+    report = described_class.new(coach: coach).run!
+
+    expect(existing.reload.note).to eq("Jeff typed this on the new site.")
+    expect(existing.overall).to eq(4)
+    expect(report[:migrated]).to eq(0)
+    expect(report[:conflicts]).to eq([
+      { session_date: Date.new(2026, 9, 16), fields: [ :overall, :energy, :note ] },
+    ])
+  end
+
+  it "names a rating that disagrees, and leaves the rating the new system holds" do
+    year
+    drill = create(:drill, slug: "wall-rally")
+    existing = create(:coach_entry, user: coach, program_year: year, session_date: "2026-09-16",
+                                    note: "Good session.", overall: nil, energy: nil)
+    DrillRating.create!(coach_entry: existing, drill: drill, program_year: year,
+                        session_date: "2026-09-16", rating: "getting")
+    insert_diary(date: "2026-09-16", note: "Good session.", ratings: { "wall-rally" => "owns" })
+
+    report = described_class.new(coach: coach).run!
+
+    expect(DrillRating.sole.rating).to eq("getting")
+    expect(report[:conflicts]).to eq([
+      { session_date: Date.new(2026, 9, 16), fields: [ "rating:wall-rally" ] },
+    ])
+  end
+
+  # created_at is the field that proves nothing was written: the migrator
+  # sets it from the legacy row with update_column, so an entry it rewrote
+  # would come back carrying the legacy timestamp instead of the one from
+  # the day Jeff typed it on the new site.
+  it "counts an entry that already agrees as already migrated and writes nothing" do
+    year
+    existing = create(:coach_entry, user: coach, program_year: year, session_date: "2026-09-16",
+                                    note: "Good session.", overall: 4, energy: nil)
+    existing.update_column(:created_at, Time.utc(2026, 9, 16, 21, 0, 0))
+    insert_diary(date: "2026-09-16", note: "Good session.", overall: 4,
+                 created_at: "2020-01-01 00:00:00+00")
+
+    report = described_class.new(coach: coach).run!
+
+    expect(existing.reload.created_at).to eq(Time.utc(2026, 9, 16, 21, 0, 0))
+    expect(report[:already_migrated]).to eq(1)
+    expect(report[:migrated]).to eq(0)
+    expect(report[:conflicts]).to eq([])
+  end
+
+  it "writes nothing new on a second run and reports nothing as newly migrated" do
+    year
+    create(:drill, slug: "wall-rally")
+    insert_diary(date: "2026-09-16", note: "Good session.", ratings: { "wall-rally" => "owns" })
 
     described_class.new(coach: coach).run!
     second = described_class.new(coach: coach).run!
 
     expect(CoachEntry.count).to eq(1)
-    expect(second[:migrated]).to eq(1)
+    expect(DrillRating.count).to eq(1)
+    expect(second[:migrated]).to eq(0)
+    expect(second[:already_migrated]).to eq(1)
+    expect(second[:conflicts]).to eq([])
   end
 
   # A migration that silently did nothing is the thing to avoid. Zeros with

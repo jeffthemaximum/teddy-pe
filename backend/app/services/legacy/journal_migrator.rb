@@ -1,17 +1,26 @@
 module Legacy
   # diary_entry into coach_entries and drill_ratings.
   #
-  # Idempotent, because CoachEntry.upsert_for addresses an entry by
-  # (user, program_year, session_date) and the old table held one row per
-  # date. Running it twice writes the same rows again rather than a second
-  # copy, which is what makes it safe to run before Jeff has decided whether
-  # the numbers look right.
+  # Idempotent, and it never overwrites anything. An entry the new system
+  # already holds at (coach, program year, session date) is left exactly as
+  # it is, whether this migration wrote it on an earlier run or Jeff typed it
+  # on the new site. That is the plan's global constraint, "the new system
+  # wins every collision, conflicts are reported, never resolved
+  # automatically", and it is the same rule Legacy::ResultMigrator follows.
+  #
+  # CoachEntry.upsert_for is deliberately only ever called for a date with no
+  # kept entry. It does find_or_initialize_by and then assign_attributes, so
+  # over an existing entry it would replace every carried field with the
+  # legacy value, a nil over a note Jeff typed included, and
+  # replace_ratings! would overwrite any rating the legacy payload names.
   class JournalMigrator
     def initialize(coach:)
       @coach = coach
       @skipped = []
       @dropped_ratings = []
       @failed = []
+      @conflicts = []
+      @already_migrated = 0
     end
 
     def run!
@@ -28,13 +37,15 @@ module Legacy
       end
 
       empty_report.merge(migrated: migrated, skipped: @skipped,
-                         dropped_ratings: @dropped_ratings, failed: @failed)
+                         dropped_ratings: @dropped_ratings, failed: @failed,
+                         conflicts: @conflicts, already_migrated: @already_migrated)
     end
 
     private
 
     def empty_report
-      { tables_missing: [], migrated: 0, skipped: [], dropped_ratings: [], failed: [] }
+      { tables_missing: [], migrated: 0, already_migrated: 0,
+        skipped: [], dropped_ratings: [], conflicts: [], failed: [] }
     end
 
     def migrate(row)
@@ -44,10 +55,20 @@ module Legacy
         return false
       end
 
+      attrs = carried(row)
+      ratings = known_ratings(row)
+
+      # Addressed exactly the way the unique index is,
+      # (user_id, program_year_id, session_date) where deleted_at is null, so
+      # this finds the row upsert_for would otherwise have written over.
+      existing = CoachEntry.kept.find_by(user: @coach, program_year: year,
+                                         session_date: row.session_date)
+      return record_existing(row, existing, attrs, ratings) if existing
+
       begin
         entry = CoachEntry.upsert_for(
           user: @coach, program_year: year, session_date: row.session_date,
-          attrs: carried(row), ratings: known_ratings(row),
+          attrs: attrs, ratings: ratings,
         )
         # created_at is a fact about when Jeff wrote it, and upsert_for has no
         # way to be told. Set it afterwards, without touching updated_at, which
@@ -63,6 +84,47 @@ module Legacy
         # still surfaces here rather than vanishing silently.
         @failed << { session_date: row.session_date, error: e.message }
         false
+      end
+    end
+
+    # Always returns false: nothing is written either way. Either the entry
+    # already says what the legacy row says, and there is nothing to do, or
+    # it disagrees and a person has to decide which version is right. Naming
+    # the fields is the point. "This entry differs" would leave Jeff opening
+    # both systems side by side on a row he cannot re-measure.
+    def record_existing(row, existing, attrs, ratings)
+      fields = disagreeing_fields(existing, attrs) + disagreeing_ratings(existing, ratings)
+      if fields.empty?
+        @already_migrated += 1
+      else
+        @conflicts << { session_date: row.session_date, fields: fields }
+      end
+      false
+    end
+
+    # Driven off `attrs`, which is carried(row), so a field added to carried
+    # is compared here without anyone remembering to add it.
+    # Legacy::Mapping.normalise is what the verifier uses too: "" and nil mean
+    # the same absence in the old table, and the two have to agree or the
+    # migrator declines a write the verifier then reports as a conflict.
+    def disagreeing_fields(existing, attrs)
+      attrs.filter_map do |field, legacy_value|
+        next if Legacy::Mapping.normalise(legacy_value) ==
+                Legacy::Mapping.normalise(existing.public_send(field))
+
+        field
+      end
+    end
+
+    # A slug the legacy payload does not name is not a disagreement. A rating
+    # the new system does not have yet is, because migrating the entry would
+    # have written it and this run is declining to.
+    def disagreeing_ratings(existing, ratings)
+      ratings.filter_map do |slug, rating|
+        current = existing.drill_ratings.joins(:drill).find_by(drills: { slug: slug })
+        next if current&.rating == rating.to_s
+
+        "rating:#{slug}"
       end
     end
 
