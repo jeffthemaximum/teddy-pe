@@ -24,4 +24,20 @@ export interface QueuedWrite {
   action: QueueableAction;
   queuedAt: string;
   attempts: number;
+  // Who typed it, recorded when it was queued rather than worked out when it
+  // is sent. One iPad, three accounts: Teddy types an unshared note at a
+  // court with no signal, his token dies on the walk home, and Jeff signs in
+  // before the connection comes back. The queue is deliberately the one
+  // slice a sign-out does not clear (words already typed are still owed to
+  // the server), so without this field the write has no author at all by the
+  // time it goes out, and the only thing standing between it and Jeff's
+  // credentials is a Pundit rule on the server that core neither references
+  // nor knows about. With it, replay sends only the signed-in person's own
+  // writes and the selectors show only theirs.
+  //
+  // `null` means nobody: a write queued with no session, or restored from
+  // storage written before this field existed. Those are never sent under
+  // anyone's token and never shown to anyone signed in, because the safe
+  // reading of "we do not know whose this is" is not "it must be yours".
+  userId: number | null;
 }

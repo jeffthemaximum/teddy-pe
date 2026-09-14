@@ -22,8 +22,20 @@ export const replay = () => ({ type: t.REPLAY }) as const;
 export const replaySucceeded = (info: { id: string; dedupeKey: string; response: unknown }) =>
   ({ type: t.REPLAY_SUCCEEDED, payload: info }) as const;
 
-export const replayFailed = (info: { id: string; permanent: boolean }) =>
-  ({ type: t.REPLAY_FAILED, payload: info }) as const;
+// Carries `dedupeKey` and `message` for the same reason REPLAY_SUCCEEDED
+// carries `dedupeKey` and `response`: `id` is the outbox's own bookkeeping
+// and means nothing to the duck that queued the write. A permanent rejection
+// takes the write off the queue for good, and a duck that never hears about
+// it leaves its own error null while the pending count drops to zero, which
+// reads as "sent" and is the exact loss this outbox exists to prevent. The
+// key's prefix (`athlete:`, `coach:`, `result:`) is how a duck recognizes
+// its own, and `message` is the server's own words, already in voice.
+export const replayFailed = (info: {
+  id: string;
+  dedupeKey: string;
+  permanent: boolean;
+  message: string;
+}) => ({ type: t.REPLAY_FAILED, payload: info }) as const;
 
 // Dispatched once on boot, whatever storage returned: the real queue, or an
 // empty one if there was nothing there or what was there could not be read.

@@ -33,12 +33,30 @@ export type { User, Role, LoginResponse } from "./types";
 // wants to queue a write (journal, test results) enqueues through its own
 // sibling import of ducks/outbox, not through this surface, because building
 // a QueueableAction (dedupeKey, request) is that duck's job, not an app's.
-import { actions as outboxDuckActions, selectors as outboxSelectors } from "./ducks/outbox";
+//
+// The selectors are narrowed for a second reason, and a sharper one. A
+// queued write holds the raw words somebody typed, in plaintext, and the
+// queue is the one slice a sign-out deliberately does not clear, because
+// those words are still owed to the server. One iPad, three accounts: what
+// an app reads through here must therefore be only the signed-in person's
+// own writes. `selectQueue`, `selectPendingCount` and `selectReplaying` all
+// are. `selectAllQueuedWrites` is not, which is why it is not on this list:
+// it exists for the persist worker, whose job genuinely is the whole
+// device's queue, and an app that could call it would read Teddy's unshared
+// note out of Jeff's session without the server ever being involved.
+import {
+  actions as outboxDuckActions,
+  selectors as outboxDuckSelectors,
+} from "./ducks/outbox";
 
 export const outboxActions = {
   replay: outboxDuckActions.replay,
 };
-export { outboxSelectors };
+export const outboxSelectors = {
+  selectQueue: outboxDuckSelectors.selectQueue,
+  selectPendingCount: outboxDuckSelectors.selectPendingCount,
+  selectReplaying: outboxDuckSelectors.selectReplaying,
+};
 export type { OutboxState, QueueableAction, QueuedWrite } from "./ducks/outbox";
 
 // The journal's public surface is narrowed the same way authActions and
@@ -46,16 +64,24 @@ export type { OutboxState, QueueableAction, QueuedWrite } from "./ducks/outbox";
 // the three things an app ever dispatches; `athleteEntrySaved`,
 // `coachEntrySaved`, `saveQueued`, `saveFailed` and the outbox reconciliation
 // worker are saga-internal, dispatched only from inside the saga (or, for
-// the reconciliation worker, from the outbox's own REPLAY_SUCCEEDED — see
+// the reconciliation worker, from the outbox's own REPLAY_SUCCEEDED: see
 // ducks/journal/sagas.ts). An app that could dispatch `athleteEntrySaved`
 // directly could put a fabricated entry, `shared` included, into state the
-// server never sent — the same reasoning Ruling 10 applied to auth.
+// server never sent, the same reasoning Ruling 10 applied to auth.
 import { actions as journalDuckActions, selectors as journalSelectors } from "./ducks/journal";
 
 export const journalActions = {
   saveAthleteEntry: journalDuckActions.saveAthleteEntry,
   saveCoachEntry: journalDuckActions.saveCoachEntry,
   setShared: journalDuckActions.setShared,
+  // The two reads a journal screen opens with. Without them the slice is
+  // empty on every cold start and both journal screens have nothing to list:
+  // an entry could only get into state by being saved in that same session.
+  // `athleteEntriesFetched` and `coachEntriesFetched` stay off the surface
+  // with the rest of the saga-internal actions, for the same reason
+  // `athleteEntrySaved` does.
+  fetchAthleteEntries: journalDuckActions.fetchAthleteEntries,
+  fetchCoachEntries: journalDuckActions.fetchCoachEntries,
 };
 export { journalSelectors };
 export type { JournalState } from "./ducks/journal";
@@ -69,7 +95,7 @@ export type { CoachEntry, AthleteEntry, DrillRatingValue } from "./types";
 // .ts), so there is no separate "clear" action to expose either.
 // `resultsFetched`, `resultSaved`, `resultDeleted`, `saveQueued` and
 // `saveFailed` are saga-internal, dispatched only from inside the saga or
-// from the outbox's own REPLAY_SUCCEEDED — an app that could dispatch
+// from the outbox's own REPLAY_SUCCEEDED. An app that could dispatch
 // `resultSaved` directly could put a height or a time on the board that no
 // server ever recorded.
 import {
@@ -103,7 +129,7 @@ export type { TestResult, TestDate } from "./types";
 // `path` and `name` stay off the surface too, deliberately. They exist so
 // createFetchDuck's own saga has exactly one copy of a duck's URL, and so
 // rootReducer's wiring can be checked against it (see the comment on
-// createFetchDuck's return value) — an internal convenience for the saga
+// createFetchDuck's return value): an internal convenience for the saga
 // that already runs inside this package, not something an app has any
 // reason to call. An app that could read `path` and build its own request
 // from it would be building a second, competing way to reach the same
