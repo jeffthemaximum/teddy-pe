@@ -35,7 +35,13 @@ const selectSignedInUserId = (s: WithAuthAndOutbox) => s.auth.user?.id ?? null;
 // re-renders whatever reads it, every time.
 export const selectQueue = createSelector(
   [selectAllQueuedWrites, selectSignedInUserId],
-  (queue, userId) => queue.filter((w) => w.userId === userId),
+  // `w.userId !== null` first: an anonymous session's own id is also `null`,
+  // and without this a write nobody authored (queued signed out, or restored
+  // from before this field existed) matched an anonymous viewer and went out
+  // with no Authorization header at all. A write with no recorded author
+  // belongs to nobody, so it is excluded here before it is ever compared to
+  // who is asking.
+  (queue, userId) => queue.filter((w) => w.userId !== null && w.userId === userId),
 );
 
 export const selectReplaying = (s: WithOutbox) => s.outbox.replaying;

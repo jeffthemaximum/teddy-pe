@@ -79,10 +79,10 @@ describe("the outbox saga", () => {
 
   it("replays oldest first, so the last edit of a day is the one that sticks", async () => {
     const spy = jest.spyOn(client, "apiRequest").mockResolvedValue({});
-    const h = harness([
-      queued("1", "day:2026-09-17", "first", null),
-      queued("2", "day:2026-09-18", "second", null),
-    ]);
+    const h = harness(
+      [queued("1", "day:2026-09-17", "first", 3), queued("2", "day:2026-09-18", "second", 3)],
+      { userId: 3 },
+    );
 
     await h.run(outboxWorkers.replay);
 
@@ -98,7 +98,7 @@ describe("the outbox saga", () => {
     // its own dedupeKey. Without both, a duck has no way to learn a
     // server-assigned id or updated_at for an entry created offline.
     jest.spyOn(client, "apiRequest").mockResolvedValue({ id: 501, updated_at: "2026-09-17T18:05:00Z" });
-    const h = harness([queued("1", "day:2026-09-17", "first", null)]);
+    const h = harness([queued("1", "day:2026-09-17", "first", 3)], { userId: 3 });
 
     await h.run(outboxWorkers.replay);
 
@@ -117,11 +117,14 @@ describe("the outbox saga", () => {
     const spy = jest
       .spyOn(client, "apiRequest")
       .mockRejectedValue(new ApiError(0, "offline", "No connection."));
-    const h = harness([
-      queued("1", "day:2026-09-17", "a", null),
-      queued("2", "day:2026-09-18", "b", null),
-      queued("3", "day:2026-09-19", "c", null),
-    ]);
+    const h = harness(
+      [
+        queued("1", "day:2026-09-17", "a", 3),
+        queued("2", "day:2026-09-18", "b", 3),
+        queued("3", "day:2026-09-19", "c", 3),
+      ],
+      { userId: 3 },
+    );
 
     await h.run(outboxWorkers.replay);
 
@@ -150,10 +153,10 @@ describe("the outbox saga", () => {
       .spyOn(client, "apiRequest")
       .mockRejectedValueOnce(new ApiError(422, "invalid", "A note cannot be blank."))
       .mockResolvedValueOnce({});
-    const h = harness([
-      queued("1", "athlete:2026-09-17", "", null),
-      queued("2", "athlete:2026-09-18", "b", null),
-    ]);
+    const h = harness(
+      [queued("1", "athlete:2026-09-17", "", 3), queued("2", "athlete:2026-09-18", "b", 3)],
+      { userId: 3 },
+    );
 
     await h.run(outboxWorkers.replay);
 
@@ -174,10 +177,10 @@ describe("the outbox saga", () => {
     const spy = jest
       .spyOn(client, "apiRequest")
       .mockRejectedValue(new ApiError(401, "unauthorized", "Session expired."));
-    const h = harness([
-      queued("1", "day:2026-09-17", "a", null),
-      queued("2", "day:2026-09-18", "b", null),
-    ]);
+    const h = harness(
+      [queued("1", "day:2026-09-17", "a", 3), queued("2", "day:2026-09-18", "b", 3)],
+      { userId: 3 },
+    );
 
     await h.run(outboxWorkers.replay);
 
@@ -219,6 +222,44 @@ describe("the outbox saga", () => {
       (a) => (a as { payload?: { id?: string } }).payload?.id === "1",
     );
     expect(aboutTeddy).toEqual([]);
+  });
+
+  it("never replays a write with no recorded author, whether the session is anonymous or real", async () => {
+    // The corner the C3 fix left open: an anonymous session's own id is also
+    // `null`, so a write queued with nobody signed in (or restored from
+    // before `userId` existed) used to match it and go out with no
+    // Authorization header at all. A fixture with only the unattributed
+    // write cannot tell "skipped because unattributed" from "skipped
+    // because nothing matched", so this one also queues a write with a real
+    // author and checks that IT still goes, both anonymously (where it must
+    // not) and under its own signed-in session (where it must).
+    const spy = jest.spyOn(client, "apiRequest").mockResolvedValue({});
+    const queue = [
+      queued("1", "athlete:2026-09-17", "Teddy's words", 7),
+      queued("2", "athlete:2026-09-18", "Nobody's words", null),
+    ];
+
+    // An anonymous session: nobody signed in at all.
+    const anon = harness(queue, { userId: null });
+    await anon.run(outboxWorkers.replay);
+    expect(spy).not.toHaveBeenCalled();
+    // Nothing dispatched about either write: both are skipped, not failed.
+    expect(anon.dispatched).toEqual([]);
+
+    // The same queue, replayed by the write's own author.
+    const asTeddy = harness(queue, { userId: 7 });
+    await asTeddy.run(outboxWorkers.replay);
+    expect(spy).toHaveBeenCalledTimes(1);
+    const notes = spy.mock.calls.map(
+      ([, req]) => (req as { body: { athlete_entry: { note: string } } }).body.athlete_entry.note,
+    );
+    // Teddy's own write went, and only that one: the unattributed write
+    // stays invisible to him too, not just to a stranger.
+    expect(notes).toEqual(["Teddy's words"]);
+    const aboutNobody = asTeddy.dispatched.filter(
+      (a) => (a as { payload?: { id?: string } }).payload?.id === "2",
+    );
+    expect(aboutNobody).toEqual([]);
   });
 
   it("restores the queue from storage on boot", async () => {
