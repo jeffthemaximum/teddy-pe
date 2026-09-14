@@ -192,3 +192,29 @@ Three things follow from that, and they are worth writing down before Phase 2 st
 Each person deletes only their own. Teddy cannot delete Dad's notes and Dad cannot delete Teddy's entries, which is the same line the share toggle already draws.
 
 **Redeploy as soon as the re-review clears the seeder.** Production is currently running the pre-fix code, so it has a health check that cannot see a dead database, no login throttle, and the Neon host in its error text. The trade is that the deploy runs the newly pruning seeder against the live database for the first time. Conditional on a clean re-review, and the content rows get counted before and after.
+
+## 2026-09-14 (overnight): the core package, and four decisions inside it
+
+**What Jeff asked.** Start Phase 2. He then went to bed and said to keep going, to rule on anything ambiguous rather than park it, and to carry on into the web app. Full account in `docs/history/2026-09-14-core-package.md`.
+
+**Decisions made this session.**
+
+- **`core/` owns the ducks and the network and owns no storage.** Storage arrives as a three-method async interface that each app supplies: the web app hands it `localStorage`, and Phase 4 hands it `expo-secure-store`. That one seam is the only place the two apps differ, which is what makes the brief's rule that no duck may be redefined cheap to keep rather than a promise broken quietly.
+- **A duck exposes what an app dispatches, never what a saga dispatches to itself.** An app that could dispatch `signInSucceeded` could put itself in a signed-in state holding a token the server never issued, and render Teddy's journal against credentials that do not exist. The same reasoning narrowed all ten ducks. The package's test asserts the exact set of exports rather than a list of expected ones, so anything added by accident fails.
+- **A queued write belongs to whoever typed it.** Teddy and Jeff share an iPad. A write queued with no signal survives a sign-out on purpose, because the words are still owed to the server, but a replay now sends only the signed-in person's writes and leaves the rest queued for when they come back. Before this, Teddy's unshared note would have been sent under Jeff's token, and was readable by Jeff through an exported selector the whole time it sat queued.
+- **One entry has one home.** The week payload carries a day's journal entries inline and the journal slice holds them by date, which is two sources of truth for one thing. The payload's copy is folded into the slice on arrival and screens read the slice. Which copy wins is decided in one function, by whichever the server stamped later, with a tie going to the copy arriving now. That answers the case "the slice always wins" gets wrong: a week fetch still in flight when a save lands.
+- **The bundle may carry the product's name and nothing else about Teddy.** A decoupled app has a publicly readable bundle, so a test builds it and reads it. The repo is `teddy-pe`, the API is `teddy-pe-api.fly.dev`, and the session key is `teddy-pe.session`, so the name is unavoidable and excluding it would be theatre that also makes the test impossible to keep green. The list covers him as a person and his program instead, and a further assertion requires every occurrence of his name to be one of four allowed forms, so a real leak cannot hide behind the exemption.
+
+**Found while building, and worth knowing.**
+
+- **Every journal save would have returned 400.** Neither save sent `program_year_id`, which both controllers require. The same defect was caught and fixed in the test-results duck earlier the same night and never swept here, which is the second time on this project that a correction was applied where it was found and not everywhere it applied.
+- **The journal stored the API's envelope as the entry**, so a day's entry filed under the key `"undefined"` and a screen asking for that date got nothing back.
+- **Nothing fetched journal entries at all**, so both journal screens would have opened empty until something was saved in that same session.
+- **Clearing a test-result box deletes the row.** The controller treats an empty value as a delete and answers with a different shape. That is the only delete anywhere in the API, and Jeff will use it in the first week, because typing a wrong number on a court with a stopwatch and clearing it is what happens.
+
+**Open.**
+
+- The soft delete Jeff asked for is owed. It is built in Phase 2c alongside the journal screen, because an endpoint with no button is designed against an imagined interaction.
+- `GET /api/v1/athlete_entries` has no year filter, so a second program year will make that screen list both. The fix belongs in the controller.
+- An app can still read another user's queued words by reaching past the filtered selector into raw state. Accepted at three users; closing it means getting plaintext out of the store entirely.
+- 41 em dashes across `core/` against this repo's own style rule, being removed as files are touched.
