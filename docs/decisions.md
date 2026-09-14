@@ -218,3 +218,30 @@ Each person deletes only their own. Teddy cannot delete Dad's notes and Dad cann
 - `GET /api/v1/athlete_entries` has no year filter, so a second program year will make that screen list both. The fix belongs in the controller.
 - An app can still read another user's queued words by reaching past the filtered selector into raw state. Accepted at three users; closing it means getting plaintext out of the store entirely.
 - 41 em dashes across `core/` against this repo's own style rule, being removed as files are touched.
+
+## 2026-09-14 (overnight, later): the web app's read screens
+
+**What Jeff asked.** Keep going into building the web app, and rule rather than park. Full account in `docs/history/2026-09-14-web-app.md`.
+
+**Decisions made this session.**
+
+- **Program vocabulary does not go in the web app, it comes from the API.** A decoupled app's JavaScript is public, so a test builds the bundle and reads it. When that test first blocked a program word, an implementer reworded around it, and the replacement was program vocabulary too. The rule is now what the code does rather than which strings it contains: a heading either shows what the API called something, or it is plain English a stranger learns nothing from.
+- **The bundle test reads everything the build emits**, not only the scripts. A description tag in `index.html` is served to a stranger exactly like the JavaScript is, and for a while it was the one file nobody looked at.
+- **The nav shows only what the API will answer.** Emily gets 403 on both journals and Teddy gets 403 on Dad's notes, so neither sees a tab for them, and a typed URL is refused by the same table the nav reads. A tab that always errors teaches a child the app is broken.
+- **An open drill lives in the URL.** Tapping a drill in Wednesday's card opens it in the glossary, which means Jeff can bookmark one and Teddy can use the back button.
+- **The session is restored before the first paint, not after it.** Restoring in an effect meant every launch showed a sign-in form for a moment and then replaced it, even with a good stored session.
+- **The app asks the API who it is signed in as.** That was added mid-session: it saves a round trip on a server that takes seven seconds to wake, and it turns restoring a session into a real check rather than trusting whatever is in storage. A token dies whenever a password changes.
+
+**Found while building, and worth knowing.**
+
+- **A property name cannot be minified.** Deleting a program word from the screen was not enough, because the code still read `week.trials` and the field name shipped in the bundle regardless. The marker now derives the same condition from the budget instead.
+- **Every screen rendered unstyled.** The app has no CSS at all. That is a requirement rather than a polish item, because Teddy is 7 and This Week is the screen he opens, so it has its own task in Phase 2c.
+- **Tapping a drill did nothing.** The token carried its slug and had no handler, and the glossary had no way to receive one. Each task tested its own half and the link between them existed in neither.
+- **A waiting screen with no way out.** If the API answers anything but a 401 when the app asks who it is, the person stays signed in on cached data and the year id never arrives. Three screens waited forever under copy promising a few seconds. They now offer to try again.
+
+**Open.**
+
+- The soft delete is still owed and is the first real task of Phase 2c, built with its endpoint.
+- Six small helpers live in the web app that the native app will need: weekday ordering and labels, today's date, the current month key, and a position sort. They belong in the shared package and have not moved yet.
+- The bundle test is a denylist and is not airtight. It catches a program word typed into a heading and his name pasted into a comment or a tag. API field names still ship, because a minifier cannot rename them.
+- Nothing yet proves the deployed site refuses a stranger. The bundle test proves the JavaScript carries nothing; the running site is Phase 2c's deploy task.
