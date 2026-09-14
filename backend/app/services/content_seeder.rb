@@ -3,15 +3,46 @@
 #
 # The repo owns the program. Postgres owns what Jeff and Teddy generate. This
 # is the one place the two meet.
+#
+# Pruning, and where it stops.
+#
+# fly.toml runs content:seed as the release command on every deploy, so "edit
+# the YAML and deploy" is the only way a content change reaches production.
+# That road used to run one way. Every write was find_or_initialize_by plus
+# save!, nothing anywhere called destroy, so deleting a day block from the
+# YAML left the row in Postgres forever, in every payload and in the exported
+# docs. Content gets edited by deletion as often as by addition.
+#
+# What is pruned, inside the year being seeded and nowhere else: month plans,
+# weeks, day cards, day blocks, area cells and ball gates. A seeded row this
+# run's YAML does not have is gone.
+#
+# What is not, and why. Blocks, areas, patches, test dates, drills, battery
+# tests and battery measures each have a row of Jeff's or Teddy's pointing at
+# them: rank awards, patch awards, test results and drill ratings. A battery
+# measure declares dependent: :destroy on its test results, so pruning one
+# would delete Teddy's numbers on the strength of a YAML edit. None of that is
+# content and no YAML file gets to remove it. Those tables are left alone on
+# purpose. Deleting one of those rows is a migration Jeff writes, looks at,
+# and runs on its own.
+#
+# Day cards are the one prune that touches Teddy's side at all, and only to
+# let go: DayCard declares dependent: :nullify on both journals, so removing a
+# day the YAML no longer has nullifies the entry's day_card_id and leaves
+# everything he wrote where it is. Nothing reads an entry by day_card_id. The
+# API addresses entries by (user, year, session_date) and the week payload by
+# session_date, so a nullified entry still reads back on its own day, and the
+# next write to that date relinks it. There is a spec for exactly this.
 class ContentSeeder
   class MissingContent < StandardError; end
 
-  attr_reader :year_label, :counts, :year, :bare
+  attr_reader :year_label, :counts, :year, :bare, :pruned
 
   def initialize(year_label:, root: Rails.root.join("content/program_years"))
     @year_label = year_label
     @dir = root.join(year_label)
     @counts = Hash.new(0)
+    @pruned = Hash.new(0)
     @bare = []
     raise MissingContent, "no content at #{@dir}" unless File.directory?(@dir)
   end
@@ -53,6 +84,19 @@ class ContentSeeder
     record
   end
 
+  # Everything in scope that this run did not write. destroy_all rather than
+  # delete_all, because the dependent: options on these models are the whole
+  # safety story: a week takes its day cards, a day card takes its day blocks
+  # and lets go of the journal entries pointing at it. delete_all would skip
+  # all of that and hit the foreign keys, which are NO ACTION.
+  def prune(scope, kept_ids)
+    doomed = scope.where.not(id: kept_ids)
+    return if doomed.empty?
+
+    @pruned[scope.model.table_name] += doomed.count
+    doomed.destroy_all
+  end
+
   def seed_athlete(attrs)
     upsert(Athlete, { slug: attrs.fetch("slug") },
            attrs.slice("name", "birthday"))
@@ -75,10 +119,13 @@ class ContentSeeder
     rows.to_h do |row|
       area = upsert(year.areas, { slug: row.fetch("slug") }, row.slice("position", "name", "summary"))
 
-      row.fetch("cells").each do |block_key, body|
+      cells = row.fetch("cells").map do |block_key, body|
         block = blocks[block_key] or raise MissingContent, "area #{area.slug} names unknown block #{block_key}"
         upsert(AreaCell, { area: area, block: block }, { body: body })
       end
+      # A cell for a block this area no longer covers. Nothing references a
+      # cell, so it goes without taking anything with it.
+      prune(AreaCell.where(area: area), cells.map(&:id))
 
       [ row.fetch("slug"), area ]
     end
@@ -94,7 +141,7 @@ class ContentSeeder
   end
 
   def seed_ball_gates(rows)
-    rows.each do |row|
+    gates = rows.map do |row|
       # The gate is identified by the progression it guards, not by where it
       # happens to sit in the file. Keying on position meant reordering the
       # list wrote one gate's requirement onto another gate's row.
@@ -102,6 +149,8 @@ class ContentSeeder
              row.slice("from_ball", "to_ball"),
              row.slice("position", "label", "requirement", "status"))
     end
+    # Nothing references a gate, so a progression dropped from the file goes.
+    prune(year.ball_gates, gates.map(&:id))
   end
 
   def seed_test_dates(rows)
@@ -152,10 +201,14 @@ class ContentSeeder
     tokenizer = BodyTokenizer.new(Drill.terms)
     roles = year.day_roles.index_by(&:dow)
 
-    Dir[@dir.join("plans/*.yml")].sort.each do |path|
+    plans = Dir[@dir.join("plans/*.yml")].sort.map do |path|
       doc = YAML.load_file(path, permitted_classes: [ Date ])
       seed_month_plan(doc, blocks, roles, tokenizer)
     end
+    # A month whose file is gone. Its weeks and day cards go with it through
+    # dependent: :destroy, and the journal entries on those days keep every
+    # word, holding a nil day_card_id instead of a stale one.
+    prune(year.month_plans, plans.map(&:id))
   end
 
   def seed_month_plan(doc, blocks, roles, tokenizer)
@@ -166,16 +219,21 @@ class ContentSeeder
     plan = upsert(MonthPlan, { program_year: year, month: attrs.fetch("month") },
                   attrs.slice("label", "range_display").merge("block" => block))
 
-    doc.fetch("weeks").each do |row|
+    weeks = doc.fetch("weeks").map do |row|
       week = upsert(plan.weeks, { number: row.fetch("number") },
                     row.slice("position_in_block", "theme", "dates_display", "targets", "challenge", "trials")
                        .merge("block" => block))
       seed_days(week, row.fetch("days"), roles, tokenizer)
+      week
     end
+    # A week dropped from the month. It survived in the month view before this.
+    prune(plan.weeks, weeks.map(&:id))
+
+    plan
   end
 
   def seed_days(week, rows, roles, tokenizer)
-    rows.each_with_index do |row, index|
+    cards = rows.each_with_index.map do |row, index|
       role = roles[row.fetch("dow")] or
         raise MissingContent, "#{row['date']} names unknown day role #{row['dow']}"
 
@@ -188,7 +246,11 @@ class ContentSeeder
 
       slugs = seed_blocks_for(card, row["blocks"] || [], tokenizer)
       card.update!(drill_slugs: slugs)
+      card
     end
+    # A day shortened out of the week. The old card was still counted by
+    # Week#high_intent_efforts and still validated against the budget.
+    prune(week.day_cards, cards.map(&:id))
   end
 
   # Returns the day's drill slugs in first-mention order, which is what the
@@ -196,14 +258,21 @@ class ContentSeeder
   def seed_blocks_for(card, rows, tokenizer)
     day_slugs = []
 
-    rows.each_with_index do |row, index|
+    blocks = rows.each_with_index.map do |row, index|
       tokens = tokenizer.tokenize(name: row.fetch("name"), body: row["body"].to_s)
-      upsert(card.day_blocks, { position: index },
-             { minutes: row.fetch("minutes"), name: row.fetch("name"), body: row["body"],
-               tag: row["tag"], name_tokens: tokens[:name_tokens],
-               body_tokens: tokens[:body_tokens], drill_slugs: tokens[:drill_slugs] })
+      block = upsert(card.day_blocks, { position: index },
+                     { minutes: row.fetch("minutes"), name: row.fetch("name"), body: row["body"],
+                       tag: row["tag"], name_tokens: tokens[:name_tokens],
+                       body_tokens: tokens[:body_tokens], drill_slugs: tokens[:drill_slugs] })
       day_slugs |= tokens[:drill_slugs]
+      block
     end
+    # Day blocks are keyed on position, which is the one place the ball-gates
+    # lesson could not be applied because a block has no natural key: a name is
+    # prose and repeats. Every attribute is reassigned on every run, so a
+    # reorder rewrites rows rather than moving them, and the only thing left
+    # over is the tail. This is the tail.
+    prune(card.day_blocks, blocks.map(&:id))
 
     # Blocks where nothing matched are the gaps to fill when the next month is
     # written. build.py printed this; so does the seeder.
