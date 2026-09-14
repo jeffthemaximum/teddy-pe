@@ -25,3 +25,25 @@ export const authActions = {
 export { authSelectors };
 export type { AuthState } from "./ducks/auth";
 export type { User, Role, LoginResponse } from "./types";
+
+// The six read ducks. Each is already wired into the store by
+// rootReducer/rootSaga; an app dispatches `<duck>.actions.fetch(...)` and
+// reads through `<duck>.selectors` or the derived selectors below.
+export { programYears } from "./ducks/programYears";
+export { programYear } from "./ducks/programYear";
+export { plan } from "./ducks/plan";
+export { week, selectWeek, selectDayByDate, selectWeekBudget, selectWeekSpend } from "./ducks/week";
+export { drills, selectDrills, selectDrillBySlug, selectDrillsMatching } from "./ducks/drills";
+export { progression } from "./ducks/progression";
+
+export type {
+  ProgramYearSummary,
+  ProgramYearDetail,
+  MonthPlan,
+  Week as WeekPayload,
+  DayCard,
+  DayBlock,
+  Token,
+  Drill,
+  Progression as ProgressionPayload,
+} from "./types";

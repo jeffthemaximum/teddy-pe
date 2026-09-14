@@ -47,8 +47,9 @@ export function createFetchDuck<T, A = void>(opts: {
   function* worker(action: ReturnType<typeof actions.fetch>) {
     const config: CoreConfig = yield getContext("config");
     const token: string | null = yield select(selectToken);
-    // Nothing about Teddy is fetchable unauthenticated. An anonymous fetch is
-    // a bug in the caller, not a network request that should go out and fail.
+    // Nothing about Teddy is fetchable unauthenticated, so an anonymous fetch
+    // is always a bug in the caller. Treat it as one: return here, before it
+    // becomes a network request that goes out and fails.
     if (!token) return;
 
     try {
@@ -83,6 +84,12 @@ export function createFetchDuck<T, A = void>(opts: {
   // `path` is returned here so a duck has exactly one copy of its URL. An
   // earlier draft of this plan had each duck restate it, which is a second
   // place to drift and the defect Phase 1 found three times.
+  //
+  // `name` is returned too, so a caller can check it against the key it
+  // registered in combineReducers. The selectors above read state at
+  // s[opts.name]; nothing at compile time connects that string to the key a
+  // duck actually lands under in the store, so a typo in either place
+  // compiles clean and only fails the first time a selector runs for real.
   return {
     actions,
     reducer,
@@ -90,6 +97,7 @@ export function createFetchDuck<T, A = void>(opts: {
     worker,
     selectors,
     path: opts.path,
+    name: opts.name,
     types: { FETCH, SUCCEEDED, FAILED },
   };
 }
