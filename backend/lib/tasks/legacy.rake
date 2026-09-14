@@ -36,4 +36,44 @@ namespace :legacy do
       puts "  The migration leaves all of these alone. Decide which number is real yourself."
     end
   end
+
+  desc "Copy the old Neon rows into the Rails tables. COACH_EMAIL= CONFIRM=yes"
+  task migrate: :environment do
+    abort("Set CONFIRM=yes once you have read the survey.") unless ENV["CONFIRM"] == "yes"
+
+    coach = User.find_by!(email: ENV.fetch("COACH_EMAIL").strip.downcase, role: "coach")
+
+    journal = Legacy::JournalMigrator.new(coach: coach).run!
+    results = Legacy::ResultMigrator.new(coach: coach).run!
+
+    puts "diary entries written: #{journal[:migrated]}"
+    journal[:skipped].each { |s| puts "  skipped #{s[:session_date]}: #{s[:reason]}" }
+    journal[:dropped_ratings].each { |d| puts "  rating lost on #{d[:session_date]}: no drill '#{d[:slug]}'" }
+
+    puts "test results written: #{results[:migrated]}"
+    results[:skipped].each { |s| puts "  skipped #{s[:window]} #{s[:test_id]}: #{s[:reason]}" }
+    results[:conflicts].each do |c|
+      puts "  left alone #{c[:window]} #{c[:test_id]}: old #{c[:legacy_value]}, current #{c[:current_value]}"
+    end
+
+    # These are the rows that did not arrive. They are what tells Jeff
+    # whether it is safe to follow this migration with a deletion, so they
+    # get their own loud section rather than hiding among the skips.
+    failed_total = journal[:failed].size + results[:failed].size
+    if failed_total.positive?
+      puts
+      puts "=" * 60
+      puts "#{failed_total} row(s) FAILED to migrate. Nothing was deleted, but read this before trusting the counts above."
+      journal[:failed].each do |f|
+        puts "  diary entry #{f[:session_date]}: #{f[:error]}"
+      end
+      results[:failed].each do |f|
+        puts "  test result #{f[:window]} #{f[:test_id]}: #{f[:error]}"
+      end
+      puts "=" * 60
+    end
+
+    puts
+    puts "Now run rails legacy:verify. Nothing gets deleted until it reads clean."
+  end
 end
