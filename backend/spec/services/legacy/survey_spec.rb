@@ -52,6 +52,43 @@ RSpec.describe Legacy::Survey, :legacy do
     expect(report[:unmapped_windows]).to eq([ "2099-01" ])
   end
 
+  # R9 removed TestDate.find_by(window:) from the migrator and the verifier,
+  # because the unique index on test_dates is (program_year_id, window) and a
+  # global find_by would file a result under whichever program year happened
+  # to come first. The survey is what a person reads before typing
+  # CONFIRM=yes, so it has to name the same row the migrator will refuse to
+  # write rather than quietly counting it as mappable.
+  it "names a window more than one program year carries, instead of guessing" do
+    year
+    create(:battery_measure, program_year: year, test_id: "t1")
+    create(:test_date, program_year: year, window: "2026-09")
+    other_year = create(:program_year, starts_on: "2020-01-01", ends_on: "2020-12-31")
+    create(:test_date, program_year: other_year, window: "2026-09")
+    insert_result(window: "2026-09", test_id: "t1", value: "4.5")
+
+    report = described_class.new.run
+
+    expect(report[:ambiguous_windows]).to eq([ "2026-09" ])
+    expect(report[:unmapped_windows]).to eq([])
+    expect(report[:unmapped_test_ids]).to eq([])
+  end
+
+  # The migrator asks the test date's own program year for the measure. A
+  # survey that asked every program year at once would report this row as
+  # mappable and then the migrator would skip it, which is the survey
+  # under-reporting the thing it exists to report.
+  it "counts a test id as unmapped when the measure belongs to another program year" do
+    year
+    create(:test_date, program_year: year, window: "2026-09")
+    other_year = create(:program_year, starts_on: "2020-01-01", ends_on: "2020-12-31")
+    create(:battery_measure, program_year: other_year, test_id: "t1")
+    insert_result(window: "2026-09", test_id: "t1", value: "4.5")
+
+    report = described_class.new.run
+
+    expect(report[:unmapped_test_ids]).to eq([ "t1" ])
+  end
+
   it "names a session date that falls in no program year" do
     year
     insert_diary(date: "2020-01-01")

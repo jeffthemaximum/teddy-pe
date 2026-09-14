@@ -29,34 +29,20 @@ module Legacy
     def empty_report = { migrated: 0, skipped: [], conflicts: [], failed: [] }
 
     def migrate(row)
-      # The unique index on test_dates is (program_year_id, window), so two
-      # program years are allowed to carry a test date with the same window
-      # string. A global find_by would silently pick whichever came first
-      # and file this result under the wrong program year. There is only
-      # one program year today, so that cannot happen yet, but this is a
-      # one-shot migration of numbers nobody can measure again, so the
-      # lookup refuses to guess.
-      dates = TestDate.where(window: row.test_window).to_a
-      if dates.size > 1
-        @skipped << { window: row.test_window, test_id: row.test_id,
-                      reason: "more than one program year has this window" }
+      # Legacy::Mapping owns every reason a row maps onto nothing, including
+      # the one R9 was about: two program years are allowed to carry the same
+      # window string, so an ambiguous window is refused rather than guessed
+      # at. Legacy::Survey and Legacy::Verifier ask the same question of the
+      # same code, which is the only thing keeping the three in agreement.
+      resolved = Legacy::Mapping.resolve_result(window: row.test_window, test_id: row.test_id)
+      unless resolved.ok?
+        @skipped << { window: row.test_window, test_id: row.test_id, reason: resolved.reason }
         return false
       end
 
-      date = dates.first
-      if date.nil?
-        @skipped << { window: row.test_window, test_id: row.test_id,
-                      reason: "no test date with this window" }
-        return false
-      end
-
+      date = resolved.test_date
+      measure = resolved.measure
       year = date.program_year
-      measure = year.battery_measures.find_by(test_id: row.test_id)
-      if measure.nil?
-        @skipped << { window: row.test_window, test_id: row.test_id,
-                      reason: "no battery measure with this test id" }
-        return false
-      end
 
       value = row.value.to_s.strip
       if value.empty?

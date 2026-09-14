@@ -121,30 +121,18 @@ module Legacy
       conflicts << { kind: :result, key: key, legacy: legacy, kept: result.raw_value }
     end
 
-    # smallint comes back as an Integer on one side and may be nil on the
-    # other, and "" and nil mean the same absence in the old table.
-    def normalise(value)
-      return nil if value.nil? || value == ""
-
-      value
-    end
+    def normalise(value) = Legacy::Mapping.normalise(value)
 
     def year_for(date)
       ProgramYear.find_by("starts_on <= ? and ends_on >= ?", date, date)
     end
 
-    # The unique index on test_dates is (program_year_id, window), so two
-    # program years are allowed to carry a test date with the same window
-    # string. TestDate.find_by(window:) would silently pick whichever came
-    # first, same as it would inside Legacy::ResultMigrator, and file the
-    # comparison under the wrong program year. Refusing to guess and
-    # instead treating an ambiguous window as out of scope keeps this
-    # method in agreement with what the migrator actually did.
+    # Legacy::Mapping, so that "which legacy rows are in scope" is decided by
+    # the same code the migrator and the survey run. A window two program
+    # years share resolves to nothing here for the same reason the migrator
+    # skips it: neither is willing to guess which year the row belongs to.
     def resolve_test_date(window)
-      dates = TestDate.where(window: window).to_a
-      return nil unless dates.size == 1
-
-      dates.first
+      Legacy::Mapping.resolve_result(window: window, test_id: nil).test_date
     end
   end
 end
