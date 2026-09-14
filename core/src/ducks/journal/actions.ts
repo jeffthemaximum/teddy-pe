@@ -26,6 +26,23 @@ export interface SaveCoachEntryPayload {
   ratings: Record<string, DrillRatingValue>;
 }
 
+// One place this key format is computed. It has two callers that must never
+// drift apart: the action creators below, which stamp it onto a write when
+// it is queued, and the saga (sagas.ts), which recomputes it to look a
+// pending write back up by date when the toggle needs to know what note is
+// waiting to be sent. A key format with two independent owners is exactly
+// how this project has been bitten before.
+export const ATHLETE_PREFIX = "athlete:";
+export const COACH_PREFIX = "coach:";
+
+export function athleteDedupeKey(date: string): string {
+  return `${ATHLETE_PREFIX}${date}`;
+}
+
+export function coachDedupeKey(date: string): string {
+  return `${COACH_PREFIX}${date}`;
+}
+
 // Both save actions are built as full `QueueableAction`s at the moment they
 // are created, not patched together later inside the saga. `dedupeKey` and
 // `request` are already right there on the action a component dispatches, so
@@ -66,7 +83,7 @@ export const saveAthleteEntry = (payload: SaveAthleteEntryPayload) =>
     // One write per athlete per day, because AthleteEntry.upsert_for upserts
     // on (user, program_year, session_date). Two edits of the same day
     // collapse to one queued write; two different days never collide.
-    dedupeKey: `athlete:${payload.date}`,
+    dedupeKey: athleteDedupeKey(payload.date),
     request: athleteRequest(payload),
   }) as const;
 
@@ -74,7 +91,7 @@ export const saveCoachEntry = (payload: SaveCoachEntryPayload) =>
   ({
     type: t.SAVE_COACH_ENTRY,
     payload,
-    dedupeKey: `coach:${payload.date}`,
+    dedupeKey: coachDedupeKey(payload.date),
     request: coachRequest(payload),
   }) as const;
 

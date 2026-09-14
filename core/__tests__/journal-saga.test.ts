@@ -138,15 +138,39 @@ describe("the journal saga", () => {
   // and the toggle's own save replaces the queued write with an empty note.
   // The words are gone, having never left the device.
 
-  it("carries a note forward from the outbox's pending write (ordering A: note typed offline, then the toggle) — the case the fix exists for", async () => {
+  it("carries a note forward from the outbox's pending write for THIS date (ordering A: note typed offline, then the toggle) — the case the fix exists for", async () => {
+    // A queue holding only one write cannot tell "the write for this date"
+    // apart from "the first write in the queue" — `queue.find(matching
+    // dedupeKey)` and `queue[0]` return the same thing, and a version that
+    // carries Tuesday's note into Wednesday's entry would pass anyway. So
+    // this queues three writes: one for a different date under the same
+    // `athlete:` prefix, one for the same date but the `coach:` prefix (a
+    // different person's writing on the same day), and the one that
+    // actually belongs to this save — in an order where the wrong one, not
+    // the right one, sits at index 0.
     const spy = jest.spyOn(client, "apiRequest").mockResolvedValue({ ...savedAthleteEntry, shared: true });
-    const pendingWrite = actions.saveAthleteEntry({ date: "2026-09-17", note: "Landed three.", shared: false });
+    const wrongDate = actions.saveAthleteEntry({ date: "2026-09-16", note: "Tuesday's note.", shared: false });
+    const wrongPrefixSameDate = actions.saveCoachEntry({
+      date: "2026-09-17",
+      note: "Jeff's note, not Teddy's.",
+      overall: null,
+      energy: null,
+      flag_pain: false,
+      pain_note: null,
+      challenge_num: null,
+      ratings: {},
+    });
+    const correctWrite = actions.saveAthleteEntry({ date: "2026-09-17", note: "Landed three.", shared: false });
     const h = harness({
       // The note exists ONLY here — queued, never saved. `journal.athlete`
       // stays empty, unlike the old version of this test, which seeded the
       // note through `athleteEntrySaved` and so could never have caught this.
       outbox: {
-        queue: [{ id: "1", action: pendingWrite, queuedAt: "2026-09-17T18:00:00Z", attempts: 0 }],
+        queue: [
+          { id: "0", action: wrongDate, queuedAt: "2026-09-16T18:00:00Z", attempts: 0 },
+          { id: "2", action: wrongPrefixSameDate, queuedAt: "2026-09-17T18:05:00Z", attempts: 0 },
+          { id: "1", action: correctWrite, queuedAt: "2026-09-17T18:00:00Z", attempts: 0 },
+        ],
         replaying: false,
       },
     });
@@ -334,5 +358,36 @@ describe("the journal saga", () => {
     });
 
     expect(h.dispatched).toHaveLength(0);
+  });
+
+  it("ignores a plausible-looking stub — a session_date with no note at all — rather than overwriting a real entry with it", async () => {
+    // `{session_date: "2026-09-17"}` alone has a real-looking key and nothing
+    // else. Folding it in would replace whatever real entry was on record for
+    // that date with a stub carrying no note, no id, nothing. `note` may
+    // legitimately be `null` on a real entry (that's still accepted), but it
+    // must be *present* for something to count as an entry at all.
+    const h = harness();
+
+    await h.run(journalWorkers.reconcileReplay, {
+      type: "outbox/REPLAY_SUCCEEDED",
+      payload: { id: "1", dedupeKey: "athlete:2026-09-17", response: { session_date: "2026-09-17" } },
+    });
+
+    expect(h.dispatched).toHaveLength(0);
+  });
+
+  it("still accepts a real entry whose note is genuinely null", async () => {
+    // The guard above must reject a missing `note`, not merely a falsy one —
+    // a coach entry saved before Jeff writes anything is `note: null` and is
+    // a real row, not a stub.
+    const h = harness();
+    const nullNoteEntry = { ...savedCoachEntry, note: null };
+
+    await h.run(journalWorkers.reconcileReplay, {
+      type: "outbox/REPLAY_SUCCEEDED",
+      payload: { id: "1", dedupeKey: "coach:2026-09-17", response: nullNoteEntry },
+    });
+
+    expect(h.dispatched).toContainEqual(actions.coachEntrySaved(nullNoteEntry));
   });
 });

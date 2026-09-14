@@ -2,6 +2,7 @@ import { all, call, getContext, put, select, takeEvery } from "redux-saga/effect
 import * as t from "./actionTypes";
 import * as actions from "./actions";
 import type { SaveAthleteEntryPayload } from "./actions";
+import { athleteDedupeKey, ATHLETE_PREFIX, COACH_PREFIX } from "./actions";
 import { apiRequest, ApiError } from "../../services/apiClient";
 import { sessionExpired } from "../auth/actions";
 import { selectToken } from "../auth/selectors";
@@ -63,13 +64,17 @@ function* saveCoachEntry(action: ReturnType<typeof actions.saveCoachEntry>) {
 }
 
 // The note a pending queued write carries, if there is one, under this same
-// day's `dedupeKey`. Read through the outbox's own selector rather than
+// day's `dedupeKey` — this date's, specifically, not merely the first write
+// in the queue. `athleteDedupeKey` is the same function `saveAthleteEntry`
+// stamped onto the write when it was queued (see actions.ts): one place
+// computes the key, so a lookup here can never drift from what a write was
+// actually filed under. Read through the outbox's own selector rather than
 // reaching into `state.outbox` directly, the same boundary `enqueue` and
 // `outbox/REPLAY_SUCCEEDED` already cross. Guarded rather than cast blindly:
 // nothing here assumes a queued write under an `athlete:` key is necessarily
 // one this duck built.
 function pendingAthleteNote(queue: QueuedWrite[], date: string): string | undefined {
-  const pending = queue.find((w) => w.action.dedupeKey === `athlete:${date}`);
+  const pending = queue.find((w) => w.action.dedupeKey === athleteDedupeKey(date));
   const payload = pending?.action.payload;
   if (
     payload !== null &&
@@ -126,22 +131,28 @@ function* setShared(action: ReturnType<typeof actions.setShared>) {
 // sit there forever, matching no real date. Guarded rather than trusted,
 // since `response` crossed the outbox as `unknown` and was never this duck's
 // to begin with until this check says otherwise.
-function isEntryResponse(value: unknown): value is { session_date: string } {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    typeof (value as { session_date?: unknown }).session_date === "string"
-  );
+//
+// `session_date` alone is not enough, either: `{session_date: "2026-09-17"}`
+// on its own is a plausible-looking stub, not a real entry, and folding it in
+// would overwrite a real one with that stub. `note` is required on every
+// entry this duck's own serializers send (it may legitimately be `null` —
+// CoachEntry#note and AthleteEntry#note both are — but the key must be
+// present), so its presence is what tells a stub apart from the real thing.
+function isEntryResponse(value: unknown): value is { session_date: string; note: string | null } {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as { session_date?: unknown; note?: unknown };
+  if (typeof v.session_date !== "string") return false;
+  return v.note === null || typeof v.note === "string";
 }
 
 function* reconcileReplay(action: { type: string; payload: { dedupeKey: string; response: unknown } }) {
   const { dedupeKey, response } = action.payload;
   if (!isEntryResponse(response)) return;
-  if (dedupeKey.startsWith("athlete:")) {
+  if (dedupeKey.startsWith(ATHLETE_PREFIX)) {
     yield put(actions.athleteEntrySaved(response as AthleteEntry));
     return;
   }
-  if (dedupeKey.startsWith("coach:")) {
+  if (dedupeKey.startsWith(COACH_PREFIX)) {
     yield put(actions.coachEntrySaved(response as CoachEntry));
   }
 }
