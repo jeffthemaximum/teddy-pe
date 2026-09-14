@@ -6,7 +6,6 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "@teddy-pe/core";
-import type { AthleteEntry } from "@teddy-pe/core";
 import { Loading } from "../components/Loading";
 import { ErrorNote } from "../components/ErrorNote";
 import { WaitingForYearId } from "../components/WaitingForYearId";
@@ -38,6 +37,13 @@ const DELETE_DETAIL = "It goes off this page for good. Dad can get it back if yo
 const DELETE_CONFIRM = "Yes, delete it";
 const DELETE_CANCEL = "Keep it";
 const DELETE_QUEUED_TEXT = "Deleted here. It will tell the server once you're back online.";
+// What a deleted day says instead of the form. A day he deleted is not the
+// same as a day he has not written in yet, and showing him the empty boxes
+// for both would be the app quietly forgetting he asked. The second line is
+// the promise the toggle would otherwise break, said out loud: there is
+// nothing here for Dad to see, and nothing to share.
+const DELETE_QUEUED_DETAIL =
+  "Today is off this page and Dad cannot see it. Once it sends you can write about today again.";
 
 export function AthleteJournal() {
   const dispatch = useAppDispatch();
@@ -53,6 +59,14 @@ export function AthleteJournal() {
   // this renders.
   const role = useAppSelector(authSelectors.selectRole);
   const queued = useAppSelector(journalSelectors.selectIsEntryQueued("athlete", today));
+  // Whether today was deleted with no signal and has not been written again
+  // since. It is a different question from `queued`, and the difference is
+  // the whole of the fix: a queued delete and a queued save both leave the
+  // slice with no entry for today and a write pending, so from here they
+  // look identical. With no entry, `shared` below reads as false and the
+  // toggle offers to show Dad a day that is not there any more, which is
+  // exactly what he tapped, and the save it fired queued behind the delete.
+  const deleteQueued = useAppSelector(journalSelectors.selectIsDeleteQueued("athlete", today));
   const loading = useAppSelector(journalSelectors.selectIsLoadingAthleteEntries);
   const error = useAppSelector(journalSelectors.selectJournalError);
   const saving = useAppSelector(journalSelectors.selectIsSaving(today));
@@ -103,7 +117,6 @@ export function AthleteJournal() {
   // the first, so the gesture that deletes cannot be the gesture that opened
   // the question.
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [justDeleted, setJustDeleted] = useState(false);
 
   // When the entry he was looking at goes away, the form goes back to blank.
   // Tied to the entry actually leaving state rather than to the tap, so a
@@ -121,29 +134,41 @@ export function AthleteJournal() {
     hadEntryRef.current = entry !== null;
   }, [entry]);
 
-  // Whether the last save is sitting in the outbox rather than actually
-  // gone to the server, read off the same two things a screen is allowed to
-  // read (isSaving(date) and the entry it already holds) rather than asking
-  // the outbox what it is holding. A save that finishes online replaces the
-  // entry (see reducer.ts's fold); a save that only got as far as the queue
-  // does not touch it at all, so isSaving clearing with the entry
-  // unchanged is what a queued write looks like from here.
-  const wasSavingRef = useRef(saving);
-  const entryRef = useRef<AthleteEntry | null>(entry);
-  const [waitingToSend, setWaitingToSend] = useState(false);
-  useEffect(() => {
-    const wasSaving = wasSavingRef.current;
-    wasSavingRef.current = saving;
-    if (wasSaving && !saving) {
-      setWaitingToSend(entry === entryRef.current);
-    } else if (entry !== entryRef.current) {
-      setWaitingToSend(false);
-    }
-    entryRef.current = entry;
-  }, [saving, entry]);
+  // Whether the last save is sitting in the outbox rather than actually gone
+  // to the server. This used to be guessed: `saving` clearing with the entry
+  // unchanged looked like a queued write, but it is really only a check that
+  // nothing changed. A save the server rejects for good changes nothing
+  // either, so a write that had just been thrown away told Teddy his words
+  // were safe on the device with the outbox empty. core's own selector knows
+  // for certain, and CoachJournal was moved onto it this phase; this is the
+  // same line, in the same shape.
+  const waitingToSend = !saving && queued;
 
   if (currentId === null) {
     return <WaitingForYearId label={FINDING_YEAR_LABEL} />;
+  }
+
+  // A day he deleted with no signal, before anything has replaced it. It
+  // comes before the loading and hydration branches below, because what the
+  // queue says he asked for is already settled whether or not a fetch has
+  // landed, and reopening this screen offline must answer him about the day
+  // he took back rather than with a fetch error.
+  //
+  // No form, no toggle and no Save. There is nothing to save for a day that
+  // is not there, and the toggle in particular would hand Dad a blanked-out
+  // row for a day Teddy deleted, which is the promise this whole screen
+  // exists to keep.
+  if (deleteQueued) {
+    return (
+      <div className="athlete-journal">
+        <h1>Today</h1>
+        {error && <ErrorNote message={error} />}
+        <section className="athlete-journal__deleted">
+          <p role="status">{DELETE_QUEUED_TEXT}</p>
+          <p>{DELETE_QUEUED_DETAIL}</p>
+        </section>
+      </div>
+    );
   }
 
   if (!hydrated) {
@@ -199,7 +224,6 @@ export function AthleteJournal() {
     // exists only as a write still waiting in the outbox has nothing to
     // delete and never shows the control.
     if (entryId === null) return;
-    setJustDeleted(true);
     dispatch(journalActions.deleteEntry({ side: "athlete", date: today, id: entryId }));
   }
 
@@ -281,11 +305,6 @@ export function AthleteJournal() {
           )}
         </section>
       )}
-
-      {/* The entry is off this screen already, and the write that says so is
-          still in the outbox. Saying nothing here would look exactly like a
-          delete that had reached the server. */}
-      {justDeleted && entry === null && queued && <p role="status">{DELETE_QUEUED_TEXT}</p>}
     </div>
   );
 }

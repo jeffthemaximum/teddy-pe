@@ -838,6 +838,29 @@ legend {
   align-self: flex-start;
 }
 
+/* A day he deleted, with the delete still waiting for a connection. It
+   stands where the form would be, so the page is never blank at him, and it
+   is the quiet card rather than the alarm colours below: nothing has gone
+   wrong here, the app is only telling him what it is still holding. */
+.athlete-journal__deleted {
+  margin-top: 1rem;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--rule-firm);
+  border-radius: 14px;
+  background: var(--sunk);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.athlete-journal__deleted p {
+  margin: 0;
+}
+
+.athlete-journal__deleted p:first-child {
+  font-weight: 700;
+}
+
 .athlete-journal__delete {
   margin-top: 3rem;
   padding-top: 1.4rem;

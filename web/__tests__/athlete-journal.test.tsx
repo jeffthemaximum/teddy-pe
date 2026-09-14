@@ -1,7 +1,13 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
-import { createCoreStore, journalActions, memoryStorage } from "@teddy-pe/core";
+import {
+  createCoreStore,
+  journalActions,
+  journalSelectors,
+  memoryStorage,
+  outboxActions,
+} from "@teddy-pe/core";
 import type { AthleteEntry } from "@teddy-pe/core";
 import { AthleteJournal } from "../src/screens/AthleteJournal";
 
@@ -33,6 +39,18 @@ function entry(overrides: Partial<AthleteEntry> = {}): AthleteEntry {
 
 const UNSHARED_ENTRY = entry({ shared: false });
 const SHARED_ENTRY = entry({ shared: true });
+
+// What a save actually carries. `shared` is on this type for the same reason
+// the two fixtures above exist: it is the one field on the payload that is a
+// promise rather than a value, and a save that quietly flipped it would hand
+// Dad a day Teddy meant to keep.
+interface SavePayload {
+  felt: number | null;
+  best: string | null;
+  hard: string | null;
+  note: string;
+  shared: boolean;
+}
 
 // Puts a known current program year id in front of the screen without a
 // real /me round trip, the same action core's own restoreSessionSaga
@@ -107,6 +125,12 @@ function hydrateWith(store: ReturnType<typeof createCoreStore>, fixture: Athlete
   });
 }
 
+// Lets the sagas the real store is running finish whatever a dispatch above
+// started, so an assertion is never racing a worker.
+async function settle() {
+  await act(async () => {});
+}
+
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date(`${TODAY}T12:00:00`));
@@ -114,6 +138,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 describe("the athlete journal", () => {
@@ -236,16 +261,52 @@ describe("the athlete journal", () => {
 
     const saves = dispatched.filter((a) => a.type === "journal/SAVE_ATHLETE_ENTRY");
     expect(saves).toHaveLength(1);
-    const payload = saves[0]!.payload as {
-      felt: number | null;
-      best: string | null;
-      hard: string | null;
-      note: string;
-    };
+    const payload = saves[0]!.payload as SavePayload;
     expect(payload.felt).toBe(4);
     expect(payload.best).toBe("The wall rally");
     expect(payload.hard).toBe("Staying low");
     expect(payload.note).toBe("Good day at the wall.");
+    // The one field on this payload that is a promise rather than a value.
+    // He opened a day nobody has shared, so a save of it must not be the
+    // thing that hands it to Dad. Every other assertion in this file passed
+    // while a screen sent `shared: true` on every single save.
+    expect(payload.shared).toBe(false);
+  });
+
+  // The two directions of `shared`, each from its own fixture, because a
+  // screen that hardcoded either value would pass one of them. The
+  // expectation comes from the fixture the store was seeded with, never from
+  // anything the screen computed, so the two sources really can disagree.
+  it("keeps a day Teddy has not shared unshared when he saves it again", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { store, dispatched } = renderJournalRecording();
+    hydrateWith(store, UNSHARED_ENTRY);
+    expect(UNSHARED_ENTRY.shared).toBe(false);
+    dispatched.length = 0;
+
+    await user.type(screen.getByLabelText(/tell me about today/i), " And again.");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    const saves = dispatched.filter((a) => a.type === "journal/SAVE_ATHLETE_ENTRY");
+    expect(saves).toHaveLength(1);
+    expect((saves[0]!.payload as SavePayload).shared).toBe(false);
+  });
+
+  it("keeps a day he has shared shared when he saves it again", async () => {
+    // The other way round: editing a note he already showed Dad must not
+    // quietly take it back either.
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { store, dispatched } = renderJournalRecording();
+    hydrateWith(store, SHARED_ENTRY);
+    expect(SHARED_ENTRY.shared).toBe(true);
+    dispatched.length = 0;
+
+    await user.type(screen.getByLabelText(/tell me about today/i), " And again.");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    const saves = dispatched.filter((a) => a.type === "journal/SAVE_ATHLETE_ENTRY");
+    expect(saves).toHaveLength(1);
+    expect((saves[0]!.payload as SavePayload).shared).toBe(true);
   });
 
   it("can save just one thing, leaving the others empty", async () => {
@@ -261,12 +322,7 @@ describe("the athlete journal", () => {
 
     const saves = dispatched.filter((a) => a.type === "journal/SAVE_ATHLETE_ENTRY");
     expect(saves).toHaveLength(1);
-    const payload = saves[0]!.payload as {
-      felt: number | null;
-      best: string | null;
-      hard: string | null;
-      note: string;
-    };
+    const payload = saves[0]!.payload as SavePayload;
     // Empty must be null, not the empty string a careless default would
     // send: "" is a real (if odd) thing he could type, and would be
     // indistinguishable from "he wrote nothing" on the other end.
@@ -293,7 +349,7 @@ describe("the athlete journal", () => {
     expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
   });
 
-  it("says the entry is waiting when it was saved with no connection", () => {
+  it("says the entry is waiting when it was saved with no connection", async () => {
     const { store } = renderJournal();
     hydrateEmpty(store);
 
@@ -301,10 +357,76 @@ describe("the athlete journal", () => {
       store.dispatch({ type: "journal/SAVE_ATHLETE_ENTRY", payload: { date: TODAY } });
     });
     act(() => {
+      // The write really goes into the outbox, which is the half this
+      // fixture used to leave out. The screen used to answer this question
+      // by watching `saving` clear with the entry unchanged, and that is
+      // true of a queued write and of a write the server threw away alike,
+      // so the assertion below passed against an empty queue. It is the
+      // exact QueueableAction a real offline save queues.
+      store.dispatch({
+        type: "outbox/ENQUEUE",
+        payload: journalActions.saveAthleteEntry({
+          programYearId: 555,
+          date: TODAY,
+          felt: null,
+          best: null,
+          hard: null,
+          note: "On the walk home, no signal out here.",
+          shared: false,
+        }),
+      });
       store.dispatch({ type: "journal/SAVE_QUEUED", payload: { date: TODAY } });
     });
+    await settle();
 
     expect(screen.getByText(/saved on your device/i)).toBeInTheDocument();
+  });
+
+  it("stops saying his words are safe once the server has thrown the save away", async () => {
+    // The other half, and the reason the guess was worth replacing. A save
+    // rejected for good comes off the queue and is gone; nothing about the
+    // entry on screen changes, so the old heuristic went on telling a
+    // 7-year-old his writing was waiting safely on the device. He is told
+    // his words are safe when they are not.
+    const { store } = renderJournal();
+    hydrateEmpty(store);
+
+    const queuedSave = journalActions.saveAthleteEntry({
+      programYearId: 555,
+      date: TODAY,
+      felt: null,
+      best: null,
+      hard: null,
+      note: "On the walk home, no signal out here.",
+      shared: false,
+    });
+    act(() => {
+      store.dispatch({ type: "journal/SAVE_ATHLETE_ENTRY", payload: { date: TODAY } });
+      store.dispatch({ type: "outbox/ENQUEUE", payload: queuedSave });
+      store.dispatch({ type: "journal/SAVE_QUEUED", payload: { date: TODAY } });
+    });
+    await settle();
+    // It really did say so first, so what follows is a message going away
+    // rather than one that was never there.
+    expect(screen.getByText(/saved on your device/i)).toBeInTheDocument();
+
+    const queueId = store.getState().outbox.queue[0]!.id;
+    act(() => {
+      store.dispatch({
+        type: "outbox/REPLAY_FAILED",
+        payload: {
+          id: queueId,
+          dedupeKey: queuedSave.dedupeKey,
+          permanent: true,
+          message: "A note cannot be blank.",
+        },
+      });
+    });
+    await settle();
+
+    expect(screen.queryByText(/saved on your device/i)).not.toBeInTheDocument();
+    // And he is told what actually happened, in the server's own words.
+    expect(screen.getByRole("alert")).toHaveTextContent("A note cannot be blank.");
   });
 
   // ---- deleting today's entry ---------------------------------------------
@@ -429,6 +551,88 @@ describe("the athlete journal", () => {
       });
 
       expect(screen.getByText(/deleted here/i)).toBeInTheDocument();
+    });
+
+    // The ordering that broke, driven through the real store and the real
+    // sagas with only fetch mocked, because every piece between the button
+    // and the wire gets to be wrong here. Teddy deletes an entry at a court
+    // with no signal and reaches straight for the share toggle. The toggle
+    // used to still be there and still be enabled, and the save it fired
+    // replaced the queued delete under the same key, so the replay upserted
+    // the row he had deleted back to `shared: true` with his words blanked
+    // out, and a day he took back turned up in his dad's payload.
+    it("never gives Dad a day he deleted with no signal, and offers him nothing to share on it", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      // No connection: every request fails the way a dead one does.
+      const fetchMock = vi
+        .spyOn(globalThis, "fetch")
+        .mockRejectedValue(new TypeError("Failed to fetch"));
+
+      const { store } = renderJournal();
+      hydrateWith(store, UNSHARED_ENTRY);
+
+      await user.click(screen.getByRole("button", { name: "Delete today" }));
+      await user.click(screen.getByRole("button", { name: "Yes, delete it" }));
+      await settle();
+
+      // The delete is owed to the server and nothing else is.
+      expect(
+        store.getState().outbox.queue.map((w) => w.action.request.method),
+      ).toEqual(["DELETE"]);
+
+      // There is nothing on screen to tap. Both halves matter: with the
+      // entry gone from the slice the toggle read `shared` as false and
+      // offered to show Dad a day that is not there any more.
+      expect(screen.queryByRole("button", { name: /let dad see this/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /keep this to yourself/i }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
+      // And he is told what happened, which is the part that makes an empty
+      // page different from a deleted one.
+      expect(screen.getByText(/deleted here/i)).toBeInTheDocument();
+      expect(screen.getByText(/dad cannot see it/i)).toBeInTheDocument();
+
+      // The connection comes back, against a server that records everything
+      // it is asked for. Recording the requests rather than asserting a call
+      // count is what makes "nothing was shared" checkable at all.
+      const sent: { url: string; method?: string; body: string }[] = [];
+      fetchMock.mockReset();
+      fetchMock.mockImplementation((input, init) => {
+        const request = init as RequestInit | undefined;
+        sent.push({
+          url: String(input),
+          method: request?.method,
+          body: request?.body === undefined ? "" : String(request.body),
+        });
+        return Promise.resolve({
+          status: 200,
+          ok: true,
+          text: () =>
+            Promise.resolve(JSON.stringify({ deleted: { id: 9001, session_date: TODAY } })),
+        } as Response);
+      });
+
+      await act(async () => {
+        store.dispatch(outboxActions.replay());
+      });
+      await waitFor(() => expect(store.getState().outbox.queue).toHaveLength(0));
+
+      // One request, and it is the delete. Nothing was created, so there is
+      // no row on the server for this day at all.
+      expect(sent).toHaveLength(1);
+      expect(sent[0]!.method).toBe("DELETE");
+      expect(sent[0]!.url).toBe("https://api.test/api/v1/athlete_entries/9001");
+      expect(sent.some((r) => r.method === "POST")).toBe(false);
+      // And nothing that left this device so much as mentioned sharing.
+      expect(sent.map((r) => r.body).join("")).not.toContain("shared");
+
+      // Still gone here too. Nothing is owed any more, so the day is his to
+      // start again: an empty form, and nothing shared on it.
+      expect(journalSelectors.selectAthleteEntryFor(TODAY)(store.getState())).toBeNull();
+      expect(screen.queryByText(/deleted here/i)).not.toBeInTheDocument();
+      expect(screen.getByLabelText(/tell me about today/i)).toHaveValue("");
+      expect(screen.getByText(/only you can see this/i)).toBeInTheDocument();
     });
   });
 
