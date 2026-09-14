@@ -157,5 +157,49 @@ RSpec.describe "test results", type: :request do
       expect(height["change"]).to eq("same")
       expect(height["cm_per_year"]).to be_within(0.5).of(12.0)
     end
+
+    # The Year tab and the Progression tab answer the same three questions
+    # about the same rows. They used to sort those rows differently, the Year
+    # tab by test_date.position and Progression by window, and then hand the
+    # result to cm_per_year, whose answer depends on which row comes first.
+    #
+    # Nothing forces a test date's position to agree with the calendar. The
+    # two windows below are put out of order on purpose, which is the only
+    # arrangement that tells one ordering from the other. A growth pace is the
+    # trigger for halving jumping and sprinting for 8 to 12 weeks, so the two
+    # tabs are not allowed to disagree about it.
+    it "gives the Year tab and the Progression tab the same answer" do
+      september = year.test_dates.find_by!(window: "2026-09")
+      december  = year.test_dates.find_by!(window: "2026-12")
+      sep_position, dec_position = september.position, december.position
+      september.update!(position: dec_position)
+      december.update!(position: sep_position)
+      expect(december.position).to be < september.position
+
+      get "/api/v1/program_years/#{year.id}", headers: auth(coach)
+      year_tab = JSON.parse(response.body).dig("battery", "progress")
+      year_height = year_tab.find { |p| p["test_id"] == "h" }
+      year_sprint = year_tab.find { |p| p["test_id"] == "t1" }
+
+      get "/api/v1/progression", headers: auth(coach)
+      progression = JSON.parse(response.body)
+      prog_sprint = progression["battery"].find { |c| c["test_id"] == "t1" }
+
+      # Both read September first, so both see 3cm over 91 days. The series
+      # assertions pin each side's ordering on its own, so a change to either
+      # one fails here rather than only a change that makes them disagree.
+      expect(year_height["cm_per_year"]).to be_within(0.5).of(12.0)
+      expect(progression.dig("height", "cm_per_year")).to eq(year_height["cm_per_year"])
+      expect(year_height["series"].map { |p| p["window"] }).to eq(%w[2026-09 2026-12])
+      expect(progression.dig("height", "series").map { |p| p["window"] }).to eq(%w[2026-09 2026-12])
+
+      # And the same for a measure that reports a verdict rather than a pace.
+      # Read backwards the sprint gets slower, so this is "better" or "worse".
+      expect(year_sprint["baseline"]).to eq("4.6")
+      expect(year_sprint["change"]).to eq("better")
+      expect(prog_sprint["first"]).to eq(year_sprint["baseline"])
+      expect(prog_sprint["latest"]).to eq(year_sprint["latest"])
+      expect(prog_sprint["change"]).to eq(year_sprint["change"])
+    end
   end
 end

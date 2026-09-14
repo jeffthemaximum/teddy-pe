@@ -22,15 +22,48 @@ class TestResult < ApplicationRecord
     record
   end
 
+  # One ordering for every series this app draws or summarises.
+  #
+  # The Year tab used to sort by test_date.position and the Progression tab by
+  # window, and both then asked cm_per_year for a growth pace, which depends
+  # entirely on which row comes first. The two agreed only because the 2026-27
+  # windows happen to run in the same order as their positions. Author one test
+  # date out of position and the Year tab said null while Progression said a
+  # number, about the figure that triggers halving jumping and sprinting for 8
+  # to 12 weeks.
+  #
+  # The window is the clock the measurement was taken on, so the window leads.
+  # position breaks a tie inside one window and id breaks a tie after that, so
+  # the order is total and does not shuffle between two calls.
+  def self.chronological(rows)
+    rows.sort_by { |r| [ r.test_date.window, r.test_date.position, r.id ] }
+  end
+
+  # First, latest, direction of travel and growth pace over one measure's rows.
+  # Both payloads call this and differ only in the names they publish it under.
+  # cm_per_year is present for a growth measure and absent for every other, so
+  # a caller cannot accidentally report a centimetres-a-year figure for a
+  # sprint time.
+  def self.summarise(rows, measure)
+    ordered = chronological(rows)
+    first, last = ordered.first, ordered.last
+
+    summary = { rows: ordered, first: first&.numeric_value, latest: last&.numeric_value,
+                change: measure.improvement_from(first&.numeric_value, last&.numeric_value) }
+    return summary unless measure.direction == "growth"
+
+    summary.merge(cm_per_year: cm_per_year(ordered))
+  end
+
   # Growth pace in centimetres a year, from the windows the measurements were
   # taken in rather than when they were typed. Two heights measured three
   # months apart can be entered in one sitting, so recorded_at times data
   # entry. A fast pace is the trigger for halving jumping and sprinting for 8
   # to 12 weeks, so it has to come from the right clock.
   #
-  # Returns nil on a non-positive span: nothing forces a test date's position
-  # to agree with the calendar, and a misordered pair produced a negative
-  # pace that read as shrinking and suppressed the trigger.
+  # Returns nil on a non-positive span. Callers reach this through summarise,
+  # which orders the rows first, so a nil here now means two measurements in
+  # one window rather than a pair read backwards.
   def self.cm_per_year(rows)
     return nil if rows.size < 2
 

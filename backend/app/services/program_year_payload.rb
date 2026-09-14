@@ -88,37 +88,39 @@ class ProgramYearPayload
     }
   end
 
+  # TestResult.chronological, the same ordering the Progression tab uses. The
+  # two used to sort differently and could disagree about the growth pace.
   def results
-    @results ||= TestResult.where(program_year: @year)
-                           .includes(:test_date, :battery_measure)
-                           .sort_by { |r| r.test_date.position }
+    @results ||= TestResult.chronological(
+      TestResult.where(program_year: @year).includes(:test_date, :battery_measure).to_a
+    )
   end
 
   # One card per measure: latest value, change since baseline with the
   # direction applied, and a series for the sparkline. Fifteen tests in
   # different units on one axis would mean nothing, so they stay separate.
+  #
+  # The arithmetic is TestResult.summarise, shared with the Progression tab.
+  # Only the names differ here: this view calls the first value the baseline.
   def progress
     by_measure = results.group_by(&:battery_measure_id)
 
     @year.battery_measures.map do |measure|
-      rows = (by_measure[measure.id] || [])
-      baseline = rows.first
-      latest = rows.last
+      summary = TestResult.summarise(by_measure[measure.id] || [], measure)
 
       card = {
         test_id: measure.test_id, label: measure.label, unit: measure.unit,
         direction: measure.direction,
-        baseline: baseline&.numeric_value&.to_s,
-        latest: latest&.numeric_value&.to_s,
-        change: measure.improvement_from(baseline&.numeric_value, latest&.numeric_value)&.to_s,
-        series: rows.map { |r| { window: r.test_date.window, value: r.numeric_value&.to_s } }
+        baseline: summary[:first]&.to_s,
+        latest: summary[:latest]&.to_s,
+        change: summary[:change]&.to_s,
+        series: summary[:rows].map { |r| { window: r.test_date.window, value: r.numeric_value&.to_s } }
       }
       # Height reports a pace rather than a verdict. A fast one is the
       # trigger for the growth-load protocol: halve jumping and sprinting
-      # for 8 to 12 weeks and double down on skill and mobility. See
-      # TestResult.cm_per_year for why it is measured against the test
-      # windows rather than recorded_at.
-      measure.direction == "growth" ? card.merge(cm_per_year: TestResult.cm_per_year(rows)) : card
+      # for 8 to 12 weeks and double down on skill and mobility. summarise
+      # carries cm_per_year only for a growth measure.
+      summary.key?(:cm_per_year) ? card.merge(cm_per_year: summary[:cm_per_year]) : card
     end
   end
 

@@ -35,10 +35,11 @@ class ProgressionPayload
     end
   end
 
+  # TestResult.chronological, the same ordering the Year tab uses.
   def results
-    @results ||= TestResult.where(athlete: @athlete)
-                           .includes(:test_date, :battery_measure)
-                           .sort_by { |r| [ r.test_date.window, r.id ] }
+    @results ||= TestResult.chronological(
+      TestResult.where(athlete: @athlete).includes(:test_date, :battery_measure).to_a
+    )
   end
 
   # Growth (height) is excluded here by direction, the same test that
@@ -52,21 +53,25 @@ class ProgressionPayload
            .each { |card| card.delete(:position) }
   end
 
+  # The arithmetic is TestResult.summarise, shared with the Year tab. Only the
+  # names differ: this view calls the first value first rather than baseline.
   def measure_card(test_id, rows)
     measure = rows.last.battery_measure
+    summary = TestResult.summarise(rows, measure)
 
     { test_id: test_id, label: measure.label, unit: measure.unit, direction: measure.direction,
       position: measure.position,
-      first: rows.first.numeric_value&.to_s, latest: rows.last.numeric_value&.to_s,
-      change: measure.improvement_from(rows.first.numeric_value, rows.last.numeric_value)&.to_s,
-      series: rows.map { |r| point(r) } }
+      first: summary[:first]&.to_s, latest: summary[:latest]&.to_s,
+      change: summary[:change]&.to_s,
+      series: summary[:rows].map { |r| point(r) } }
   end
 
   def height
     rows = results.select { |r| r.battery_measure.direction == "growth" }
     return { series: [], cm_per_year: nil } if rows.empty?
 
-    { series: rows.map { |r| point(r) }, cm_per_year: TestResult.cm_per_year(rows) }
+    summary = TestResult.summarise(rows, rows.last.battery_measure)
+    { series: summary[:rows].map { |r| point(r) }, cm_per_year: summary[:cm_per_year] }
   end
 
   def point(result)
