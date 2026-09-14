@@ -402,3 +402,21 @@ A whole-branch review of the legacy migration returned "not safe to run against 
 - **Nothing is said in its place.** The drill fieldset immediately below already explains that the date is outside this week. A second notice saying the same thing on the same screen is noise, so the block simply does not render and the number field stands on its own.
 - **The export line was already right.** "Challenge number" in `docs_exporter.rb` is what the column has always meant. The label was the thing that had drifted, so only the label moved.
 - **Same sunk panel as the per-drill fieldsets.** The two things on this screen that come from the plan rather than from Jeff now look alike, which is the difference worth showing.
+## 2026-09-14: the jump rope test moves to Thursday
+
+**What Jeff asked.** There is no jump rope in the house this week. Move the jump rope test off Tuesday to Wednesday, Thursday or Friday.
+
+**Thursday 17 September, for two reasons.**
+
+- **The baseline window is Sep 15-17.** Friday would have put one test of the ten a day outside its own window, which means changing `docs/architecture.md` and recording this measure on a date the other nine do not share. Thursday keeps the battery whole.
+- **Wednesday is the wrong kind of room.** It is the only high-impact home day and already carries the 20m sprint, the broad jump, the single-leg hop and the line-touch, all max efforts. Jump rope is repeated jumping. Stacking it there adds jump volume to the one day the effort rules exist to protect, for no gain.
+
+Thursday is Wall Day, low intent by design, and its dad note already said high-intent efforts stay near zero. The rope goes in second, straight after Wake Up, while he is fresh and before the tennis block: a rhythm test measures rhythm, not what is left after 30 minutes of drop-feeds.
+
+**Decisions made doing it.**
+
+- **Content only, at Jeff's call.** The Phase 3 cutover landed the same afternoon and the old JSON pipeline is gone, so `backend/content/program_years/2026-27/plans/2026-09.yml` is the only place a day card lives now. The seeder reported `pruned day_blocks: 1`, which is the Tuesday block leaving, said out loud rather than done quietly.
+- **`hie` did not move.** Tuesday stays 6 and Thursday stays 2. A rope test is a rhythm and coordination measure, not a high-intent effort, so the week's spend is unchanged at 28 of 40 and no budget rule is touched.
+- **Tuesday stays inside its fixed range.** Rings Day is fixed at 75 to 90 minutes. Its blocks drop from 86 to 78, still inside, so the declared range is unchanged. Thursday's blocks go from 117 to 125 and its range moves from 110-120 to 115-125.
+- **The dad note gained a line.** A card that quietly grows a test its note never mentions is a worse card. Thursday now opens with what to watch on the rope, and the tennis and basketball notes follow unchanged.
+- **The move is pinned by a test that can fail.** `plan_seeder_spec.rb` asserts the rope is on Thursday and absent from Tuesday, both ends. A one-sided check would pass a card that gained the test while Tuesday kept it, which would hand Teddy the same test twice in one week. It was run against the old content first and failed there.

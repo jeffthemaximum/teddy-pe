@@ -18,8 +18,8 @@ RSpec.describe "this week", type: :request do
 
     thu = body["days"].find { |d| d["dow"] == "thu" }
     expect(thu).to include("name" => "Wall & Ball", "date" => "2026-09-17", "hie" => 2)
-    expect(thu["dad_note"]).to start_with("Form over volume")
-    expect(thu["blocks"].size).to eq(9)
+    expect(thu["dad_note"]).to start_with("Rope first, while he is fresh")
+    expect(thu["blocks"].size).to eq(10)
   end
 
   it "renders block prose as tokens rather than markup" do
