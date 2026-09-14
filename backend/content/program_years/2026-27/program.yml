@@ -467,22 +467,32 @@ test_dates:
 - window: 2026-09
   label: Baseline
   display: Sep 15–17
+  starts_on: 2026-09-15
+  ends_on: 2026-09-17
   position: 1
 - window: 2026-12
   label: Retest 1
   display: Dec 7–11
+  starts_on: 2026-12-07
+  ends_on: 2026-12-11
   position: 2
 - window: 2027-03
   label: Retest 2
   display: Mar 1–5
+  starts_on: 2027-03-01
+  ends_on: 2027-03-05
   position: 3
 - window: 2027-06
   label: Retest 3
   display: Jun 14–18
+  starts_on: 2027-06-14
+  ends_on: 2027-06-18
   position: 4
 - window: 2027-08
   label: Final
   display: Aug 9–13
+  starts_on: 2027-08-09
+  ends_on: 2027-08-13
   position: 5
 day_roles:
 - dow: mon

@@ -155,7 +155,8 @@ class ContentSeeder
 
   def seed_test_dates(rows)
     rows.each do |row|
-      upsert(year.test_dates, { window: row.fetch("window") }, row.slice("label", "display", "position"))
+      upsert(year.test_dates, { window: row.fetch("window") },
+             row.slice("label", "display", "position", "starts_on", "ends_on"))
     end
   end
 
