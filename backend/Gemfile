@@ -10,7 +10,7 @@ gem "pg", "~> 1.5"
 # so every `render json:` raises ArgumentError against an unpinned json. This
 # is a constraint on a gem that is already here transitively rather than a new
 # dependency. Drop the pin when Rails stops passing quirks_mode.
-gem "json", "~> 2.7"
+gem "json", "~> 3.0"
 
 # JSON API
 gem "active_model_serializers", "~> 0.10"
