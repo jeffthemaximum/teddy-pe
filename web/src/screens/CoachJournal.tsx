@@ -4,11 +4,19 @@ import {
   drills,
   journalActions,
   journalSelectors,
+  selectDayByDate,
   selectDrills,
+  selectWeek,
   useAppDispatch,
   useAppSelector,
+  week,
 } from "@teddy-pe/core";
-import type { CoachEntry, DrillRatingValue, SaveCoachEntryPayload } from "@teddy-pe/core";
+import type {
+  CoachEntry,
+  Drill,
+  DrillRatingValue,
+  SaveCoachEntryPayload,
+} from "@teddy-pe/core";
 import { Loading } from "../components/Loading";
 import { ErrorNote } from "../components/ErrorNote";
 import { WaitingForYearId } from "../components/WaitingForYearId";
@@ -40,6 +48,16 @@ const RATING_VALUES: DrillRatingValue[] = ["not_yet", "getting", "owns"];
 function ratingLabel(value: DrillRatingValue): string {
   return value.replace(/_/g, " ");
 }
+
+// What the rating fieldset says in each of the three cases where it has no
+// day card to narrow itself by. He is writing up a session, so the list
+// should be the drills that session actually ran; when it cannot be, the
+// screen says which of the three reasons it is rather than quietly handing
+// him all 84.
+const FINDING_DRILLS_LABEL = "Finding this day's drills.";
+const NO_DRILLS_LABEL = "This day's card lists no drills.";
+const OUTSIDE_WEEK_LABEL = "This date is outside this week, so every drill is listed.";
+const NO_WEEK_LABEL = "This week could not be reached, so every drill is listed.";
 
 // The delete, in the same two steps Teddy's screen uses. It is the same
 // irreversible act and he taps it on a phone with one thumb straight after a
@@ -129,6 +147,20 @@ export function CoachJournal() {
   const queued = useAppSelector(journalSelectors.selectIsEntryQueued("coach", date));
   const waitingToSend = !saving && queued;
 
+  // The current week, read for one thing only: which drills the day he is
+  // writing up actually ran. He picks a date and rates what happened, so
+  // handing him the whole 84-entry glossary makes him find eight of them.
+  // This is the same duck This Week fills, so arriving here from that tab
+  // costs nothing.
+  //
+  // Only `weeks/current` exists (routes.rb), so a date outside this week has
+  // no card to narrow by, and neither does a week that has not arrived or
+  // could not be reached. Those three cases are told apart below rather than
+  // collapsed into one silent fallback.
+  const weekData = useAppSelector(selectWeek);
+  const weekError = useAppSelector(week.selectors.selectError);
+  const dayCard = useAppSelector(selectDayByDate(date));
+
   const [form, setForm] = useState<FormState>(() => formFrom(existingEntry));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [justDeleted, setJustDeleted] = useState(false);
@@ -161,6 +193,7 @@ export function CoachJournal() {
     if (currentId !== null) {
       dispatch(journalActions.fetchCoachEntries());
       dispatch(drills.actions.fetch());
+      dispatch(week.actions.fetch(currentId));
     }
   }, [dispatch, currentId]);
 
@@ -193,6 +226,31 @@ export function CoachJournal() {
     // own data arrives.
     return null;
   }
+
+  // Whether the week is still on its way. A failed fetch is not pending: it
+  // has answered, badly, and the fieldset says so rather than waiting for a
+  // week that is not coming.
+  const weekPending = weekData === null && weekError === null;
+
+  // The drills this day's card ran, in the order it ran them, followed by
+  // anything the entry already carries a rating for. That tail is not a
+  // nicety: handleSubmit sends `form.ratings` whole, so a rating made
+  // before a plan edit dropped the drill from the card would go on being
+  // saved on every save while never appearing on screen. Shown, it can be
+  // changed or seen for what it is.
+  //
+  // Null, not an empty array, when there is no card to narrow by. An empty
+  // card (Game Day: the home program is off) and no card at all are
+  // different things and say different things below.
+  const bySlug = new Map(drillList.map((d) => [d.slug, d]));
+  const cardSlugs = dayCard?.drill_slugs ?? null;
+  const dayDrills: Drill[] | null =
+    cardSlugs === null
+      ? null
+      : [...cardSlugs, ...Object.keys(form.ratings).filter((slug) => !cardSlugs.includes(slug))]
+          .map((slug) => bySlug.get(slug))
+          .filter((d): d is Drill => d !== undefined);
+  const shownDrills = dayDrills ?? drillList;
 
   function updateRating(slug: string, value: DrillRatingValue) {
     setForm((prev) => ({ ...prev, ratings: { ...prev.ratings, [slug]: value } }));
@@ -319,23 +377,33 @@ export function CoachJournal() {
         {drillList.length > 0 && (
           <fieldset>
             <legend>Rate each drill</legend>
-            {drillList.map((drill) => (
-              <fieldset key={drill.slug}>
-                <legend>{drill.name}</legend>
-                {RATING_VALUES.map((value) => (
-                  <label key={value}>
-                    <input
-                      type="radio"
-                      name={`coach-journal-rating-${drill.slug}`}
-                      value={value}
-                      checked={form.ratings[drill.slug] === value}
-                      onChange={() => updateRating(drill.slug, value)}
-                    />
-                    {ratingLabel(value)}
-                  </label>
+            {weekPending ? (
+              <p role="status">{FINDING_DRILLS_LABEL}</p>
+            ) : (
+              <>
+                {dayDrills === null && (
+                  <p>{weekError ? NO_WEEK_LABEL : OUTSIDE_WEEK_LABEL}</p>
+                )}
+                {dayDrills !== null && dayDrills.length === 0 && <p>{NO_DRILLS_LABEL}</p>}
+                {shownDrills.map((drill) => (
+                  <fieldset key={drill.slug}>
+                    <legend>{drill.name}</legend>
+                    {RATING_VALUES.map((value) => (
+                      <label key={value}>
+                        <input
+                          type="radio"
+                          name={`coach-journal-rating-${drill.slug}`}
+                          value={value}
+                          checked={form.ratings[drill.slug] === value}
+                          onChange={() => updateRating(drill.slug, value)}
+                        />
+                        {ratingLabel(value)}
+                      </label>
+                    ))}
+                  </fieldset>
                 ))}
-              </fieldset>
-            ))}
+              </>
+            )}
           </fieldset>
         )}
 

@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { createCoreStore, journalActions, memoryStorage } from "@teddy-pe/core";
-import type { CoachEntry, Drill } from "@teddy-pe/core";
+import type { CoachEntry, DayCard, Drill, WeekPayload } from "@teddy-pe/core";
 import { CoachJournal } from "../src/screens/CoachJournal";
 
 // Three drills, each rated to a different one of the three named values (or
@@ -47,6 +47,77 @@ const BALANCE_BEAM_WALK: Drill = {
 };
 
 const DRILLS: Drill[] = [STAR_JUMP, WALL_TAPS, BALANCE_BEAM_WALK];
+
+// The current week. This screen needs it before it can know which drills
+// belong to the day he is writing up, so every test that expects a filtered
+// list loads this the same way this-week.test.tsx loads its own.
+//
+// The seven cards deliberately disagree about which drills they carry. A
+// week where every card listed the same three could not tell a filtered
+// list apart from an unfiltered one:
+//   Mon carries two, in the reverse of the order the glossary lists them,
+//     so card order can be told apart from glossary order.
+//   Tue and Fri each carry exactly one, and a different one.
+//   Wed and Thu carry all three, which is what every test written before
+//     this filter existed already assumes about the day it opens.
+//   Sat is Game Day and carries none at all.
+function day(
+  overrides: Partial<DayCard> &
+    Pick<DayCard, "id" | "dow" | "date" | "name" | "role" | "drill_slugs">,
+): DayCard {
+  return {
+    minutes: "60 to 90",
+    intensity: 2,
+    hie: 0,
+    summary_lines: [`${overrides.name} notes`],
+    ...overrides,
+  };
+}
+
+const ALL_SLUGS = ["star-jump", "wall-taps", "balance-beam-walk"];
+
+const WEEK: WeekPayload = {
+  id: 201,
+  number: 1,
+  position_in_block: 1,
+  theme: "Baseline & Land",
+  dates_display: "Sep 14 to Sep 20",
+  targets: ["Tennis: drop-feed rally"],
+  challenge: "Silent Landings.",
+  trials: false,
+  block_key: "cub",
+  high_intent_efforts: 32,
+  budget: 40,
+  days: [
+    day({ id: 1001, dow: "mon", date: "2026-09-14", name: "Land Like a Cat", role: "Floor Day", drill_slugs: ["wall-taps", "star-jump"] }),
+    day({ id: 1002, dow: "tue", date: "2026-09-15", name: "Rings Work", role: "Rings Day", drill_slugs: ["balance-beam-walk"] }),
+    day({ id: 1003, dow: "wed", date: "2026-09-16", name: "Test Day", role: "Fast Day", drill_slugs: ALL_SLUGS }),
+    day({ id: 1004, dow: "thu", date: "2026-09-17", name: "Wall & Ball", role: "Wall Day", drill_slugs: ALL_SLUGS }),
+    day({ id: 1005, dow: "fri", date: "2026-09-18", name: "Skate & Stick", role: "Skate Day", drill_slugs: ["wall-taps"] }),
+    day({ id: 1006, dow: "sat", date: "2026-09-19", name: "Game Day", role: "Game Day", minutes: "0", summary_lines: ["Home program off"], drill_slugs: [] }),
+    day({ id: 1007, dow: "sun", date: "2026-09-20", name: "Ceremony", role: "Court Day", minutes: "30 to 45", drill_slugs: ["star-jump"] }),
+  ],
+};
+
+// An entry on the Friday card, which lists wall-taps and nothing else,
+// carrying a rating for a drill that card does not list. A rating made
+// before a plan changed has to stay on screen: the save sends the whole
+// ratings map either way, so a form that hid it would look like it had
+// dropped a rating it was in fact still writing.
+const FRIDAY_ENTRY: CoachEntry = {
+  id: 502,
+  session_date: "2026-09-18",
+  program_year_id: 42,
+  day_card_id: 1005,
+  overall: null,
+  energy: null,
+  flag_pain: false,
+  pain_note: null,
+  note: null,
+  challenge_num: null,
+  ratings: { "star-jump": "owns" },
+  updated_at: "2026-09-18T20:00:00.000Z",
+};
 
 // A minimal, otherwise-blank save payload, spread with a `date` override
 // wherever a test only cares about which day is saving. Building a real
@@ -123,6 +194,25 @@ function loadDrills(store: ReturnType<typeof createCoreStore>, drills: Drill[] =
   act(() => {
     store.dispatch({ type: "drills/SUCCEEDED", payload: { drills } });
   });
+}
+
+function loadWeek(store: ReturnType<typeof createCoreStore>, payload: WeekPayload = WEEK) {
+  act(() => {
+    store.dispatch({ type: "week/SUCCEEDED", payload });
+  });
+}
+
+// The legends of the per-drill fieldsets inside "Rate each drill", in the
+// order they render. Read off that fieldset's own children rather than off
+// the page, so the overall and energy fieldsets are never counted, and as
+// an ordered list rather than a set, so a test can assert the order the
+// card runs them in.
+function ratedDrillNames(): string[] {
+  const fieldset = screen.queryByRole("group", { name: "Rate each drill" });
+  if (!fieldset) return [];
+  return Array.from(fieldset.querySelectorAll(":scope > fieldset > legend")).map(
+    (el) => el.textContent ?? "",
+  );
 }
 
 // Every dispatched action, in order, so a test can assert on how many times
@@ -216,6 +306,7 @@ describe("the coach's journal", () => {
   it("opens a day's entry filled in when one exists", () => {
     const { store } = renderCoachJournal(42);
     loadDrills(store);
+    loadWeek(store);
     act(() => {
       store.dispatch({ type: "journal/COACH_ENTRIES_FETCHED", payload: [EXISTING_ENTRY] });
     });
@@ -247,6 +338,7 @@ describe("the coach's journal", () => {
   it("opens empty when none does", () => {
     const { store } = renderCoachJournal(42);
     loadDrills(store);
+    loadWeek(store);
     act(() => {
       store.dispatch({ type: "journal/COACH_ENTRIES_FETCHED", payload: [EXISTING_ENTRY] });
     });
@@ -270,6 +362,7 @@ describe("the coach's journal", () => {
     const user = userEvent.setup();
     const { store } = renderCoachJournal(42);
     loadDrills(store);
+    loadWeek(store);
     setDate("2026-09-16");
     const dispatched = trackDispatch(store);
 
@@ -302,6 +395,7 @@ describe("the coach's journal", () => {
     const user = userEvent.setup();
     const { store } = renderCoachJournal(42);
     loadDrills(store);
+    loadWeek(store);
     setDate("2026-09-16");
     const dispatched = trackDispatch(store);
 
@@ -322,6 +416,7 @@ describe("the coach's journal", () => {
     const user = userEvent.setup();
     const { store } = renderCoachJournal(42);
     loadDrills(store);
+    loadWeek(store);
     setDate("2026-09-16");
     const dispatched = trackDispatch(store);
 
@@ -339,6 +434,7 @@ describe("the coach's journal", () => {
     const user = userEvent.setup();
     const { store } = renderCoachJournal(42);
     loadDrills(store);
+    loadWeek(store);
     setDate("2026-09-16");
     const dispatched = trackDispatch(store);
 
@@ -359,6 +455,7 @@ describe("the coach's journal", () => {
     const user = userEvent.setup();
     const { store } = renderCoachJournal(42);
     loadDrills(store);
+    loadWeek(store);
 
     expect(screen.queryByLabelText(/what hurt, and where/i)).not.toBeInTheDocument();
 
@@ -375,6 +472,7 @@ describe("the coach's journal", () => {
     // was written.
     const { store } = renderCoachJournal(42);
     loadDrills(store);
+    loadWeek(store);
     setDate("2026-09-16");
 
     act(() => {
@@ -391,6 +489,7 @@ describe("the coach's journal", () => {
   it("says the entry is waiting when it was saved with no connection", async () => {
     const { store } = renderCoachJournal(42);
     loadDrills(store);
+    loadWeek(store);
     setDate("2026-09-16");
     // Flushed here, before anything is queued: the outbox reads its stored
     // queue back on its own, once, the moment the store is created, and a
@@ -458,6 +557,7 @@ describe("the coach's journal", () => {
     function openExistingEntry() {
       const { store } = renderCoachJournal(42);
       loadDrills(store);
+      loadWeek(store);
       act(() => {
         store.dispatch({ type: "journal/COACH_ENTRIES_FETCHED", payload: [EXISTING_ENTRY] });
       });
@@ -468,6 +568,7 @@ describe("the coach's journal", () => {
     it("offers nothing to delete on a day with no entry", () => {
       const store = renderCoachJournal(42);
       loadDrills(store.store);
+      loadWeek(store.store);
       setDate("2026-09-15");
 
       expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
@@ -561,6 +662,156 @@ describe("the coach's journal", () => {
       });
 
       expect(screen.getByText(/deleted here/i)).toBeInTheDocument();
+    });
+  });
+  // ---- which drills it asks about -----------------------------------------
+  describe("the drills it asks him to rate", () => {
+    it("asks for this week once on mount", async () => {
+      const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
+      seedAuth(store, 42);
+      const dispatched = trackDispatch(store);
+
+      const { rerender } = render(
+        <Provider store={store}>
+          <CoachJournal />
+        </Provider>,
+      );
+      await settle();
+
+      const fetches = () => dispatched.filter((a) => a.type === "week/FETCH");
+      expect(fetches()).toHaveLength(1);
+
+      rerender(
+        <Provider store={store}>
+          <CoachJournal />
+        </Provider>,
+      );
+      await settle();
+      expect(fetches()).toHaveLength(1);
+    });
+
+    it("lists only the drills on that day's card", () => {
+      const { store } = renderCoachJournal(42);
+      loadDrills(store);
+      loadWeek(store);
+
+      // Tuesday's card carries balance-beam-walk and nothing else.
+      setDate("2026-09-15");
+
+      expect(ratedDrillNames()).toEqual(["Balance Beam Walk"]);
+    });
+
+    it("puts them in the order the card runs them", () => {
+      const { store } = renderCoachJournal(42);
+      loadDrills(store);
+      loadWeek(store);
+
+      // Monday's card runs wall-taps first, which is the reverse of the
+      // order the glossary lists the two in.
+      setDate("2026-09-14");
+
+      expect(ratedDrillNames()).toEqual(["Wall Taps", "Star Jump"]);
+    });
+
+    it("swaps the list when he picks another day", () => {
+      const { store } = renderCoachJournal(42);
+      loadDrills(store);
+      loadWeek(store);
+
+      setDate("2026-09-15");
+      expect(ratedDrillNames()).toEqual(["Balance Beam Walk"]);
+
+      setDate("2026-09-18");
+      expect(ratedDrillNames()).toEqual(["Wall Taps"]);
+    });
+
+    it("keeps a drill he has already rated even when that day's card has dropped it", () => {
+      const { store } = renderCoachJournal(42);
+      loadDrills(store);
+      loadWeek(store);
+      act(() => {
+        store.dispatch({ type: "journal/COACH_ENTRIES_FETCHED", payload: [FRIDAY_ENTRY] });
+      });
+
+      // Friday's card lists wall-taps only. The entry rates star-jump.
+      setDate("2026-09-18");
+
+      expect(ratedDrillNames()).toEqual(["Wall Taps", "Star Jump"]);
+      expect(within(ratingGroup("Star Jump")).getByRole("radio", { name: "owns" })).toBeChecked();
+    });
+
+    it("says so when the day's card has no drills at all", () => {
+      const { store } = renderCoachJournal(42);
+      loadDrills(store);
+      loadWeek(store);
+
+      // Saturday is Game Day: the home program is off and the card carries
+      // no drills, so there is nothing here to rate.
+      setDate("2026-09-19");
+
+      expect(ratedDrillNames()).toEqual([]);
+      expect(screen.getByText("This day's card lists no drills.")).toBeInTheDocument();
+    });
+
+    it("lists every drill when the date is outside this week", () => {
+      const { store } = renderCoachJournal(42);
+      loadDrills(store);
+      loadWeek(store);
+
+      setDate("2026-09-07");
+
+      expect(ratedDrillNames()).toEqual(["Star Jump", "Wall Taps", "Balance Beam Walk"]);
+      expect(
+        screen.getByText("This date is outside this week, so every drill is listed."),
+      ).toBeInTheDocument();
+    });
+
+    it("lists every drill when this week could not be reached", () => {
+      const { store } = renderCoachJournal(42);
+      loadDrills(store);
+      act(() => {
+        store.dispatch({ type: "week/FAILED", payload: "That could not be reached." });
+      });
+
+      setDate("2026-09-15");
+
+      expect(ratedDrillNames()).toEqual(["Star Jump", "Wall Taps", "Balance Beam Walk"]);
+      expect(
+        screen.getByText("This week could not be reached, so every drill is listed."),
+      ).toBeInTheDocument();
+    });
+
+    it("says it is finding the day's drills rather than listing all of them", async () => {
+      // The week fetch is still in flight, which on a cold Fly machine is
+      // around seven seconds. Listing all 84 for that long and then
+      // collapsing to the day's handful is worse than saying what it is
+      // waiting for, and he can type the note meanwhile.
+      const { store } = renderCoachJournal(42);
+      loadDrills(store);
+      await settle();
+
+      expect(ratedDrillNames()).toEqual([]);
+      expect(screen.getByText("Finding this day's drills.")).toBeInTheDocument();
+      expect(screen.getByLabelText(/what did you see/i)).toBeInTheDocument();
+    });
+
+    it("still saves a rating made before the card dropped the drill", async () => {
+      const user = userEvent.setup();
+      const { store } = renderCoachJournal(42);
+      loadDrills(store);
+      loadWeek(store);
+      act(() => {
+        store.dispatch({ type: "journal/COACH_ENTRIES_FETCHED", payload: [FRIDAY_ENTRY] });
+      });
+      setDate("2026-09-18");
+      const dispatched = trackDispatch(store);
+
+      await user.click(within(ratingGroup("Wall Taps")).getByRole("radio", { name: "getting" }));
+      await user.click(screen.getByRole("button", { name: /save/i }));
+
+      const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
+      const payload = saves[0]?.payload as { ratings: Record<string, unknown> };
+      expect(payload.ratings).toEqual({ "star-jump": "owns", "wall-taps": "getting" });
     });
   });
 });

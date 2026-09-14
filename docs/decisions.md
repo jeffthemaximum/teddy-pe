@@ -347,3 +347,33 @@ A whole-branch review of the legacy migration returned "not safe to run against 
 **Counts are reported loudly and never block.** A gap between the legacy diary count and the migrated one has legitimate causes, failed rows and conflicts among them. It gets a paragraph saying what accounts for the gap and what a leftover means, and does not fail the task.
 
 **One lookup, three callers.** `Legacy::Mapping` now owns "can this legacy row map onto anything", and the survey, the result migrator and the verifier all call it. They were three hand-written copies, and the survey's copy still had the ambiguous `TestDate.find_by(window:)` that ruling R9 had removed from the other two. The survey is what a person reads before typing `CONFIRM=yes`, so it under-reporting what will not map is worse than the migrator doing it.
+## 2026-09-14 (Phase 2c): the Notes page asks about the day, not the glossary
+
+**What Jeff asked.** On `https://teddy-pe-mlfs.vercel.app/notes`, "Rate each drill" listed every drill in the glossary. Show only the drills that were actually done that day.
+
+**Where the link already was.** Every day card carries `drill_slugs`, filled by `backend/app/services/week_payload.rb` from what the tokenizer found in that day's blocks, and core already has `selectDayByDate`. Nothing needed building on the server or in `core/`. `CoachJournal` simply had no day cards, because it had never needed them.
+
+**Decisions made building it.**
+
+- **The current week only.** `weeks/current` is the one week endpoint there is (`routes.rb`), so filtering any date in the year meant a second fetch of the month plan, and a week that straddles a month boundary would need a third lookup: Oct 1 to 4 live in the September plan, not the October one. Jeff writes the entry after the session, so the date is almost always inside the week already on screen. A date outside it gets the full list and one line saying why.
+- **Four states, told apart, rather than one silent fallback.** The week still on its way, the week unreachable, a date outside the week, and a card with no drills on it are four different facts about why the list is not narrowed, and each says which it is. A single "here is everything" would be right on the screen and wrong in his hands.
+- **It waits rather than flashing.** A cold Fly machine answers in around seven seconds. Listing all 84 for that long and then collapsing to eight is worse than saying "Finding this day's drills", and the note field stays live meanwhile so he can type while it loads.
+- **A drill he has already rated stays on screen even when the card has dropped it.** `handleSubmit` sends `form.ratings` whole, so a rating made before a plan edit goes on being saved on every save. Hiding it would have made the form quietly write something it never showed. Shown at the end of the day's own list, it can be changed or cleared.
+- **Card order, not glossary order.** The list reads down the session the way it ran, because that is the order he is remembering it in.
+- **The week is fetched here, not lifted into a parent.** It is the same duck This Week fills, so arriving from that tab costs nothing, and the screen keeps asking for what it needs the way every other screen in this app does.
+- **The tests that predated the filter now seed a week.** Eleven of them rendered this form with no day cards in the store, which is a real state and no longer the one those tests are about. They load the week fixture now and exercise the path production takes.
+
+## 2026-09-14: the password minimum comes down to 6
+
+**What Jeff asked.** Lower the minimum password length to 6, and reset all three accounts to one password he chose. The password itself is deliberately not written down here, or anywhere else in this repo.
+
+**Why it needed asking.** It is 7 characters and the model required 12, so the reset could not run at all until the rule moved. The concern was raised once, in both directions, and Jeff decided. It is his family, his app and his call.
+
+**Decisions made doing it.**
+
+- **Six, written down with its reason beside it.** The comment on the validation says what the number is for, so the next person to move it is weighing the same thing rather than a bare integer.
+- **The rule got its first test.** `backend/spec/models/user_spec.rb` did not exist, and nothing anywhere asserted the minimum. That is precisely why lowering it looked free: a one-character edit, no suite to disagree. It is now asserted from both sides, one below and one at the boundary, plus the `allow_nil` behaviour that keeps a rename from being a password change.
+- **The throttle is what actually holds the door.** `AuthController#login` allows 10 attempts in 3 minutes per address, counted by attempt rather than by failure, and none of that changed. The length minimum is the floor for the other case, where the database itself leaks and bcrypt is all that is left. Worth being clear which defence does which job, because the two are easy to confuse and only one of them moved.
+- **No client-side rule to match.** Neither `web/` nor `core/` validates length, so the server is the only place the number lives and there is no second copy to drift.
+- **The reset waits for the deploy.** A `rails runner` on the Fly machine runs the deployed code, so resetting to a 7-character password before this ships raises `RecordInvalid`. Merge, deploy, then reset, in that order.
+- **Everyone signs out.** The JWT carries a fingerprint of the password digest (`api_controller.rb`), so every token on every device dies at the reset and all three sign in again. That is the design working, not a side effect to route around.
