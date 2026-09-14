@@ -336,6 +336,17 @@ The web app is up at `https://teddy-pe-mlfs.vercel.app`, built from `main`, serv
 
 **A note on what a test can be asked to prove.** `web/__tests__/hosting-config.test.ts` cannot show the rewrite works. That rule lives in the host and only a request to the deployed site answers it. The test holds the config to the shape that was verified against the real host, which is a smaller claim honestly stated, and it names the `cleanUrls` interaction in a comment so the combination cannot come back quietly.
 
+## 2026-09-14 (Phase 3, final fix round): what the migration gate blocks on, and what it only reports
+
+A whole-branch review of the legacy migration returned "not safe to run against production data". The rulings that came out of fixing it, written down because they will be asked again the next time someone touches `backend/app/services/legacy/`.
+
+**An unreadable table is never a clean read, and an empty one is not a failure.** The verifier returned `[]` for a legacy table it could not find, so `clean?` was true and `legacy:verify` printed "Safe to delete the old pipeline" and exited 0. The realistic way that happens is the old rows sitting in the Vercel Neon database with `LEGACY_DATABASE_URL` unset, one step before the only copy is deleted. Table presence now blocks the gate and every task names the table by hand. Row count deliberately does not block: a legacy table that exists with nothing in it is a legitimate state, and a gate that fires on it teaches whoever reads the output to walk past the gate, which is the worse failure.
+
+**The new system wins every collision, on both sides.** This was in the plan as a global constraint and was implemented for the test results only. `CoachEntry.upsert_for` does `find_or_initialize_by` then `assign_attributes`, so the journal migrator replaced every carried field of an entry that was already there with the legacy value, a `nil` over a note Jeff typed on the new site included, and `replace_ratings!` overwrote any rating the legacy payload named. Both migrators now decline to write and report the disagreement by field name. Nothing is ever resolved automatically: which version is right is a decision about Teddy, not about code.
+
+**Counts are reported loudly and never block.** A gap between the legacy diary count and the migrated one has legitimate causes, failed rows and conflicts among them. It gets a paragraph saying what accounts for the gap and what a leftover means, and does not fail the task.
+
+**One lookup, three callers.** `Legacy::Mapping` now owns "can this legacy row map onto anything", and the survey, the result migrator and the verifier all call it. They were three hand-written copies, and the survey's copy still had the ambiguous `TestDate.find_by(window:)` that ruling R9 had removed from the other two. The survey is what a person reads before typing `CONFIRM=yes`, so it under-reporting what will not map is worse than the migrator doing it.
 ## 2026-09-14 (Phase 2c): the Notes page asks about the day, not the glossary
 
 **What Jeff asked.** On `https://teddy-pe-mlfs.vercel.app/notes`, "Rate each drill" listed every drill in the glossary. Show only the drills that were actually done that day.
