@@ -230,7 +230,13 @@ function MeasureRow({
       <input
         id={inputId}
         type="text"
-        inputMode="decimal"
+        // Not "decimal": that keypad has no space and no letters, and "15
+        // to 18" is a real value this box has to accept (see the comment
+        // on rawValue above). A numeric pad would be faster for the common
+        // case of typing "4.42" on a phone, so this costs him a couple of
+        // extra taps to reach the number row for a plain number, in trade
+        // for being able to type the range at all.
+        inputMode="text"
         value={value}
         onChange={(event) => setValue(event.target.value)}
         onBlur={commit}

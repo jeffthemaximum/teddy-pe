@@ -301,6 +301,23 @@ describe("the test sheet", () => {
     expect(screen.getByLabelText(/balance hold, left \(sec\)/i)).toBeInTheDocument();
   });
 
+  it("gives the box a keyboard that can type a range, not a numbers-only pad", async () => {
+    // userEvent.type does not enforce inputMode the way a real phone
+    // keyboard does, so a test that typed "15 to 18" here and checked the
+    // save payload would keep passing even with inputMode="decimal" back
+    // in place: jsdom has no numeric keypad to refuse the letters and the
+    // space. The only thing that actually stands between him and typing a
+    // range on a court is this attribute, so this reads that attribute
+    // directly rather than what userEvent is willing to fake past it.
+    const { store } = renderTests(42);
+    loadYear(store);
+    loadResults(store);
+    await settle();
+
+    const input = measureInput(/10-yard sprint/i);
+    expect(input).toHaveAttribute("inputmode", "text");
+  });
+
   it("shows a measure with no result as empty, not as zero", async () => {
     const { store } = renderTests(42);
     loadYear(store);

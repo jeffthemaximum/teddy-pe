@@ -27,7 +27,11 @@
   /* Ink. */
   --ink: #17212b;
   --ink-soft: #51606c;
-  --ink-faint: #6d7a85;
+  /* On --card (#fff) this holds 5.08:1, above the 4.5:1 a body-size sentence
+     needs. It carries lines like Progress's "Lower is better.", the one
+     sentence that says which direction a whole chart runs, so faint still
+     has to be readable, not just quiet. */
+  --ink-faint: #63707b;
 
   /* Structure and the one accent. */
   --court: #0f3f63;

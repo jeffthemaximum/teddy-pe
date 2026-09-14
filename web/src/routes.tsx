@@ -15,26 +15,33 @@ import { Tests } from "./screens/Tests";
 // Phase 1:
 //
 //   endpoint                                          coach  athlete  viewer
-//   /api/v1/athlete_entries        (the Journal)        200    200     403
-//   /api/v1/coach_entries          (the Notes)           200    403     403
-//   /api/v1/test_results           (Tests)                200    200     200
+//   /api/v1/athlete_entries  index (the Journal)         200    200     403
+//   /api/v1/coach_entries    index (the Notes)            200    403     403
+//   /api/v1/test_results     create (the only thing       200    200     403
+//                            the Tests screen offers)
 //   program_years, plans, weeks,
 //   drills, progression                                 200    200     200
 //
 // so the nav below shows exactly, and only, what the API will actually
 // answer for the signed-in person.
 //
+// Tests is read on /api/v1/test_results#index (200 for all three) but the
+// screen itself is nothing but live input boxes, so it is gated on
+// test_results#create, the action every one of those boxes actually takes.
+// A viewer who could technically fetch the results has no way to use this
+// screen for anything that will not 403 the moment she blurs a box.
+//
 // "any" means every signed-in person, including a role string this app has
 // never seen. That is a real possibility, not a hypothetical: the API sends
 // role as a plain string in the JWT payload, TypeScript's Role type does not
 // check it at runtime, and a role this app does not recognize is either a
-// bug in the API or a new account type somebody added. The four "any" items
+// bug in the API or a new account type somebody added. The five "any" items
 // below are exactly the ones that answer 200 for all three known roles, so
 // there is no reason to believe a role we cannot name would be refused
 // either; showing the read-only program is more useful than showing nothing
 // and it costs nothing if we are wrong, because the API is still the one
-// deciding what each request actually returns. Journal and Notes are the
-// opposite: closed by default, open only to the roles named explicitly,
+// deciding what each request actually returns. Journal, Notes and Tests are
+// the opposite: closed by default, open only to the roles named explicitly,
 // which is the direction a guess should fail in when the guess might be
 // wrong (403 is what a stranger swiping this tab would get, so hiding the
 // tab is never worse than what already happens if it is tapped).
@@ -66,8 +73,15 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/week", label: "This Week", roles: "any", element: <ThisWeek /> },
   { to: "/glossary", label: "Glossary", roles: "any", element: <Glossary /> },
   { to: "/progress", label: "Progress", roles: "any", element: <Progress /> },
-  { to: "/tests", label: "Tests", roles: "any", element: <Tests /> },
-  // athlete_entries: closed to a viewer, open to Teddy and Jeff.
+  // test_results create: coach or athlete only. A viewer's fifteen input
+  // boxes would 403 on every one of them, so she does not get the tab.
+  { to: "/tests", label: "Tests", roles: ["coach", "athlete"], element: <Tests /> },
+  // athlete_entries index: closed to a viewer, open to Teddy and Jeff. Jeff
+  // reads this screen, he does not write on it; athlete_entries#create is
+  // athlete-only, so Save and the share toggle answer only to Teddy. That
+  // is a rule the screen itself has to keep (AthleteJournal renders the
+  // controls only for the role that can use them), not a reason to hide the
+  // route from Jeff: he can read the page the API hands him, every time.
   { to: "/journal", label: "Journal", roles: ["coach", "athlete"], element: <AthleteJournal /> },
   // coach_entries: Jeff's own notes, closed to everyone else.
   { to: "/notes", label: "Notes", roles: ["coach"], element: <CoachJournal /> },

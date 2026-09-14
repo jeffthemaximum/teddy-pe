@@ -32,8 +32,18 @@ const MUST_NOT_APPEAR = [
   "cartwheel",
   "high-intent",
   "Champion",
+  // All seven day_roles names (program.yml), transcribed by hand from that
+  // file rather than derived from it: two of these ("Floor Day", "Rings
+  // Day") were the only ones on this list before, which is exactly the gap
+  // that let "Coyote" through below. A day name is as much his program's
+  // vocabulary as a block name is.
   "Floor Day",
   "Rings Day",
+  "Fast Day",
+  "Wall Day",
+  "Skate Day",
+  "Game Day",
+  "Court Day",
   "green ball",
 ];
 
@@ -41,7 +51,15 @@ const MUST_NOT_APPEAR = [
 // are checked from a word boundary rather than as a bare substring. Only the
 // LEFT side needs a boundary: "Cubs", "Foxes" and "CubTrials" are leaks, and
 // a right-hand boundary would wave all three through.
-const MUST_NOT_APPEAR_AS_WORD = ["Cub", "Fox", "Trials"];
+//
+// All six block names (program.yml's `blocks` list), transcribed by hand
+// from that file, not imported from it: a test that read the names from the
+// same file the app reads them from would go on passing if a heading and the
+// content file drifted together, and this file exists to catch exactly a
+// heading that should never have been written at all. This list used to
+// carry only "Cub" and "Fox", which is the reviewer's finding: a heading
+// reading "Coyote" built clean and this suite stayed green.
+const MUST_NOT_APPEAR_AS_WORD = ["Cub", "Fox", "Coyote", "Wolf", "Puma", "Cheetah", "Trials"];
 
 // Third-party tokens that start with a denied word and have nothing to do
 // with the program. Matching from the left boundary only means a real word

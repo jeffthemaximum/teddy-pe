@@ -70,12 +70,14 @@ describe("the shell", () => {
     expect(tab(/notes/i)).not.toBeInTheDocument();
   });
 
-  it("shows Emily the program and neither journal", async () => {
+  it("shows Emily the program and neither journal, nor the test sheet", async () => {
     // Shared means shared with Dad, not published. The API answers 403 on
-    // both journals for her, and the nav has to agree with that.
+    // both journals for her, and test_results#create is coach-or-athlete
+    // only, so Tests joins them: fifteen live input boxes she cannot use
+    // for anything is worse than no tab.
     await renderAs("viewer");
     expect(tab(/year/i)).toBeInTheDocument();
-    expect(tab(/tests/i)).toBeInTheDocument();
+    expect(tab(/tests/i)).not.toBeInTheDocument();
     expect(tab(/journal/i)).not.toBeInTheDocument();
     expect(tab(/notes/i)).not.toBeInTheDocument();
   });
@@ -189,12 +191,14 @@ describe("the shell", () => {
     // Role arrives as a plain string in the API's response; TypeScript's
     // Role type checks nothing at runtime. An unrecognized role is either a
     // bug in the API or a new account type, and the two safe assumptions
-    // point different ways for different tabs: fail OPEN for the four
+    // point different ways for different tabs: fail OPEN for the five
     // endpoints that answer 200 for every role Phase 1 tested (there is no
     // reason to expect a role we cannot name would be refused there either,
-    // and the API still has the final say), fail CLOSED for the two that
-    // are restricted by name, because a 403 tab is worse than no tab and a
-    // guess should not be the one taking that risk.
+    // and the API still has the final say), fail CLOSED for the three that
+    // are restricted by name (Journal, Notes, and Tests, gated on
+    // test_results#create rather than its always-200 index), because a 403
+    // tab is worse than no tab and a guess should not be the one taking
+    // that risk.
     const storage = memoryStorage();
     const guest = { id: 9, email: "guest@example.com", name: "Guest", role: "guest" };
     await storage.setItem(
@@ -207,7 +211,7 @@ describe("the shell", () => {
     await screen.findByRole("navigation");
 
     expect(tab(/year/i)).toBeInTheDocument();
-    expect(tab(/tests/i)).toBeInTheDocument();
+    expect(tab(/tests/i)).not.toBeInTheDocument();
     expect(tab(/journal/i)).not.toBeInTheDocument();
     expect(tab(/notes/i)).not.toBeInTheDocument();
   });
@@ -235,6 +239,15 @@ describe("direct navigation to a route the role cannot use", () => {
     expect(window.location.pathname).not.toBe("/journal");
   });
 
+  it("does not render the test sheet for the viewer", async () => {
+    // test_results#create is coach-or-athlete only, and Tests is nothing
+    // but create calls. A typed /tests must bounce her the same as a typed
+    // /notes or /journal does.
+    window.history.pushState({}, "", "/tests");
+    await renderAs("viewer");
+    expect(window.location.pathname).not.toBe("/tests");
+  });
+
   it("does render the coach's notes for the coach, so the guard is not just blocking everyone", async () => {
     // Without this, all three examples above would also pass against a
     // guard that redirects home unconditionally, which guards nothing.
@@ -247,5 +260,11 @@ describe("direct navigation to a route the role cannot use", () => {
     window.history.pushState({}, "", "/notes");
     await renderAs("coach");
     expect(window.location.pathname).toBe("/notes");
+  });
+
+  it("does render the test sheet for the athlete, so the guard is not just blocking everyone", async () => {
+    window.history.pushState({}, "", "/tests");
+    await renderAs("athlete");
+    expect(window.location.pathname).toBe("/tests");
   });
 });
