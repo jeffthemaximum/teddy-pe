@@ -149,8 +149,22 @@ function ratingGroup(drillName: string) {
   return screen.getByRole("group", { name: drillName });
 }
 
+// This screen's mount effect fires two fetches, and a selector it reads
+// before either answers hands back a fresh object rather than the same one
+// twice (see this file's own "Selector ... returned a different result"
+// console warning). React checks each selector again right after mount to
+// catch exactly that, and schedules one more render when it does, outside
+// whatever this test already wrapped in act(). A test that never awaits
+// anything else after render sees that render land after its own body has
+// finished, which is the console's "not wrapped in act" warning, not a sign
+// anything here is actually wrong. This flushes it inside act(), the same
+// way an awaited user.click already does for the tests below that have one.
+async function settle() {
+  await act(async () => {});
+}
+
 describe("the coach's journal", () => {
-  it("fetches his entries once on mount", () => {
+  it("fetches his entries once on mount", async () => {
     const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
     seedAuth(store, 42);
     const dispatched = trackDispatch(store);
@@ -160,6 +174,7 @@ describe("the coach's journal", () => {
         <CoachJournal />
       </Provider>,
     );
+    await settle();
 
     const fetches = () => dispatched.filter((a) => a.type === "journal/FETCH_COACH_ENTRIES");
     expect(fetches()).toHaveLength(1);
@@ -170,19 +185,21 @@ describe("the coach's journal", () => {
         <CoachJournal />
       </Provider>,
     );
+    await settle();
     expect(fetches()).toHaveLength(1);
   });
 
-  it("says the server may be waking rather than showing a blank page", () => {
+  it("says the server may be waking rather than showing a blank page", async () => {
     // Right after mount, both the entries fetch and the drill list fetch
     // this screen dispatched are in flight and neither has answered, the
     // same gap Year, Month and This Week each have their own version of.
     renderCoachJournal(42);
+    await settle();
 
     expect(screen.getByRole("status")).toHaveTextContent(/waking/i);
   });
 
-  it("shows the error the API gave, not one of ours", () => {
+  it("shows the error the API gave, not one of ours", async () => {
     const { store } = renderCoachJournal(42);
 
     act(() => {
@@ -191,6 +208,7 @@ describe("the coach's journal", () => {
         payload: { side: "coach", message: "That could not be reached." },
       });
     });
+    await settle();
 
     expect(screen.getByRole("alert")).toHaveTextContent("That could not be reached.");
   });
@@ -370,10 +388,17 @@ describe("the coach's journal", () => {
     expect(screen.getByText("Saving.")).toBeInTheDocument();
   });
 
-  it("says the entry is waiting when it was saved with no connection", () => {
+  it("says the entry is waiting when it was saved with no connection", async () => {
     const { store } = renderCoachJournal(42);
     loadDrills(store);
     setDate("2026-09-16");
+    // Flushed here, before anything is queued: the outbox reads its stored
+    // queue back on its own, once, the moment the store is created, and a
+    // memory-only store like this one's always answers empty. Queuing a
+    // write below and only settling once at the very end would let that
+    // read land after the queue already has this write in it, replacing it
+    // with the empty one core read from storage a beat too late.
+    await settle();
 
     const savePayload = {
       ...BASE_SAVE_PAYLOAD,
@@ -397,11 +422,12 @@ describe("the coach's journal", () => {
     act(() => {
       store.dispatch({ type: "journal/SAVE_QUEUED", payload: { date: "2026-09-16" } });
     });
+    await settle();
 
     expect(screen.getByText(/waiting to send/i)).toBeInTheDocument();
   });
 
-  it("renders nothing rather than throwing before anything has loaded", () => {
+  it("renders nothing rather than throwing before anything has loaded", async () => {
     // The id is known, but the drill-list fetch and the entries fetch this
     // screen dispatches on mount are both intercepted before either can
     // reach its own reducer, freezing the component in the instant between
@@ -422,6 +448,7 @@ describe("the coach's journal", () => {
         <CoachJournal />
       </Provider>,
     );
+    await settle();
 
     expect(container).toBeEmptyDOMElement();
   });

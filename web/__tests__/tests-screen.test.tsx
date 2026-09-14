@@ -189,6 +189,21 @@ function measureInput(label: RegExp): HTMLInputElement {
   return screen.getByLabelText(label) as HTMLInputElement;
 }
 
+// This screen's mount effect fires two fetches, and every selector it reads
+// before either one answers hands back a fresh object for an empty window
+// rather than the same one twice (see this file's own "Selector ... returned
+// a different result" console warning). React checks each selector again
+// right after mount to catch exactly that, and schedules one more render
+// when it does, outside whatever this test already wrapped in act(). A test
+// that never awaits anything else after render sees that render land after
+// its own body has finished, which is the console's "not wrapped in act"
+// warning, not a sign anything here is actually wrong. This flushes it
+// inside act(), the same way an awaited user.click already does for the
+// tests below that have one.
+async function settle() {
+  await act(async () => {});
+}
+
 beforeEach(() => {
   // "Today" is pinned inside the baseline window (2026-09), regardless of
   // the real calendar date the suite happens to run on. A window test that
@@ -203,7 +218,7 @@ afterEach(() => {
 });
 
 describe("the test sheet", () => {
-  it("fetches the year and the results once on mount", () => {
+  it("fetches the year and the results once on mount", async () => {
     const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
     seedAuth(store, 42);
     const dispatched = trackDispatch(store);
@@ -213,6 +228,7 @@ describe("the test sheet", () => {
         <Tests />
       </Provider>,
     );
+    await settle();
 
     const yearFetches = () => dispatched.filter((a) => a.type === "programYear/FETCH");
     const resultFetches = () => dispatched.filter((a) => a.type === "testResults/FETCH_RESULTS");
@@ -225,66 +241,73 @@ describe("the test sheet", () => {
         <Tests />
       </Provider>,
     );
+    await settle();
     expect(yearFetches()).toHaveLength(1);
     expect(resultFetches()).toHaveLength(1);
   });
 
-  it("says the server may be waking rather than showing a blank sheet", () => {
+  it("says the server may be waking rather than showing a blank sheet", async () => {
     // Right after mount, both fetches this screen dispatched are in flight
     // and neither has answered yet.
     renderTests(42);
+    await settle();
 
     expect(screen.getByRole("status")).toHaveTextContent(/waking/i);
   });
 
-  it("shows the error the API gave, not one of ours", () => {
+  it("shows the error the API gave, not one of ours", async () => {
     const { store } = renderTests(42);
 
     act(() => {
       store.dispatch({ type: "programYear/FAILED", payload: "That could not be reached." });
     });
+    await settle();
 
     expect(screen.getByRole("alert")).toHaveTextContent("That could not be reached.");
   });
 
-  it("opens with the right window already chosen", () => {
+  it("opens with the right window already chosen", async () => {
     const { store } = renderTests(42);
     loadYear(store);
     loadResults(store);
+    await settle();
 
     expect(windowSelect()).toHaveValue("2026-09");
     expect(measureInput(/10-yard sprint/i)).toHaveValue("2.7");
     expect(measureInput(/broad jump/i)).toHaveValue("38");
   });
 
-  it("lets him change the window, and shows that window's numbers", () => {
+  it("lets him change the window, and shows that window's numbers", async () => {
     const { store } = renderTests(42);
     loadYear(store);
     loadResults(store);
 
     fireEvent.change(windowSelect(), { target: { value: "2026-12" } });
+    await settle();
 
     expect(windowSelect()).toHaveValue("2026-12");
     expect(measureInput(/10-yard sprint/i)).toHaveValue("2.5");
     expect(measureInput(/balance hold, left/i)).toHaveValue("20");
   });
 
-  it("shows every measure the battery has, with its unit", () => {
+  it("shows every measure the battery has, with its unit", async () => {
     const { store } = renderTests(42);
     loadYear(store);
     loadResults(store);
+    await settle();
 
     expect(screen.getByLabelText(/10-yard sprint \(sec\)/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/broad jump \(in\)/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/balance hold, left \(sec\)/i)).toBeInTheDocument();
   });
 
-  it("shows a measure with no result as empty, not as zero", () => {
+  it("shows a measure with no result as empty, not as zero", async () => {
     const { store } = renderTests(42);
     loadYear(store);
     // balance_l has no result at the baseline window, the window this
     // opens on.
     loadResults(store);
+    await settle();
 
     const input = measureInput(/balance hold, left/i);
     expect(input).toHaveValue("");
@@ -333,7 +356,7 @@ describe("the test sheet", () => {
     expect((saves[0]?.payload as { rawValue: string }).rawValue).toBe("2.6");
   });
 
-  it("marks only that measure as saving while a save is in flight", () => {
+  it("marks only that measure as saving while a save is in flight", async () => {
     const { store } = renderTests(42);
     loadYear(store);
     loadResults(store);
@@ -348,6 +371,7 @@ describe("the test sheet", () => {
         }),
       );
     });
+    await settle();
 
     const sprintRow = measureInput(/10-yard sprint/i).closest("li")!;
     const jumpRow = measureInput(/broad jump/i).closest("li")!;
@@ -391,10 +415,17 @@ describe("the test sheet", () => {
     expect(measureInput(/10-yard sprint/i)).toHaveValue("");
   });
 
-  it("says the value is waiting when it was saved with no connection", () => {
+  it("says the value is waiting when it was saved with no connection", async () => {
     const { store } = renderTests(42);
     loadYear(store);
     loadResults(store);
+    // Flushed here, before anything is queued: the outbox reads its stored
+    // queue back on its own, once, the moment the store is created, and a
+    // memory-only store like this one's always answers empty. Queuing a
+    // write below and only settling once at the very end would let that
+    // read land after the queue already has this write in it, replacing it
+    // with the empty one core read from storage a beat too late.
+    await settle();
 
     const payload = {
       programYearId: 42,
@@ -422,13 +453,14 @@ describe("the test sheet", () => {
         payload: { window: "2026-09", testId: "sprint10" },
       });
     });
+    await settle();
 
     const row = measureInput(/10-yard sprint/i).closest("li")!;
     expect(within(row).getByText(/waiting to send/i)).toBeInTheDocument();
     expect(within(row).queryByText("Saving.")).not.toBeInTheDocument();
   });
 
-  it("renders nothing rather than throwing before anything has loaded", () => {
+  it("renders nothing rather than throwing before anything has loaded", async () => {
     // The id is known, but the year fetch and the results fetch this
     // screen dispatches on mount are both intercepted before either can
     // reach its own reducer, freezing the component in the instant between
@@ -449,6 +481,7 @@ describe("the test sheet", () => {
         <Tests />
       </Provider>,
     );
+    await settle();
 
     expect(container).toBeEmptyDOMElement();
   });

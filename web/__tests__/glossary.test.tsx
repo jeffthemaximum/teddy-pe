@@ -105,8 +105,23 @@ function searchBox() {
   return screen.getByRole("searchbox", { name: /find a drill/i });
 }
 
+// This screen's mount effect fires a fetch, and the selector it reads
+// before that answers hands back a fresh array rather than the same one
+// twice (see this file's own "Selector ... returned a different result"
+// console warning, from selectDrills's `?? []`). React checks each selector
+// again right after mount to catch exactly that, and schedules one more
+// render when it does, outside whatever this test already wrapped in
+// act(). A test that never awaits anything else after render sees that
+// render land after its own body has finished, which is the console's "not
+// wrapped in act" warning, not a sign anything here is actually wrong. This
+// flushes it inside act(), the same way an awaited userEvent call already
+// does for the tests below that have one.
+async function settle() {
+  await act(async () => {});
+}
+
 describe("the drill glossary", () => {
-  it("asks for the drills once on mount", () => {
+  it("asks for the drills once on mount", async () => {
     const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
     const dispatched: { type: string; payload?: unknown }[] = [];
     const realDispatch = store.dispatch;
@@ -122,6 +137,7 @@ describe("the drill glossary", () => {
         </MemoryRouter>
       </Provider>,
     );
+    await settle();
 
     const drillFetches = () => dispatched.filter((a) => a.type === "drills/FETCH");
     expect(drillFetches()).toHaveLength(1);
@@ -136,14 +152,16 @@ describe("the drill glossary", () => {
         </MemoryRouter>
       </Provider>,
     );
+    await settle();
     expect(drillFetches()).toHaveLength(1);
   });
 
-  it("says the server may be waking rather than showing a blank list", () => {
+  it("says the server may be waking rather than showing a blank list", async () => {
     const { store } = renderGlossary();
     act(() => {
       store.dispatch({ type: "drills/FETCH" });
     });
+    await settle();
 
     expect(screen.getByRole("status")).toHaveTextContent(/waking/i);
   });
@@ -163,11 +181,12 @@ describe("the drill glossary", () => {
     expect(screen.getByRole("status")).toHaveTextContent(/waking/i);
   });
 
-  it("shows the error the API gave, not one of ours", () => {
+  it("shows the error the API gave, not one of ours", async () => {
     const { store } = renderGlossary();
     act(() => {
       store.dispatch({ type: "drills/FAILED", payload: "The drill list could not be found." });
     });
+    await settle();
 
     expect(screen.getByRole("alert")).toHaveTextContent("The drill list could not be found.");
   });
@@ -329,7 +348,7 @@ describe("the drill glossary", () => {
     expect(screen.queryByText(/no drill called that/i)).not.toBeInTheDocument();
   });
 
-  it("renders nothing rather than throwing before the drills have loaded", () => {
+  it("renders nothing rather than throwing before the drills have loaded", async () => {
     // Every screen can render before its data arrives. The FETCH the
     // component dispatches on mount is intercepted before it can reach the
     // reducer, freezing state in the instant before loading or data or
@@ -349,6 +368,7 @@ describe("the drill glossary", () => {
         </MemoryRouter>
       </Provider>,
     );
+    await settle();
 
     expect(container).toBeEmptyDOMElement();
   });
