@@ -73,9 +73,15 @@ cd web  && npx vitest run
 
 ## Deploying
 
-The API deploys to Fly from `backend/`. `bin/rails content:seed` runs as the release command, so a merge to `main` seeds production on its own and a YAML edit reaches the site without a separate step.
+The API deploys to Fly from `backend/`, by hand:
 
-The web app deploys to Vercel from `web/`, using `web/vercel.json`. Every push to `main` redeploys.
+```bash
+cd backend && fly deploy -a teddy-pe-api
+```
+
+`bin/rails db:prepare content:seed` runs as the release command, so that deploy is what carries a YAML edit into production. Merging to `main` does not do it. CI scans, lints and tests and never talks to Fly. Deploy from a checkout of `main`, because `fly deploy` uploads the current directory as the build context and the plan YAML ships inside the image.
+
+The web app deploys to Vercel from `web/`, using `web/vercel.json`. Every push to `main` redeploys. That half being automatic is the trap worth knowing: the site can rebuild from the newest commit and still show old program content, because the cards come from the API's database and get there only on a Fly deploy.
 
 ## The program is private
 

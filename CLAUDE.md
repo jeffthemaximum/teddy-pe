@@ -26,7 +26,17 @@ Plans are YAML in `backend/content/program_years/<year>/plans/`. Match the shape
 cd backend && bin/rails content:seed
 ```
 
-The seeder is idempotent and reports a count per table, plus anything it pruned, so a YAML edit that removes rows says so rather than doing it quietly. Deploying runs it as the release command, so a merge to `main` seeds production on its own.
+The seeder is idempotent and reports a count per table, plus anything it pruned, so a YAML edit that removes rows says so rather than doing it quietly. It also runs as the release command on every Fly deploy, which is how a content change reaches production.
+
+Merging to `main` does not deploy the API. CI scans, lints and tests, and nothing in it talks to Fly. The deploy is a command someone runs:
+
+```bash
+cd backend && fly deploy -a teddy-pe-api
+```
+
+Run it from a checkout of `main`, because `fly deploy` uploads the current directory as the build context and the plan YAML ships inside the image. A deploy from a stale worktree seeds stale content.
+
+Vercel is the half that is automatic: every push to `main` rebuilds the web app. That rebuild changes nothing about the program, because the cards come from the API's database. A front end built from the newest commit will still show old content until the API is deployed.
 
 Before planning a month, pull the program back into the repo as readable prose:
 
