@@ -688,6 +688,166 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
     expect(journalSelectors.selectJournalError(store.getState())).toBeNull();
   });
 
+  // The other ordering of the same two writes, and the one that was losing
+  // the delete. He deletes a day with no signal and then touches that day
+  // again before anything has reached the server. Both are owed, in that
+  // order; collapsing them kept only the second, the delete never went out,
+  // and the row he asked to be gone was upserted straight back.
+  it("sends a delete made offline and a save made after it, in that order, rather than letting the save swallow the delete", async () => {
+    const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation((input) =>
+      String(input).endsWith("/api/v1/auth/login")
+        ? respond(200, TEDDY_LOGIN)
+        : Promise.reject(new TypeError("Failed to fetch")),
+    );
+    await signInFor(store, TEDDY_LOGIN);
+
+    store.dispatch({
+      type: "journal/ATHLETE_ENTRIES_FETCHED",
+      payload: [
+        {
+          id: 502,
+          session_date: "2026-09-17",
+          program_year_id: 1,
+          day_card_id: null,
+          felt: 2,
+          best: "The one he took back",
+          hard: null,
+          note: "The one he took back",
+          shared: false,
+          updated_at: "2026-09-17T19:00:00Z",
+        },
+      ],
+    });
+
+    store.dispatch(journalActions.deleteEntry({ side: "athlete", date: "2026-09-17", id: 502 }));
+    await waitUntil(
+      () => outboxSelectors.selectQueue(store.getState()).length === 1,
+      "the offline delete to queue",
+    );
+
+    store.dispatch(
+      journalActions.saveAthleteEntry({
+        programYearId: 1,
+        date: "2026-09-17",
+        felt: 5,
+        best: "Starting the day again.",
+        hard: null,
+        note: "Starting the day again.",
+        shared: false,
+      }),
+    );
+    await waitUntil(
+      () => outboxSelectors.selectQueue(store.getState()).length === 2,
+      "the save to queue behind the delete rather than replace it",
+    );
+    expect(
+      outboxSelectors.selectQueue(store.getState()).map((w) => w.action.request.method),
+    ).toEqual(["DELETE", "POST"]);
+
+    // A server that answers both, and answers the create with a row of its
+    // own: the unique index on athlete_entries is partial on
+    // `deleted_at IS NULL`, so the delete frees the day and the create is
+    // free to take it.
+    fetchMock.mockReset();
+    fetchMock.mockImplementation((input, init) =>
+      (init as RequestInit | undefined)?.method === "DELETE"
+        ? respond(200, { deleted: { id: 502, session_date: "2026-09-17" } })
+        : respond(201, {
+            athlete_entry: {
+              id: 503,
+              session_date: "2026-09-17",
+              program_year_id: 1,
+              day_card_id: null,
+              felt: 5,
+              best: "Starting the day again.",
+              hard: null,
+              note: "Starting the day again.",
+              shared: false,
+              updated_at: "2026-09-17T20:00:00Z",
+            },
+          }),
+    );
+
+    store.dispatch(outboxActions.replay());
+    await waitUntil(
+      () => outboxSelectors.selectQueue(store.getState()).length === 0,
+      "the replay to send both writes",
+    );
+
+    // Two requests, and the delete is the first of them. The order is the
+    // whole point: the other way round, the create would be removed by the
+    // delete that followed it.
+    expect(fetchMock.mock.calls).toHaveLength(2);
+    expect(String(fetchMock.mock.calls[0]![0])).toBe("https://api.test/api/v1/athlete_entries/502");
+    expect((fetchMock.mock.calls[0]![1] as RequestInit).method).toBe("DELETE");
+    expect(String(fetchMock.mock.calls[1]![0])).toBe("https://api.test/api/v1/athlete_entries");
+    expect((fetchMock.mock.calls[1]![1] as RequestInit).method).toBe("POST");
+
+    // And what is on record for the day is the new row, not the one he
+    // deleted.
+    const saved = journalSelectors.selectAthleteEntryFor("2026-09-17")(store.getState());
+    expect(saved?.id).toBe(503);
+    expect(saved?.note).toBe("Starting the day again.");
+  });
+
+  // A replayed delete the server answers 404: the row was already gone,
+  // which is the state the delete asked for. It resolves with no body at
+  // all, so the only thing saying an entry is gone is that the write was a
+  // DELETE. Until that travelled with it, the entry never left the slice.
+  it("takes the entry out of the journal when a replayed delete finds the row already gone", async () => {
+    const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation((input) =>
+      String(input).endsWith("/api/v1/auth/login")
+        ? respond(200, TEDDY_LOGIN)
+        : Promise.reject(new TypeError("Failed to fetch")),
+    );
+    await signInFor(store, TEDDY_LOGIN);
+
+    store.dispatch(journalActions.deleteEntry({ side: "athlete", date: "2026-09-17", id: 502 }));
+    await waitUntil(
+      () => outboxSelectors.selectQueue(store.getState()).length === 1,
+      "the offline delete to queue",
+    );
+
+    // The app was closed and reopened between the delete and the replay, so
+    // the entry was fetched back into the slice in the meantime. This is the
+    // case the delete has to clear up when it finally lands.
+    store.dispatch({
+      type: "journal/ATHLETE_ENTRIES_FETCHED",
+      payload: [
+        {
+          id: 502,
+          session_date: "2026-09-17",
+          program_year_id: 1,
+          day_card_id: null,
+          felt: 2,
+          best: "The one he took back",
+          hard: null,
+          note: "The one he took back",
+          shared: false,
+          updated_at: "2026-09-17T19:00:00Z",
+        },
+      ],
+    });
+    expect(journalSelectors.selectAthleteEntryFor("2026-09-17")(store.getState())).not.toBeNull();
+
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(() =>
+      respond(404, { error: { code: "not_found", message: "Not found." } }),
+    );
+
+    store.dispatch(outboxActions.replay());
+    await waitUntil(
+      () => outboxSelectors.selectQueue(store.getState()).length === 0,
+      "the replay to finish",
+    );
+
+    expect(journalSelectors.selectAthleteEntryFor("2026-09-17")(store.getState())).toBeNull();
+    // Already gone is what he asked for, so nobody is told anything failed.
+    expect(journalSelectors.selectJournalError(store.getState())).toBeNull();
+  });
+
   // The dedupe rule, end to end. Offline he edits a day and then deletes it:
   // one write goes out, and it is the delete.
   it("replaces a pending edit of a day with the delete of that same day", async () => {

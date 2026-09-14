@@ -79,3 +79,31 @@ export const selectIsEntryQueued =
     const key = side === "athlete" ? athleteDedupeKey(date) : coachDedupeKey(date);
     return selectQueue(s).some((write) => write.action.dedupeKey === key);
   };
+
+// Whether this day has been deleted and not written again since: the last
+// write queued for it is a delete. The last, not any, because the queue can
+// now hold a delete with a save behind it (see ducks/outbox/reducer.ts on
+// the two orderings), and a day he deleted and then wrote in again is not a
+// deleted day.
+//
+// A screen needs this and cannot work it out from `selectIsEntryQueued` and
+// the entry together. Both a queued delete and a queued save of a day the
+// server has never seen leave the slice with no entry for that date and a
+// write in the queue, so the two read identically from outside, and telling
+// them apart matters more than it sounds: with an entry gone from the slice,
+// `shared` reads as false and the share toggle offers to hand Dad a day that
+// no longer exists. The queued write itself is the only thing that knows
+// which of the two happened.
+//
+// `request.method` is the whole of what this reads, the same HTTP-level fact
+// the outbox's own collapse rule and its 404 rule read, so the format
+// knowledge here stays exactly what it already was: this duck's two key
+// prefixes, and nothing about anyone's payload.
+export const selectIsDeleteQueued =
+  (side: JournalSide, date: string) =>
+  (s: Parameters<typeof selectQueue>[0]): boolean => {
+    const key = side === "athlete" ? athleteDedupeKey(date) : coachDedupeKey(date);
+    const forThisDay = selectQueue(s).filter((write) => write.action.dedupeKey === key);
+    const last = forThisDay[forThisDay.length - 1];
+    return last !== undefined && last.action.request.method === "DELETE";
+  };

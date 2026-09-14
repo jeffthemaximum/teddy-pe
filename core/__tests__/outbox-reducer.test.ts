@@ -18,6 +18,21 @@ function testWrite(dedupeKey: string, note: string): QueueableAction {
   };
 }
 
+// A stand-in for a real duck's delete. Written out in full rather than
+// spread from `testWrite` above, because the one thing these two fixtures
+// exist to do is disagree about the method, and a shared base is how they
+// would quietly stop. `method` is the whole of what the reducer may read to
+// tell them apart: it can no more see a journal entry here than it can see a
+// test result.
+function testDelete(dedupeKey: string, id: number): QueueableAction {
+  return {
+    type: "TEST/DELETE",
+    payload: { id },
+    dedupeKey,
+    request: { path: `/test/${id}`, method: "DELETE" },
+  };
+}
+
 // A write as storage hands it back: it has an id and a `queuedAt` from a
 // previous run, which a write queued in this run cannot have. Every field is
 // named here rather than spread from a base, because what these fixtures
@@ -135,6 +150,70 @@ describe("the outbox reducer", () => {
 
     expect(newer.queue).toHaveLength(1);
     expect(newer.queue[0]!.action.type).toBe("TEST/RESULT_B");
+  });
+
+  // The two orderings of an edit and a delete of one day. They are not
+  // symmetric, and each of these two tests is what stops the other one's fix
+  // from going too far.
+  it("lets a delete replace a queued edit of the same day, so one write goes out", () => {
+    // He typed a day offline and then took it back before either reached the
+    // server. Sending both would be an upsert and a delete racing on one
+    // row, and the entry would come back if they ever went in the other
+    // order.
+    const edited = reducer(
+      reducer(undefined, signedIn(teddy)),
+      actions.enqueue(testWrite("athlete:2026-09-17", "Something he thought better of.")),
+    );
+    const removed = reducer(edited, actions.enqueue(testDelete("athlete:2026-09-17", 502)));
+
+    expect(removed.queue).toHaveLength(1);
+    expect(removed.queue[0]!.action.request.method).toBe("DELETE");
+  });
+
+  it("queues a save behind a delete of the same day rather than replacing it", () => {
+    // The other way round, and the bug: with the delete already queued, a
+    // save under the same key used to take its place, so the delete never
+    // went out at all. The still-kept row was upserted back on replay with
+    // whatever the save carried, and a day Teddy deleted with no signal
+    // turned up in his dad's payload.
+    //
+    // Both writes are owed, in this order. The server can take both: the
+    // unique index on the entry tables is partial on `deleted_at IS NULL`,
+    // so the delete frees the day and the save creates a new row for it.
+    const removed = reducer(
+      reducer(undefined, signedIn(teddy)),
+      actions.enqueue(testDelete("athlete:2026-09-17", 502)),
+    );
+    const thenSaved = reducer(
+      removed,
+      actions.enqueue(testWrite("athlete:2026-09-17", "Starting today again.")),
+    );
+
+    expect(thenSaved.queue.map((w) => w.action.request.method)).toEqual(["DELETE", "POST"]);
+    expect((thenSaved.queue[1]!.action.payload as { note: string }).note).toBe(
+      "Starting today again.",
+    );
+    // And the delete still carries what it was queued with, rather than
+    // having been edited in place by the save that landed behind it.
+    expect(thenSaved.queue[0]!.action.payload).toEqual({ id: 502 });
+  });
+
+  it("still collapses two saves queued behind one delete, into the later save", () => {
+    // The limit of the rule above. A delete stops a save from replacing it;
+    // it does not stop saves replacing each other, or three edits made after
+    // a delete would be three requests for one outcome again. That means the
+    // collapse has to find the LAST write under the key, not the first: the
+    // first is the delete, and reading it would append every edit forever.
+    const removed = reducer(
+      reducer(undefined, signedIn(teddy)),
+      actions.enqueue(testDelete("athlete:2026-09-17", 502)),
+    );
+    const once = reducer(removed, actions.enqueue(testWrite("athlete:2026-09-17", "First try.")));
+    const twice = reducer(once, actions.enqueue(testWrite("athlete:2026-09-17", "Second try.")));
+
+    expect(twice.queue).toHaveLength(2);
+    expect(twice.queue.map((w) => w.action.request.method)).toEqual(["DELETE", "POST"]);
+    expect((twice.queue[1]!.action.payload as { note: string }).note).toBe("Second try.");
   });
 
   it("keeps writes for different days separately", () => {
@@ -340,6 +419,36 @@ describe("the outbox reducer", () => {
     // the merge kept the right one or the wrong one.
     expect((merged.queue[0]!.action.payload as { note: string }).note).toBe("Landed five.");
     expect(merged.queue[0]!.id).not.toBe("disk-1");
+  });
+
+  it("keeps a restored delete that a write typed since would otherwise discard", () => {
+    // The delete-then-save ordering arriving by the other road. The delete
+    // was made on a previous launch and is on disk; the save was typed in
+    // this one, before the read of storage answered. Discarding the delete
+    // as "an earlier edit of the same write" loses it exactly as silently as
+    // collapsing it would, and the row Teddy asked to be gone stays.
+    const typedNow = reducer(
+      reducer(undefined, signedIn(teddy)),
+      actions.enqueue(testWrite("athlete:2026-09-17", "Starting today again.")),
+    );
+
+    const merged = reducer(
+      typedNow,
+      actions.queueRestored([
+        {
+          id: "disk-1",
+          action: testDelete("athlete:2026-09-17", 502),
+          queuedAt: "2026-09-17T18:00:00Z",
+          attempts: 0,
+          userId: teddy.id,
+        },
+      ]),
+    );
+
+    // Disk first, which is oldest first by causality: the delete happened
+    // before the save, and that is the order both are owed in.
+    expect(merged.queue.map((w) => w.action.request.method)).toEqual(["DELETE", "POST"]);
+    expect(merged.queue[0]!.id).toBe("disk-1");
   });
 
   it("keeps a restored write under the same key that somebody else typed", () => {

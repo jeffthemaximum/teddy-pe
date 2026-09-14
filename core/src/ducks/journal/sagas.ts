@@ -15,7 +15,7 @@ import type { QueueableAction, QueuedWrite } from "../outbox/types";
 import { selectAthleteEntryFor } from "./selectors";
 import { week as weekDuck } from "../week";
 import type { CoreConfig } from "../../config";
-import type { AthleteEntry, CoachEntry, Week } from "../../types";
+import type { AthleteEntry, CoachEntry, HttpMethod, Week } from "../../types";
 
 // What a person is told when the server answers a save with something this
 // duck cannot read as an entry. Rare, and it used to be silent: the wrapper
@@ -171,7 +171,13 @@ function pendingAthleteWrite(
   queue: QueuedWrite[],
   date: string,
 ): SaveAthleteEntryPayload | undefined {
-  const pending = queue.find((w) => w.action.dedupeKey === athleteDedupeKey(date));
+  // The last write for this day, not the first. Since a queued delete is no
+  // longer replaced by a later save (ducks/outbox/reducer.ts), one day's key
+  // can hold two writes, and the more recent one is the one that says what
+  // he currently means. Reading the first would reach past a save to the
+  // delete sitting in front of it and carry nothing forward.
+  const forThisDay = queue.filter((w) => w.action.dedupeKey === athleteDedupeKey(date));
+  const pending = forThisDay[forThisDay.length - 1];
   const payload = pending?.action.payload;
   if (
     payload !== null &&
@@ -298,9 +304,9 @@ function* reportFetchFailure(e: unknown, side: JournalSide) {
 // with a stub.
 function* reconcileReplay(action: {
   type: string;
-  payload: { dedupeKey: string; response: unknown };
+  payload: { dedupeKey: string; response: unknown; method?: HttpMethod };
 }) {
-  const { dedupeKey, response } = action.payload;
+  const { dedupeKey, response, method } = action.payload;
   // Which half of the journal this key belongs to, or neither: a test
   // result's queued write replays through this same action and is not this
   // duck's business. `dateFromDedupeKey` reads the date back out of the same
@@ -319,7 +325,14 @@ function* reconcileReplay(action: {
   // `unwrapEntry` and be dropped as unreadable, and an entry that was
   // re-fetched between the queueing and the replay (the app was closed and
   // reopened) would sit on screen having already been deleted on the server.
-  if (isDeleteAcknowledgement(response)) {
+  //
+  // `method` covers the one delete that arrives with no shape to read at
+  // all. A DELETE answered 404 already found the row gone, which is a
+  // success, and the outbox resolves it with `response: undefined` rather
+  // than invent a body for it (see ducks/outbox/sagas.ts). Until that field
+  // existed, this claim was true of every replayed delete except that one,
+  // and the entry it was about never left the slice.
+  if (isDeleteAcknowledgement(response) || method === "DELETE") {
     yield put(actions.entryDeleted({ side, date }));
     return;
   }

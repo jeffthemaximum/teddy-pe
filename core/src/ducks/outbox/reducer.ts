@@ -2,7 +2,7 @@ import * as t from "./actionTypes";
 import * as authTypes from "../auth/actionTypes";
 import type { AuthAction } from "../auth/actions";
 import type { OutboxAction } from "./actions";
-import type { QueuedWrite } from "./types";
+import type { QueueableAction, QueuedWrite } from "./types";
 
 export interface OutboxState {
   queue: QueuedWrite[];
@@ -38,6 +38,54 @@ function stillOwing(queue: QueuedWrite[], userId: number | null): boolean {
   return queue.some((w) => w.userId === userId);
 }
 
+// Read off `request.method` and nothing else, the same HTTP-level fact the
+// replay worker's 404 rule already reads (see sagas.ts), and for the same
+// reason: no duck's semantics can live in this file, because nothing here
+// can tell a journal entry from a test result.
+function isDelete(action: QueueableAction): boolean {
+  return action.request.method === "DELETE";
+}
+
+// Whether a write arriving under a key may take the place of the write
+// already queued under it, or has to queue behind it.
+//
+// Collapsing is the rule almost everywhere: three edits of one day are three
+// requests for one outcome, and only the last should go. A delete is the one
+// write a later save must not swallow, and the two orderings are not
+// symmetric.
+//
+//   save then delete: one delete. He typed a day and then took it back.
+//   Sending both would be an upsert and a delete racing on one row, and the
+//   entry would come back if they ever replayed the other way round.
+//
+//   delete then save: a delete AND a save, in that order. The server
+//   supports it, because the unique index on both entry tables is partial on
+//   `deleted_at IS NULL`: the delete frees the day, so a new row can be
+//   created for it. Collapsing this way round loses the delete, the
+//   still-kept row is upserted straight back on replay with whatever the
+//   save carried, `shared` included, and a day Teddy deleted with no signal
+//   turns up in his dad's payload.
+//
+// Written as one asymmetric rule rather than by giving deletes a dedupeKey
+// prefix of their own. A separate prefix would make the two orderings
+// independent, and would buy the second case by giving up the first: an edit
+// and a delete of one day would stop collapsing at all.
+function supersedes(incoming: QueueableAction, existing: QueueableAction): boolean {
+  return isDelete(incoming) || !isDelete(existing);
+}
+
+// The last write queued under this key by this person, or -1. The last, not
+// the first: a key can now hold a delete with a save queued behind it, and a
+// further edit of that day belongs with the save, never with the delete in
+// front of it.
+function lastIndexForKey(queue: QueuedWrite[], dedupeKey: string, userId: number | null): number {
+  for (let i = queue.length - 1; i >= 0; i -= 1) {
+    const w = queue[i]!;
+    if (w.action.dedupeKey === dedupeKey && w.userId === userId) return i;
+  }
+  return -1;
+}
+
 export function reducer(
   state: OutboxState = initialState,
   action: OutboxAction | AuthAction | { type: string },
@@ -50,10 +98,12 @@ export function reducer(
       // allows a second athlete: letting one person's write collapse into
       // another's would destroy the first person's words in the name of
       // deduping them.
-      const idx = state.queue.findIndex(
-        (w) => w.action.dedupeKey === incoming.dedupeKey && w.userId === state.signedInUserId,
-      );
-      if (idx >= 0) {
+      const idx = lastIndexForKey(state.queue, incoming.dedupeKey, state.signedInUserId);
+      // `supersedes` is what keeps a queued delete from being swallowed by a
+      // save for the same day. Without it, Teddy deleting an entry with no
+      // signal and then touching that day again replaced the delete in place,
+      // and the row he had asked to be gone came back on replay.
+      if (idx >= 0 && supersedes(incoming, state.queue[idx]!.action)) {
         // Same logical write, edited again. Keep its place and its id, but
         // replace the content and reset attempts: the last edit is the one
         // that should reach the server, not the first, and it hasn't failed
@@ -70,6 +120,10 @@ export function reducer(
         queue[idx] = write;
         return { ...state, queue };
       }
+      // Either nothing is queued for this day, or what is queued is a delete
+      // this write is not allowed to replace. Both end the same way: on the
+      // back of the queue, so a save made after a delete goes out after it
+      // rather than instead of it.
       const write: QueuedWrite = {
         id: makeId(),
         action: incoming,
@@ -145,10 +199,20 @@ export function reducer(
       // same reason ENQUEUE matches on both: `athlete:2026-09-17` is one key
       // per day, not one key per day per person, so collapsing on the key
       // alone would destroy one person's words in the name of deduping them.
+      //
+      // `supersedes` guards that ruling for the reason it exists on ENQUEUE:
+      // an in-memory save must not discard a restored delete for the same
+      // day. Disk holds what he did before this launch, so a delete found
+      // there with a save typed since is the delete-then-save ordering
+      // arriving by another road, and dropping the delete here would lose it
+      // exactly as silently as collapsing it would.
       const kept = restored.filter(
         (r) =>
           !state.queue.some(
-            (w) => w.action.dedupeKey === r.action.dedupeKey && w.userId === r.userId,
+            (w) =>
+              w.action.dedupeKey === r.action.dedupeKey &&
+              w.userId === r.userId &&
+              supersedes(w.action, r.action),
           ),
       );
       return { ...state, queue: [...kept, ...state.queue] };

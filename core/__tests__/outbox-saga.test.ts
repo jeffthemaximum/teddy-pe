@@ -132,6 +132,10 @@ describe("the outbox saga", () => {
         id: "1",
         dedupeKey: "day:2026-09-17",
         response: { id: 501, updated_at: "2026-09-17T18:05:00Z" },
+        // The write's own method, forwarded with the rest. `write()` above
+        // builds a PATCH, so this is read off the fixture rather than off
+        // whatever the saga happened to send.
+        method: "PATCH",
       }),
     );
   });
@@ -231,6 +235,12 @@ describe("the outbox saga", () => {
         // envelope, not a result. This is what apiRequest resolves with for
         // a successful response that has no body.
         response: undefined,
+        // Which is why the method has to travel with it. With the response
+        // empty, this is the only thing in the whole payload telling the
+        // duck that queued it that something was deleted, and without it the
+        // journal dropped this as a reply it could not read and left the
+        // entry on screen.
+        method: "DELETE",
       }),
     );
     expect(

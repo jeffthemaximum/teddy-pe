@@ -1181,6 +1181,52 @@ describe("the journal saga", () => {
       ]);
     });
 
+    // The one replayed delete that arrives with nothing to read. A 404 means
+    // the row was already gone, which is the state the delete asked for, so
+    // the outbox reports it as a success with `response: undefined` rather
+    // than invent a body for it (ducks/outbox/sagas.ts). The write's own
+    // method is then the only thing in the payload saying an entry went, and
+    // without it this fell through to `unwrapEntry`, was dropped as
+    // unreadable, and left the entry sitting in the slice.
+    it("removes the entry when a replayed delete came back empty because the row was already gone", async () => {
+      const h = harness();
+
+      await h.run(journalWorkers.reconcileReplay, {
+        type: "outbox/REPLAY_SUCCEEDED",
+        payload: {
+          id: "1",
+          dedupeKey: "athlete:2026-09-17",
+          response: undefined,
+          method: "DELETE",
+        },
+      });
+
+      expect(h.dispatched).toEqual([
+        actions.entryDeleted({ side: "athlete", date: "2026-09-17" }),
+      ]);
+    });
+
+    // The other direction, which is what keeps the rule above a rule about
+    // deletes rather than a rule about empty responses. A save that comes
+    // back with nothing readable is a save this duck cannot file, and
+    // treating it as a delete would take his words off the screen on the
+    // strength of a reply nobody could parse.
+    it("does not remove anything when a replayed save comes back unreadable", async () => {
+      const h = harness();
+
+      await h.run(journalWorkers.reconcileReplay, {
+        type: "outbox/REPLAY_SUCCEEDED",
+        payload: {
+          id: "1",
+          dedupeKey: "athlete:2026-09-17",
+          response: undefined,
+          method: "POST",
+        },
+      });
+
+      expect(h.dispatched).toHaveLength(0);
+    });
+
     it("removes the coach's entry when his own queued delete replays", async () => {
       const h = harness();
 

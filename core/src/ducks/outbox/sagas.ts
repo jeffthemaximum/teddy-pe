@@ -90,7 +90,12 @@ function* replay() {
     try {
       const response: unknown = yield call(apiRequest, config, { ...write.action.request, token });
       yield put(
-        actions.replaySucceeded({ id: write.id, dedupeKey: write.action.dedupeKey, response }),
+        actions.replaySucceeded({
+          id: write.id,
+          dedupeKey: write.action.dedupeKey,
+          response,
+          method: write.action.request.method,
+        }),
       );
     } catch (e) {
       const message = e instanceof ApiError ? e.message : "Something went wrong.";
@@ -130,12 +135,19 @@ function* replay() {
       // what a delete's answer looks like. Undefined is what apiRequest
       // already resolves with for a successful response that has no body,
       // and a duck reconciling this sees exactly what it would see then.
+      //
+      // Which is why `method` goes with it. An undefined response tells a
+      // duck nothing, so on this one path the only thing saying an entry is
+      // gone is that the write asked for it to be. Without it the journal
+      // read this as a reply it could not parse, dropped it, and left the
+      // deleted entry sitting on screen forever.
       if (e instanceof ApiError && e.status === 404 && write.action.request.method === "DELETE") {
         yield put(
           actions.replaySucceeded({
             id: write.id,
             dedupeKey: write.action.dedupeKey,
             response: undefined,
+            method: write.action.request.method,
           }),
         );
         continue;

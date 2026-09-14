@@ -1,6 +1,6 @@
 import { reducer, actions, selectors } from "../src/ducks/journal";
 import type { AthleteEntry, CoachEntry } from "../src/types";
-import type { OutboxState } from "../src/ducks/outbox";
+import type { OutboxState, QueueableAction } from "../src/ducks/outbox";
 
 // Every real column an AthleteEntry has, not the abbreviated shape an old
 // draft of the brief once had. program_year_id/day_card_id/felt/best/hard
@@ -479,5 +479,105 @@ describe("selectIsEntryQueued", () => {
     const s = stateWith([orphanedWrite]);
 
     expect(selectors.selectIsEntryQueued("athlete", "2026-09-17")(s)).toBe(false);
+  });
+});
+
+describe("selectIsDeleteQueued", () => {
+  // What a screen needs that `selectIsEntryQueued` cannot answer. A day
+  // deleted with no signal and a day saved with no signal look identical
+  // from outside the queue: no entry in the slice, one write pending. The
+  // difference is what the write asks the server to do, and it decides
+  // whether the screen may still offer to save that day or share it.
+  const SIGNED_IN_USER = 3;
+  const emptyJournalState = reducer(undefined, { type: "@@INIT" });
+
+  function stateWith(queue: OutboxState["queue"]) {
+    return {
+      journal: emptyJournalState,
+      outbox: { queue, replaying: false, signedInUserId: SIGNED_IN_USER },
+      auth: { token: "a.b.c", user: { id: SIGNED_IN_USER } },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+  }
+
+  function queuedWrite(id: string, action: QueueableAction) {
+    return {
+      id,
+      action,
+      queuedAt: "2026-09-17T18:00:00Z",
+      attempts: 0,
+      userId: SIGNED_IN_USER,
+    };
+  }
+
+  const savesToday = () =>
+    actions.saveAthleteEntry({
+      programYearId: 1,
+      date: "2026-09-17",
+      felt: null,
+      best: null,
+      hard: null,
+      note: "Starting today again.",
+      shared: false,
+    });
+
+  const deletesToday = () =>
+    actions.deleteEntry({ side: "athlete", date: "2026-09-17", id: 502 });
+
+  it("answers true when the write queued for the day is a delete", () => {
+    const s = stateWith([queuedWrite("1", deletesToday())]);
+
+    expect(selectors.selectIsDeleteQueued("athlete", "2026-09-17")(s)).toBe(true);
+  });
+
+  it("answers false for a queued save, which the queued check alone cannot tell apart", () => {
+    // Both assertions on one fixture on purpose. A selector that simply
+    // repeated `selectIsEntryQueued` would pass the test above and fail
+    // here, and one that always answered false would fail the test above.
+    const s = stateWith([queuedWrite("1", savesToday())]);
+
+    expect(selectors.selectIsEntryQueued("athlete", "2026-09-17")(s)).toBe(true);
+    expect(selectors.selectIsDeleteQueued("athlete", "2026-09-17")(s)).toBe(false);
+  });
+
+  it("answers false once he has written that day again behind the delete", () => {
+    // The queue can hold both, in that order (ducks/outbox/reducer.ts). The
+    // day is not a deleted day any more: he took it back and then started
+    // it again, so the screen owes him a form rather than a notice.
+    const s = stateWith([queuedWrite("1", deletesToday()), queuedWrite("2", savesToday())]);
+
+    expect(selectors.selectIsDeleteQueued("athlete", "2026-09-17")(s)).toBe(false);
+  });
+
+  it("reads the last write for the day, not the first, when a delete follows a save", () => {
+    // The reverse of the pair above, and the reason this asks for the last
+    // write rather than whether any delete is in there.
+    const s = stateWith([queuedWrite("1", savesToday()), queuedWrite("2", deletesToday())]);
+
+    expect(selectors.selectIsDeleteQueued("athlete", "2026-09-17")(s)).toBe(true);
+  });
+
+  it("never answers for another day, or for the other side's own delete", () => {
+    const s = stateWith([
+      queuedWrite("1", deletesToday()),
+      queuedWrite("2", actions.deleteEntry({ side: "coach", date: "2026-09-20", id: 9 })),
+    ]);
+
+    expect(selectors.selectIsDeleteQueued("athlete", "2026-09-18")(s)).toBe(false);
+    expect(selectors.selectIsDeleteQueued("coach", "2026-09-17")(s)).toBe(false);
+    expect(selectors.selectIsDeleteQueued("coach", "2026-09-20")(s)).toBe(true);
+  });
+
+  it("answers false against an empty queue", () => {
+    expect(selectors.selectIsDeleteQueued("athlete", "2026-09-17")(stateWith([]))).toBe(false);
+  });
+
+  it("reads through the outbox's own signed-in scoping, the same as every other queue question", () => {
+    // A delete queued with no recorded author belongs to nobody (see
+    // ducks/outbox/types.ts), so it must not put anyone's screen into the
+    // deleted state.
+    const s = stateWith([{ ...queuedWrite("1", deletesToday()), userId: null }]);
+
+    expect(selectors.selectIsDeleteQueued("athlete", "2026-09-17")(s)).toBe(false);
   });
 });

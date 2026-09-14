@@ -1,4 +1,5 @@
 import * as t from "./actionTypes";
+import type { HttpMethod } from "../../types";
 import type { QueueableAction, QueuedWrite } from "./types";
 
 // The only action a duck needs to enqueue a write: the action itself,
@@ -19,8 +20,21 @@ export const replay = () => ({ type: t.REPLAY }) as const;
 // it is forwarded verbatim, the same way `request` was, so a duck can
 // reconcile a server-assigned id or updated_at on an entry that was created
 // offline without a second round trip to re-fetch it.
-export const replaySucceeded = (info: { id: string; dedupeKey: string; response: unknown }) =>
-  ({ type: t.REPLAY_SUCCEEDED, payload: info }) as const;
+//
+// `method` is the write's own `request.method`, forwarded for the same
+// reason: what a write asked for is something only the duck that queued it
+// can interpret, and there is one success it cannot interpret from
+// `response` alone. A DELETE answered 404 got the state it wanted and
+// resolves here with no body at all (see sagas.ts), so a duck reading only
+// the response has nothing telling it an entry is gone. It is optional
+// because `request.method` itself is: a write that names no method is a GET,
+// and no duck queues one.
+export const replaySucceeded = (info: {
+  id: string;
+  dedupeKey: string;
+  response: unknown;
+  method?: HttpMethod;
+}) => ({ type: t.REPLAY_SUCCEEDED, payload: info }) as const;
 
 // Carries `dedupeKey` and `message` for the same reason REPLAY_SUCCEEDED
 // carries `dedupeKey` and `response`: `id` is the outbox's own bookkeeping
