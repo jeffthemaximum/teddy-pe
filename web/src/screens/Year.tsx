@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { authSelectors, programYear, useAppDispatch, useAppSelector } from "@teddy-pe/core";
 import { Loading } from "../components/Loading";
 import { ErrorNote } from "../components/ErrorNote";
+import { WaitingForYearId } from "../components/WaitingForYearId";
+import { byPosition } from "../lib/scheduling";
 
 // The Year payload is the heaviest single call in the app (six blocks, nine
 // areas each with a cell per block, patches, gates, test dates, day roles),
@@ -19,10 +21,6 @@ const WAKING_LABEL = "Waking up the server. The year can take a few seconds to l
 // screen with no id yet. Saying so, in the same waking voice as everywhere
 // else, beats a content area that just stays empty with no explanation.
 const FINDING_YEAR_LABEL = "Waking up the server. Finding this year can take a few seconds too.";
-
-function byPosition<T extends { position: number }>(items: T[]): T[] {
-  return [...items].sort((a, b) => a.position - b.position);
-}
 
 export function Year() {
   const dispatch = useAppDispatch();
@@ -53,23 +51,23 @@ export function Year() {
   if (!data) {
     if (currentId === null) {
       return (
-        <main className="year">
-          <Loading label={FINDING_YEAR_LABEL} />
-        </main>
+        <div className="year">
+          <WaitingForYearId label={FINDING_YEAR_LABEL} />
+        </div>
       );
     }
     if (loading) {
       return (
-        <main className="year">
+        <div className="year">
           <Loading label={WAKING_LABEL} />
-        </main>
+        </div>
       );
     }
     if (error) {
       return (
-        <main className="year">
+        <div className="year">
           <ErrorNote message={error} />
-        </main>
+        </div>
       );
     }
     // The id is known, nothing has loaded and nothing has failed: the
@@ -93,8 +91,13 @@ export function Year() {
     (a, b) => (areaPositionBySlug.get(a.area_slug) ?? 0) - (areaPositionBySlug.get(b.area_slug) ?? 0),
   );
 
+  // A year the API has not mapped out yet (nothing built past the header
+  // fields) has nothing true to say in six empty sections. One honest line
+  // beats six headings over nothing.
+  const isEmpty = blocks.length === 0;
+
   return (
-    <main className="year">
+    <div className="year">
       {loading && <Loading label={WAKING_LABEL} />}
       {error && <ErrorNote message={error} />}
 
@@ -104,118 +107,124 @@ export function Year() {
       <p className="year__ball">Now: {data.ball_now}</p>
       <p className="year__rank-rule">{data.rank_rule}</p>
 
-      <section aria-labelledby="year-blocks-heading">
-        <h2 id="year-blocks-heading">Sections of the year</h2>
-        <ol>
-          {blocks.map((block) => (
-            <li key={block.key}>
-              <strong>{block.name}</strong>
-              {block.current && <span> Current block</span>}
-              <span className="year__block-dates">
-                {" "}
-                {block.starts_on} to {block.ends_on}
-              </span>
-              <p>{block.focus}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section aria-labelledby="year-area-list-heading">
-        <h2 id="year-area-list-heading">What this covers</h2>
-        <dl>
-          {areas.map((area) => (
-            <div key={area.slug}>
-              <dt>{area.name}</dt>
-              <dd>{area.summary}</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
-
-      <section aria-labelledby="year-areas-heading">
-        <h2 id="year-areas-heading">Coverage by section</h2>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Area</th>
+      {isEmpty ? (
+        <p className="year__empty">Nothing has been mapped out for this year yet.</p>
+      ) : (
+        <>
+          <section aria-labelledby="year-blocks-heading">
+            <h2 id="year-blocks-heading">Sections of the year</h2>
+            <ol>
               {blocks.map((block) => (
-                <th scope="col" key={block.key}>
-                  {block.name}
-                </th>
+                <li key={block.key}>
+                  <strong>{block.name}</strong>
+                  {block.current && <span> Current block</span>}
+                  <span className="year__block-dates">
+                    {" "}
+                    {block.starts_on} to {block.ends_on}
+                  </span>
+                  <p>{block.focus}</p>
+                </li>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {areas.map((area) => (
-              <tr key={area.slug}>
-                <th scope="row">{area.name}</th>
-                {blocks.map((block) => {
-                  const cell = area.cells.find((c) => c.block_key === block.key);
-                  return <td key={block.key}>{cell?.body ?? ""}</td>;
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+            </ol>
+          </section>
 
-      <section aria-labelledby="year-patches-heading">
-        <h2 id="year-patches-heading">Awards to earn</h2>
-        <ul>
-          {patches.map((patch) => (
-            <li key={patch.id}>
-              <strong>{patch.name}</strong>: {patch.requirement}
-            </li>
-          ))}
-        </ul>
-      </section>
+          <section aria-labelledby="year-area-list-heading">
+            <h2 id="year-area-list-heading">What this covers</h2>
+            <dl>
+              {areas.map((area) => (
+                <div key={area.slug}>
+                  <dt>{area.name}</dt>
+                  <dd>{area.summary}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
 
-      <section aria-labelledby="year-gates-heading">
-        <h2 id="year-gates-heading">Steps</h2>
-        <ul>
-          {gates.map((gate) => (
-            <li key={gate.position}>
-              <strong>{gate.label}</strong>
-              <span>
-                {" "}
-                {gate.from_ball} to {gate.to_ball}.
-              </span>
-              <span> Status: {gate.status}.</span>
-              {gate.status === "active" && <span> Working on this now.</span>}
-              <p>{gate.requirement}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
+          <section aria-labelledby="year-areas-heading">
+            <h2 id="year-areas-heading">Coverage by section</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Area</th>
+                  {blocks.map((block) => (
+                    <th scope="col" key={block.key}>
+                      {block.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {areas.map((area) => (
+                  <tr key={area.slug}>
+                    <th scope="row">{area.name}</th>
+                    {blocks.map((block) => {
+                      const cell = area.cells.find((c) => c.block_key === block.key);
+                      return <td key={block.key}>{cell?.body ?? ""}</td>;
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
 
-      <section aria-labelledby="year-tests-heading">
-        <h2 id="year-tests-heading">Test dates</h2>
-        <ul>
-          {testDates.map((testDate) => (
-            <li key={testDate.id}>
-              {testDate.label}: {testDate.display} ({testDate.window})
-            </li>
-          ))}
-        </ul>
-      </section>
+          <section aria-labelledby="year-patches-heading">
+            <h2 id="year-patches-heading">Awards to earn</h2>
+            <ul>
+              {patches.map((patch) => (
+                <li key={patch.id}>
+                  <strong>{patch.name}</strong>: {patch.requirement}
+                </li>
+              ))}
+            </ul>
+          </section>
 
-      <section aria-labelledby="year-days-heading">
-        <h2 id="year-days-heading">Each day of the week</h2>
-        <ol>
-          {dayRoles.map((role) => (
-            <li key={role.dow}>
-              <strong>{role.name}</strong>
-              <span>
-                {" "}
-                {role.minutes} minutes, intensity {role.intensity}
-              </span>
-              {role.organized.length > 0 && <p>{role.organized.join(", ")}</p>}
-              <p>{role.note}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-    </main>
+          <section aria-labelledby="year-gates-heading">
+            <h2 id="year-gates-heading">Steps</h2>
+            <ul>
+              {gates.map((gate) => (
+                <li key={gate.position}>
+                  <strong>{gate.label}</strong>
+                  <span>
+                    {" "}
+                    {gate.from_ball} to {gate.to_ball}.
+                  </span>
+                  <span> Status: {gate.status}.</span>
+                  {gate.status === "active" && <span> Working on this now.</span>}
+                  <p>{gate.requirement}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section aria-labelledby="year-tests-heading">
+            <h2 id="year-tests-heading">Test dates</h2>
+            <ul>
+              {testDates.map((testDate) => (
+                <li key={testDate.id}>
+                  {testDate.label}: {testDate.display} ({testDate.window})
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section aria-labelledby="year-days-heading">
+            <h2 id="year-days-heading">Each day of the week</h2>
+            <ol>
+              {dayRoles.map((role) => (
+                <li key={role.dow}>
+                  <strong>{role.name}</strong>
+                  <span>
+                    {" "}
+                    {role.minutes} minutes, intensity {role.intensity}
+                  </span>
+                  {role.organized.length > 0 && <p>{role.organized.join(", ")}</p>}
+                  <p>{role.note}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        </>
+      )}
+    </div>
   );
 }

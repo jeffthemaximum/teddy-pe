@@ -1,8 +1,10 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { createCoreStore, memoryStorage } from "@teddy-pe/core";
 import type { MonthPlan, WeekPayload, DayCard } from "@teddy-pe/core";
-import { Month, currentMonthKey } from "../src/screens/Month";
+import { Month } from "../src/screens/Month";
+import { currentMonthKey } from "../src/lib/scheduling";
 import { createAppStore } from "../src/bootstrap";
 import { stubMe, ME_PROGRAM_YEAR_ID } from "../vitest.setup";
 
@@ -236,6 +238,47 @@ describe("the Month view", () => {
     renderMonth(null);
 
     expect(screen.getByRole("status")).toHaveTextContent(/waking/i);
+  });
+
+  it("lets you try again when the year id has not arrived", async () => {
+    // core does not retry /me on its own, and a restored session on a
+    // cached user stays signed in even when /me could not answer for a
+    // reason that says nothing about the token. Left alone, this wait
+    // never ends. authActions.restoreSession() is the same call every
+    // launch already makes once (src/bootstrap.ts); this is a way to ask
+    // for it again without a full page reload.
+    const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
+    seedAuth(store, null);
+    const dispatched: { type: string }[] = [];
+    const realDispatch = store.dispatch;
+    store.dispatch = ((action: never) => {
+      dispatched.push(action as { type: string });
+      return realDispatch(action);
+    }) as typeof store.dispatch;
+
+    render(
+      <Provider store={store}>
+        <Month />
+      </Provider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /try again/i }));
+
+    expect(dispatched.some((a) => a.type === "auth/RESTORE_SESSION")).toBe(true);
+  });
+
+  it("says nothing has been planned rather than showing an empty month", () => {
+    // A month with no weeks is not the "not caught up yet" gap above: data
+    // has arrived, and it truthfully says there is nothing in it.
+    const { store } = renderMonth();
+    act(() => {
+      store.dispatch({ type: "plan/SUCCEEDED", payload: { ...MONTH_PLAN, weeks: [] } });
+    });
+
+    expect(screen.queryByText(/week 1/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/nothing has been planned/i)).toBeInTheDocument();
+    // The header itself is still the truth the API sent.
+    expect(screen.getByText(MONTH_PLAN.range_display)).toBeInTheDocument();
   });
 
   it("says the server may be waking rather than showing a blank panel", () => {

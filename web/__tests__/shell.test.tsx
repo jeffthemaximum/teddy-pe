@@ -80,6 +80,16 @@ describe("the shell", () => {
     expect(tab(/notes/i)).not.toBeInTheDocument();
   });
 
+  it("renders exactly one main landmark, not a screen's own nested inside it", async () => {
+    // The shell wraps every signed-in screen in <main className="app-content">
+    // (App.tsx). Every screen used to render its own <main> as well, so a
+    // screen reader announced two "main" landmarks for one page: the
+    // shell's, with nothing but a screen inside it, and the screen's own,
+    // holding everything a person actually came to read.
+    await renderAs("coach");
+    expect(screen.getAllByRole("main")).toHaveLength(1);
+  });
+
   it("shows no nav at all before anyone signs in", async () => {
     const store = createAppStore({ baseUrl: "https://api.test", storage: memoryStorage() });
     render(<Provider store={store}><App /></Provider>);

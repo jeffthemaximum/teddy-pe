@@ -1,4 +1,5 @@
 import { act, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { createCoreStore, memoryStorage } from "@teddy-pe/core";
 import type { ProgramYearDetail } from "@teddy-pe/core";
@@ -216,6 +217,40 @@ describe("the Year view", () => {
     renderYear(null);
 
     expect(screen.getByRole("status")).toHaveTextContent(/waking/i);
+  });
+
+  it("lets you try again when the year id has not arrived", async () => {
+    // core does not retry /me on its own, and a restored session on a
+    // cached user stays signed in even when /me could not answer for a
+    // reason that says nothing about the token. Left alone, this wait
+    // never ends. authActions.restoreSession() is the same call every
+    // launch already makes once (src/bootstrap.ts); this is a way to ask
+    // for it again without a full page reload.
+    const { dispatched } = renderYear(null);
+
+    await userEvent.click(screen.getByRole("button", { name: /try again/i }));
+
+    expect(dispatched.some((a) => a.type === "auth/RESTORE_SESSION")).toBe(true);
+  });
+
+  it("says nothing has been mapped out rather than showing six empty sections", () => {
+    // A year with no blocks has nothing true to put in any of the six
+    // sections below the header. This is not the "not caught up yet" gap
+    // above: data has arrived, and it says, truthfully, that there is
+    // nothing in it yet.
+    const { store } = renderYear();
+    act(() => {
+      store.dispatch({
+        type: "programYear/SUCCEEDED",
+        payload: { ...YEAR, blocks: [], areas: [], patches: [], ball_gates: [], test_dates: [], day_roles: [] },
+      });
+    });
+
+    expect(screen.queryByRole("heading", { name: "Sections of the year" })).not.toBeInTheDocument();
+    expect(screen.getByText(/nothing has been mapped out/i)).toBeInTheDocument();
+    // The header itself is still the truth the API sent, not swallowed by
+    // the empty state.
+    expect(screen.getByRole("heading", { name: "2026-27" })).toBeInTheDocument();
   });
 
   it("says the server may be waking rather than showing a blank panel", () => {

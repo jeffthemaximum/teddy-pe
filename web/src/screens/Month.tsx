@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { plan, authSelectors, useAppDispatch, useAppSelector } from "@teddy-pe/core";
-import type { DayCard, WeekPayload } from "@teddy-pe/core";
+import type { WeekPayload } from "@teddy-pe/core";
 import { Loading } from "../components/Loading";
 import { ErrorNote } from "../components/ErrorNote";
+import { WaitingForYearId } from "../components/WaitingForYearId";
+import { byWeekday, currentMonthKey, dowLabel } from "../lib/scheduling";
 
 // Same cold-Fly-machine wait as Year and sign in: 6.6 to 7.6 seconds. A
 // blank month reads as broken; "waking up" reads as slow.
@@ -20,31 +22,8 @@ const WAKING_LABEL = "Waking up the server. The month can take a few seconds to 
 // explanation.
 const FINDING_MONTH_LABEL = "Waking up the server. Finding this month can take a few seconds too.";
 
-const DOW_ORDER = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-
 function byNumber(weeks: WeekPayload[]): WeekPayload[] {
   return [...weeks].sort((a, b) => a.number - b.number);
-}
-
-function byWeekday(days: DayCard[]): DayCard[] {
-  return [...days].sort((a, b) => DOW_ORDER.indexOf(a.dow) - DOW_ORDER.indexOf(b.dow));
-}
-
-function dowLabel(dow: string): string {
-  return dow.length ? dow[0]!.toUpperCase() + dow.slice(1) : dow;
-}
-
-// There is no "/plans/current" the way weeks has "/weeks/current"
-// (core/src/ducks/plan/index.ts and backend/app/controllers/api/v1/
-// plans_controller.rb both address a month by its literal "YYYY-MM" key).
-// So this screen, not the payload, decides which month "the month" means:
-// today's, off the clock. Exported so a test can ask for the same value
-// the component asked for, rather than reimplementing the formatting and
-// risking the two copies drifting apart.
-export function currentMonthKey(now: Date = new Date()): string {
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  return `${year}-${month}`;
 }
 
 export function Month() {
@@ -72,23 +51,23 @@ export function Month() {
   if (!data) {
     if (yearId === null) {
       return (
-        <main className="month">
-          <Loading label={FINDING_MONTH_LABEL} />
-        </main>
+        <div className="month">
+          <WaitingForYearId label={FINDING_MONTH_LABEL} />
+        </div>
       );
     }
     if (loading) {
       return (
-        <main className="month">
+        <div className="month">
           <Loading label={WAKING_LABEL} />
-        </main>
+        </div>
       );
     }
     if (error) {
       return (
-        <main className="month">
+        <div className="month">
           <ErrorNote message={error} />
-        </main>
+        </div>
       );
     }
     // The id is known, nothing has loaded and nothing has failed: the fetch
@@ -99,20 +78,25 @@ export function Month() {
   }
 
   const weeks = byNumber(data.weeks);
-  const fullBudget = Math.max(...weeks.map((week) => week.budget));
+  // Math.max over an empty array is -Infinity, and nothing downstream
+  // should ever read a budget like that, so this only runs the comparison
+  // when there is a week to compare.
+  const fullBudget = weeks.length > 0 ? Math.max(...weeks.map((week) => week.budget)) : 0;
 
   return (
-    <main className="month">
+    <div className="month">
       {loading && <Loading label={WAKING_LABEL} />}
       {error && <ErrorNote message={error} />}
 
       <h1>{data.label}</h1>
       <p className="month__range">{data.range_display}</p>
 
-      {weeks.map((week) => (
-        <WeekSection key={week.number} week={week} fullBudget={fullBudget} />
-      ))}
-    </main>
+      {weeks.length === 0 ? (
+        <p className="month__empty">Nothing has been planned for this month yet.</p>
+      ) : (
+        weeks.map((week) => <WeekSection key={week.number} week={week} fullBudget={fullBudget} />)
+      )}
+    </div>
   );
 }
 
