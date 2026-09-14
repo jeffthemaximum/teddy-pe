@@ -37,6 +37,26 @@ module Api
         render json: { athlete_entry: serialize(entry) }
       end
 
+      # DELETE /api/v1/athlete_entries/:id
+      #
+      # Nothing leaves the database. The row keeps every word and every read
+      # path stops showing it, which is the whole of Jeff's ruling.
+      #
+      # policy_scope first, then authorize, the same two steps update takes.
+      # The scope already excludes a deleted entry, so deleting one twice is
+      # a 404 rather than a second stamp: a replayed offline delete is
+      # harmless, and the first delete's timestamp is the true one.
+      #
+      # The answer is deliberately not an entry envelope. A client that got
+      # `{athlete_entry: ...}` back would fold the entry it just deleted
+      # straight back into its own state.
+      def destroy
+        entry = policy_scope(AthleteEntry).find(params[:id])
+        authorize entry
+        entry.soft_delete!
+        render json: { deleted: { id: entry.id, session_date: entry.session_date } }
+      end
+
       private
 
       def entry_params

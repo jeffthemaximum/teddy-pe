@@ -6,6 +6,12 @@ class AthleteEntryPolicy < ApplicationPolicy
   def create? = user.athlete?
   def update? = user.athlete? && record.user_id == user.id
 
+  # Each person deletes only their own, and the line is drawn here rather
+  # than by which button a screen happens to render. The coach can read a
+  # shared entry, which means the scope hands him the record and this is the
+  # only thing standing between him and deleting his son's writing.
+  def destroy? = user.athlete? && record.user_id == user.id
+
   class Scope < Scope
     # `kept` is applied once, above the branches, rather than on each of
     # them. That is the point: this is the single place the API and the week

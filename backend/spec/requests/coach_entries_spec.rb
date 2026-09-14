@@ -155,6 +155,74 @@ RSpec.describe "coach entries", type: :request do
     end
   end
 
+  describe "DELETE /api/v1/coach_entries/:id" do
+    let!(:kept) do
+      create(:coach_entry, user: coach, program_year: year,
+             session_date: Date.new(2026, 9, 16), note: "Split step landed every time.")
+    end
+    let!(:mine) do
+      create(:coach_entry, user: coach, program_year: year,
+             session_date: Date.new(2026, 9, 17), note: "The note he took back.")
+    end
+
+    it "lets Jeff delete his own, and leaves the entry beside it alone" do
+      delete "/api/v1/coach_entries/#{mine.id}", headers: auth(coach)
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body))
+        .to eq("deleted" => { "id" => mine.id, "session_date" => "2026-09-17" })
+
+      get "/api/v1/coach_entries", headers: auth(coach)
+      expect(JSON.parse(response.body)["coach_entries"].map { |e| e["id"] }).to eq([ kept.id ])
+    end
+
+    it "keeps the row, its words and its drill ratings" do
+      mine.replace_ratings!({ "split-step" => "owns" })
+
+      delete "/api/v1/coach_entries/#{mine.id}", headers: auth(coach)
+
+      expect(CoachEntry.count).to eq(2)
+      expect(mine.reload.note).to eq("The note he took back.")
+      expect(mine.deleted_at).to be_present
+      expect(mine.drill_ratings.count).to eq(1)
+    end
+
+    it "refuses Teddy, so he cannot delete Dad's notes" do
+      delete "/api/v1/coach_entries/#{mine.id}", headers: auth(teddy)
+      expect(response).to have_http_status(:not_found)
+      expect(mine.reload.deleted_at).to be_nil
+    end
+
+    it "refuses a second coach account reaching for this one's note" do
+      someone_else = create(:user, :coach)
+
+      delete "/api/v1/coach_entries/#{mine.id}", headers: auth(someone_else)
+      expect(response).to have_http_status(:not_found)
+      expect(mine.reload.deleted_at).to be_nil
+    end
+
+    it "refuses a viewer" do
+      delete "/api/v1/coach_entries/#{mine.id}", headers: auth(viewer)
+      expect(response).to have_http_status(:not_found)
+      expect(mine.reload.deleted_at).to be_nil
+    end
+
+    it "refuses an unauthenticated caller" do
+      delete "/api/v1/coach_entries/#{mine.id}"
+      expect(response).to have_http_status(:unauthorized)
+      expect(mine.reload.deleted_at).to be_nil
+    end
+
+    it "answers a second delete with not found and leaves the first stamp alone" do
+      delete "/api/v1/coach_entries/#{mine.id}", headers: auth(coach)
+      first_stamp = mine.reload.deleted_at
+
+      delete "/api/v1/coach_entries/#{mine.id}", headers: auth(coach)
+      expect(response).to have_http_status(:not_found)
+      expect(mine.reload.deleted_at).to eq(first_stamp)
+      expect(CoachEntry.count).to eq(2)
+    end
+  end
+
   it "refuses the athlete and the viewer" do
     [ teddy, viewer ].each do |user|
       post "/api/v1/coach_entries", params: body, as: :json, headers: auth(user)

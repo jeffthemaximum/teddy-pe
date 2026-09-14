@@ -16,8 +16,9 @@ Rails.application.routes.draw do
         get "weeks/current", to: "weeks#current", as: :current_week
       end
 
-      resources :coach_entries,   only: %i[index create update]
-      resources :athlete_entries, only: %i[index show create update]
+      # destroy is a soft delete: it stamps deleted_at and the row stays.
+      resources :coach_entries,   only: %i[index create update destroy]
+      resources :athlete_entries, only: %i[index show create update destroy]
       resources :test_results,    only: %i[index create]
     end
   end

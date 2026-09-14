@@ -155,6 +155,90 @@ RSpec.describe "athlete entries", type: :request do
     end
   end
 
+  # The endpoint itself. The specs above prove a deleted entry is invisible;
+  # these prove the route, the policy and the write that stamps the column.
+  #
+  # The response shape is transcribed from the controller by hand rather than
+  # compared against a serializer or a constant: `{deleted: {id,
+  # session_date}}`, two keys, deliberately not an entry envelope, so a client
+  # cannot fold what it just deleted back into its own state.
+  describe "DELETE /api/v1/athlete_entries/:id" do
+    let!(:kept) do
+      create(:athlete_entry, user: teddy, program_year: year,
+             session_date: Date.new(2026, 9, 16), best: "The wall rally")
+    end
+    let!(:mine) do
+      create(:athlete_entry, :shared, user: teddy, program_year: year,
+             session_date: Date.new(2026, 9, 17), best: "The one he took back")
+    end
+
+    it "lets Teddy delete his own, and leaves the entry beside it alone" do
+      delete "/api/v1/athlete_entries/#{mine.id}", headers: auth(teddy)
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body))
+        .to eq("deleted" => { "id" => mine.id, "session_date" => "2026-09-17" })
+
+      get "/api/v1/athlete_entries", headers: auth(teddy)
+      expect(JSON.parse(response.body)["athlete_entries"].map { |e| e["id"] }).to eq([ kept.id ])
+    end
+
+    it "keeps the row and every word in it" do
+      delete "/api/v1/athlete_entries/#{mine.id}", headers: auth(teddy)
+
+      expect(AthleteEntry.count).to eq(2)
+      expect(mine.reload.best).to eq("The one he took back")
+      expect(mine.deleted_at).to be_present
+    end
+
+    # The line drawn server-side, not by which button a screen renders. The
+    # coach can read this entry: it is shared, so his own scope hands it to
+    # him, and the policy is the only thing between him and deleting it.
+    it "refuses the coach, even on an entry Teddy shared with him" do
+      get "/api/v1/athlete_entries/#{mine.id}", headers: auth(coach)
+      expect(response).to have_http_status(:ok)
+
+      delete "/api/v1/athlete_entries/#{mine.id}", headers: auth(coach)
+      expect(response).to have_http_status(:forbidden)
+      expect(mine.reload.deleted_at).to be_nil
+
+      get "/api/v1/athlete_entries", headers: auth(teddy)
+      expect(JSON.parse(response.body)["athlete_entries"].map { |e| e["id"] })
+        .to match_array([ kept.id, mine.id ])
+    end
+
+    it "refuses a second athlete account reaching for this one's entry" do
+      someone_else = create(:user, :athlete)
+
+      delete "/api/v1/athlete_entries/#{mine.id}", headers: auth(someone_else)
+      expect(response).to have_http_status(:not_found)
+      expect(mine.reload.deleted_at).to be_nil
+    end
+
+    it "refuses a viewer" do
+      delete "/api/v1/athlete_entries/#{mine.id}", headers: auth(viewer)
+      expect(response).to have_http_status(:not_found)
+      expect(mine.reload.deleted_at).to be_nil
+    end
+
+    it "refuses an unauthenticated caller" do
+      delete "/api/v1/athlete_entries/#{mine.id}"
+      expect(response).to have_http_status(:unauthorized)
+      expect(mine.reload.deleted_at).to be_nil
+    end
+
+    # A replayed offline delete arrives twice. The second one must not move
+    # the timestamp: the moment he decided is the first one.
+    it "answers a second delete with not found and leaves the first stamp alone" do
+      delete "/api/v1/athlete_entries/#{mine.id}", headers: auth(teddy)
+      first_stamp = mine.reload.deleted_at
+
+      delete "/api/v1/athlete_entries/#{mine.id}", headers: auth(teddy)
+      expect(response).to have_http_status(:not_found)
+      expect(mine.reload.deleted_at).to eq(first_stamp)
+      expect(AthleteEntry.count).to eq(2)
+    end
+  end
+
   it "updates rather than duplicating when the same date is posted twice" do
     post "/api/v1/athlete_entries", params: body, as: :json, headers: auth(teddy)
     post "/api/v1/athlete_entries",

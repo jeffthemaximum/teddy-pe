@@ -37,6 +37,19 @@ module Api
         render json: { coach_entry: serialize(entry) }
       end
 
+      # DELETE /api/v1/coach_entries/:id
+      #
+      # Same shape and same rules as the athlete's, including the answer:
+      # `{deleted: ...}` rather than an entry envelope, so nothing folds the
+      # deleted entry back into the state it was just removed from. The drill
+      # ratings ride along with the row and stay exactly where they are.
+      def destroy
+        entry = policy_scope(CoachEntry).find(params[:id])
+        authorize entry
+        entry.soft_delete!
+        render json: { deleted: { id: entry.id, session_date: entry.session_date } }
+      end
+
       private
 
       def entry_params
