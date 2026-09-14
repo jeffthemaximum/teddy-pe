@@ -18,6 +18,15 @@ module Legacy
   # arrive, and this verifier has no visibility into :failed lists (it only
   # ever reads the two databases), so it reports those as missing on its own
   # by finding no matching row. That is correct and desired.
+  #
+  # A result row that disagrees is a third thing again, neither a mismatch
+  # nor missing: Legacy::ResultMigrator never overwrites a TestResult that
+  # already existed at that slot, so a legacy value that disagrees with what
+  # is on the row means something was already recorded there before this
+  # migration ran and the newer number was kept on purpose. That is a
+  # conflict, not a sign the migration wrote the wrong thing, but it still
+  # has to block clean?, because the legacy number is about to be deleted
+  # forever and this is the last chance for a person to look at it.
   class Verifier
     DIARY_FIELDS = %i[note pain_note overall energy flag_pain challenge_num].freeze
 
@@ -26,19 +35,21 @@ module Legacy
 
       mismatches = []
       missing = []
+      conflicts = []
 
       diary = comparable_diary
       diary.each { |row| check_diary(row, mismatches, missing) }
 
       results = comparable_results
-      results.each { |row| check_result(row, mismatches, missing) }
+      results.each { |row| check_result(row, mismatches, missing, conflicts) }
 
       {
-        clean?: mismatches.empty? && missing.empty?,
+        clean?: mismatches.empty? && missing.empty? && conflicts.empty?,
         counts: { legacy_diary: diary.size, migrated_diary: CoachEntry.kept.count,
                   legacy_results: results.size, migrated_results: TestResult.count },
         mismatches: mismatches,
-        missing: missing
+        missing: missing,
+        conflicts: conflicts
       }
     end
 
@@ -85,7 +96,7 @@ module Legacy
       end
     end
 
-    def check_result(row, mismatches, missing)
+    def check_result(row, mismatches, missing, conflicts)
       key = "#{row.test_window}:#{row.test_id}"
       date = resolve_test_date(row.test_window)
       measure = date && BatteryMeasure.find_by(program_year_id: date.program_year_id, test_id: row.test_id)
@@ -98,8 +109,16 @@ module Legacy
       legacy = row.value.to_s.strip
       return if legacy == result.raw_value
 
-      mismatches << { kind: :result, key: key, field: :raw_value,
-                      legacy: legacy, migrated: result.raw_value }
+      # For a result row this can only mean one thing: Legacy::ResultMigrator
+      # either writes the legacy value verbatim or does not write at all (it
+      # never overwrites a TestResult that already exists at this slot). So
+      # a difference here means the slot was already occupied before this
+      # migration ran and the migrator correctly left it alone, not that the
+      # migration wrote the wrong thing. That is a conflict, not a mismatch,
+      # but it still blocks clean?: the legacy value is about to be deleted
+      # for good, and disagreeing with what is kept is exactly when a
+      # person has to look before that happens.
+      conflicts << { kind: :result, key: key, legacy: legacy, kept: result.raw_value }
     end
 
     # smallint comes back as an Integer on one side and may be nil on the

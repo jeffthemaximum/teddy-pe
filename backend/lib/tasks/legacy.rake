@@ -90,6 +90,15 @@ namespace :legacy do
       puts "DIFFERS #{m[:kind]} #{m[:key]} #{m[:field]}: old #{m[:legacy].inspect}, new #{m[:migrated].inspect}"
     end
 
+    if report[:conflicts].any?
+      puts
+      puts "Slots where the old and new numbers disagree and the new one is being kept:"
+      report[:conflicts].each do |c|
+        puts "  #{c[:key]}: old #{c[:legacy].inspect}, keeping #{c[:kept].inspect}"
+      end
+      puts "  Deleting the old table drops the old number for good. Look at each one above before anything is deleted."
+    end
+
     if report[:clean?]
       puts
       puts "Every old row has a match that agrees. Safe to delete the old pipeline."

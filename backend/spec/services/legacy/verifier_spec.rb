@@ -60,6 +60,14 @@ RSpec.describe Legacy::Verifier, :legacy do
     ])
   end
 
+  # Ruling: a result row that disagrees is never a mismatch, because
+  # Legacy::ResultMigrator either writes the legacy value verbatim or does
+  # not write at all. Whatever made the two numbers disagree here (this test
+  # edits the row directly after migrating it; the next test is the more
+  # realistic case, a slot the new system already held before the migration
+  # ran), the verifier cannot and need not tell those apart: any residual
+  # disagreement can only mean the legacy value was declined, which is a
+  # conflict for a person to look at, not a bug to fix.
   it "names a result whose value disagrees" do
     insert_result(value: "4.6")
     Legacy::ResultMigrator.new(coach: coach).run!
@@ -68,9 +76,33 @@ RSpec.describe Legacy::Verifier, :legacy do
     report = described_class.new.run
 
     expect(report[:clean?]).to be(false)
-    expect(report[:mismatches]).to eq([
-      { kind: :result, key: "2026-09:t1", field: :raw_value, legacy: "4.6", migrated: "9.9" },
+    expect(report[:conflicts]).to eq([
+      { kind: :result, key: "2026-09:t1", legacy: "4.6", kept: "9.9" },
     ])
+    expect(report[:mismatches]).to eq([])
+  end
+
+  # A mismatch here would mean "the migration wrote the wrong thing", which
+  # is not what happened: Legacy::ResultMigrator never overwrites a
+  # TestResult that already exists at a slot (see
+  # "never overwrites a result the new system already holds" in
+  # result_migrator_spec.rb), so a legacy value that disagrees with what is
+  # kept can only mean the slot was already occupied before the migration
+  # ran. That is a conflict Jeff has to look at before the legacy row is
+  # deleted for good, not a bug to fix, so it gets its own bucket and its
+  # own words rather than living among :mismatches.
+  it "routes a result whose slot the new system already held into conflicts, not mismatches" do
+    TestResult.create!(program_year: year, athlete: year.athlete, test_date: date,
+                       battery_measure: measure, recorded_by_user: coach, raw_value: "4.4")
+    insert_result(value: "9.9")
+
+    report = described_class.new.run
+
+    expect(report[:clean?]).to be(false)
+    expect(report[:conflicts]).to eq([
+      { kind: :result, key: "2026-09:t1", legacy: "9.9", kept: "4.4" },
+    ])
+    expect(report[:mismatches]).to eq([])
   end
 
   it "does not call an entry missing when it was skipped for having no program year" do
@@ -133,8 +165,18 @@ RSpec.describe Legacy::Verifier, :legacy do
 
     report = described_class.new.run
 
+    # Hand-typed, not read back off the report: a verifier hard-coded to
+    # report clean with empty buckets would still pass a bare clean?/missing/
+    # mismatches check. Naming the exact counts this fixture is supposed to
+    # produce (one clean diary entry and one clean result actually compared,
+    # against the four rows this fixture also seeded and expects excluded)
+    # is what tells "clean because everything agreed" apart from "clean
+    # because nothing was compared".
     expect(report[:clean?]).to be(true)
+    expect(report[:counts]).to eq(legacy_diary: 1, migrated_diary: 1,
+                                  legacy_results: 1, migrated_results: 1)
     expect(report[:missing]).to eq([])
     expect(report[:mismatches]).to eq([])
+    expect(report[:conflicts]).to eq([])
   end
 end
