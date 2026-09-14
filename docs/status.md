@@ -54,6 +54,15 @@ If the program itself needs changing while the rewrite is in flight (a new month
 
 - **Sep 15 to 17: record the baseline.** Open This Week, pick Baseline in the test sheet, type the numbers. They save to the database as you go and the Year tab starts charting immediately. This happens on the current site, off `main`. The rewrite does not touch it, and Phase 3 migrates these rows across with a count and a spot check before anything is dropped.
 
+- **Phase 3 is built and has been through its final fix round.** The survey, both migrators, the verifier and the three rake tasks that read the old Neon tables and copy them into Rails. `backend/` stands at 301 examples. A whole-branch review returned "not safe to run against production data" and the seven findings are closed:
+
+  - A legacy table that is not on the connection used to read as clean, so `legacy:verify` would have printed "Safe to delete the old pipeline" while nothing had been compared to anything. That is what an unset `LEGACY_DATABASE_URL` looks like, one step before the only copy is deleted. Every task now names the table and `legacy:verify` exits 1.
+  - The journal migrator wrote over entries the new site already held, a `nil` over a note Jeff typed included, and over drill ratings. It now declines and reports which fields disagree, the way the result migrator already did.
+  - The verifier looked entries up by date alone while the unique index is (user, program year, date), so a run with the wrong `COACH_EMAIL` left two complete sets and it picked one. `legacy:verify` now takes `COACH_EMAIL=` too.
+  - The verifier compared no drill ratings at all, and `DIARY_FIELDS` and the migrator's carried list were two hand-written lists with nothing asserting they agree. Both closed.
+
+  See `docs/decisions.md` for the rulings and `.superpowers/sdd/2026-09-14-phase-3-migration-and-cutover/` for the briefs and reports. The cutover runbook is Task 5 of `docs/superpowers/plans/2026-09-14-phase-3-migration-and-cutover.md`. Nothing has been run against production and nothing has been deleted. Jeff merges.
+
 - **Phase 2a is built: `core/`, the package both apps import.** Ten ducks, 176 tests, on the same branch. It holds every piece of state logic the web app and the native app share, so neither writes its own. Its whole-branch review found three Criticals, all fixed: every journal save would have returned 400 for a missing `program_year_id`, the journal stored the API's envelope instead of the entry, and a write queued offline by Teddy would have replayed under Jeff's token on the shared iPad and was readable by him while it waited. See `docs/decisions.md` for the four rulings and `docs/history/2026-09-14-core-package.md` for the account.
 
 - **Phase 2b is built: the web app's read screens.** Signing in, the shell, the Year, the month, This Week and the drill glossary. 130 tests. Its whole-app review found two Criticals, both closed: program vocabulary was shipping in the JavaScript, and the test meant to catch that could be walked past five ways including a file it never read. See `docs/history/2026-09-14-web-app.md`.
