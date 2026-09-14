@@ -72,19 +72,45 @@ export interface DayBlock {
 // Journal entry shapes belong to the journal duck (Task 6), which is the
 // place that owns saveCoachEntry/saveAthleteEntry and the sharing rule. They
 // are declared here, ahead of that duck, only because DayCard's week payload
-// carries them inline and needs somewhere to point.
+// carries them inline and needs somewhere to point. Fields taken from
+// backend/db/schema.rb (coach_entries, athlete_entries, drill_ratings) and
+// backend/app/serializers/{coach,athlete}_entry_serializer.rb, not from the
+// live payload: production has no entries yet, so the API only ever returns
+// null for both.
+
+// drill_ratings.rating is a database enum, checked in Postgres itself
+// (drill_ratings_rating_check), not a number. A form that wrote 1, 2, 3 into
+// this column would pass its own validation and fail at the server with a
+// constraint violation nobody could read as "pick one of three words."
+export type DrillRatingValue = "not_yet" | "getting" | "owns";
+
 export interface CoachEntry {
   id: number;
   session_date: string;
-  note: string;
-  ratings: Record<string, number>;
+  program_year_id: number;
+  day_card_id: number | null;
+  // 1 to 5, both nullable: the coach can save a note before scoring.
+  overall: number | null;
+  energy: number | null;
+  flag_pain: boolean;
+  pain_note: string | null;
+  note: string | null;
+  challenge_num: string | null;
+  // Keyed by drill slug, per CoachEntrySerializer#ratings.
+  ratings: Record<string, DrillRatingValue>;
   updated_at: string;
 }
 
 export interface AthleteEntry {
   id: number;
   session_date: string;
-  note: string;
+  program_year_id: number;
+  day_card_id: number | null;
+  // 1 to 5, nullable: Teddy's own reflection, written in his language.
+  felt: number | null;
+  best: string | null;
+  hard: string | null;
+  note: string | null;
   // Teddy's choice, and the only thing that decides whether Dad sees it.
   shared: boolean;
   updated_at: string;
