@@ -47,6 +47,7 @@ describe("the auth reducer", () => {
     // needs to know it was the password, not that they typed something wrong.
     const signedIn = reducer(undefined, actions.signInSucceeded({ jwt: "a.b.c", user: jeff }));
     const expired = reducer(signedIn, actions.sessionExpired());
+    expect(expired.status).toBe("anonymous");
     expect(expired.token).toBeNull();
     expect(expired.user).toBeNull();
     expect(expired.error).toBe("You were signed out. Sign in again.");

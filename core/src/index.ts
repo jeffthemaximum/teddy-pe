@@ -9,6 +9,19 @@ export type { RootState } from "./store/rootReducer";
 // etc. and reads state through `authSelectors`; the reducer and saga are
 // already wired into the store by rootReducer/rootSaga and have no reason to
 // be imported directly.
-export { actions as authActions, selectors as authSelectors } from "./ducks/auth";
+//
+// authActions is deliberately narrowed to the three actions an app is
+// allowed to dispatch. signInSucceeded, signInFailed and restoreFinished are
+// dispatched only by the saga: an app that could dispatch signInSucceeded
+// itself could put the store in a signed-in state holding a token the server
+// never issued.
+import { actions as authDuckActions, selectors as authSelectors } from "./ducks/auth";
+
+export const authActions = {
+  signIn: authDuckActions.signIn,
+  signOut: authDuckActions.signOut,
+  restoreSession: authDuckActions.restoreSession,
+};
+export { authSelectors };
 export type { AuthState } from "./ducks/auth";
 export type { User, Role, LoginResponse } from "./types";
