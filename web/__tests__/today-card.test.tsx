@@ -107,4 +107,35 @@ describe("TodayCard", () => {
 
     expect(opened).toEqual(["bear-walk"]);
   });
+
+  // A parent that swaps `day` in place (paging from today to tomorrow
+  // without a remount) is exactly the case a stale openId would survive:
+  // block ids are per-record, so yesterday's open id will not match any
+  // block on the new day, and every toggle would silently read closed.
+  it("opens the new day's first block when the day prop changes without remounting", () => {
+    const { rerender } = render(<TodayCard day={DAY} onSelectDrill={() => {}} />);
+    expect(screen.getByText("Animal walks.")).toBeInTheDocument();
+
+    const NEXT_DAY: DayCard = {
+      ...DAY,
+      id: 2,
+      date: "2026-09-18",
+      blocks: [block(11, "Warm Up", "Jump rope."), block(12, "Skill", "Volleys.")],
+    };
+    rerender(<TodayCard day={NEXT_DAY} onSelectDrill={() => {}} />);
+
+    expect(screen.getByText("Jump rope.")).toBeInTheDocument();
+    expect(screen.queryByText("Volleys.")).toBeNull();
+  });
+
+  // The month payload omits `blocks` entirely rather than sending an empty
+  // array (DayBlock is optional on DayCard for exactly this reason), so a
+  // day that never carried the field has to read the same as one that did
+  // and came back empty.
+  it("treats a day with no blocks field the same as one with none", () => {
+    const { blocks, ...withoutBlocksField } = DAY;
+    render(<TodayCard day={{ ...withoutBlocksField, dad_note: undefined }} onSelectDrill={() => {}} />);
+    expect(screen.getByText("Tennis heaviest.")).toBeInTheDocument();
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+  });
 });

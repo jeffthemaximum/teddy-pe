@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { DayCard as DayCardPayload } from "@teddy-pe/core";
 import { Tokens } from "./Tokens";
 
@@ -23,10 +23,28 @@ export function TodayCard({
   day: DayCardPayload;
   onSelectDrill: (slug: string) => void;
 }) {
+  // Undefined, not just empty, is a real shape here: the month payload
+  // omits `blocks` entirely, only the week payload fills it in (and only
+  // when called with detailed: true), so this has to cover a day that
+  // never carried the field, not only one that carried an empty array.
   const blocks = day.blocks ?? [];
   // The first block, open on arrival, because Wake Up is where a session
   // starts and he should not have to tap to begin. Null once he closes it.
   const [openId, setOpenId] = useState<number | null>(blocks[0]?.id ?? null);
+
+  // A parent that swaps `day` without unmounting this component (paging
+  // between today and tomorrow, say) keeps whatever `openId` was last set
+  // to. Block ids are per-record, so that id almost never belongs to the
+  // new day, every block reads closed, and the accordion silently opens
+  // nothing on arrival, breaking its own contract for the new day. Resync
+  // on `day.id` rather than asking every future call site, web or native,
+  // to remember to key this component by day: the same idiom CoachNoteForm
+  // and AthleteNoteForm use to reset on a date change.
+  useEffect(() => {
+    setOpenId(blocks[0]?.id ?? null);
+    // Keyed on day.id alone, not on blocks: it is the day changing, not the
+    // blocks array's identity, that makes the previous openId stale.
+  }, [day.id]);
 
   return (
     <article className="today-card">
