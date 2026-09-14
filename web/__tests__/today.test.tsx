@@ -6,6 +6,7 @@ import {
   createCoreStore,
   memoryStorage,
   journalActions,
+  testResultsActions,
   week,
 } from "@teddy-pe/core";
 import type { Role, WeekPayload, ProgramYearDetail } from "@teddy-pe/core";
@@ -301,6 +302,20 @@ describe("Today", () => {
       expect(screen.queryByText(/no card has been written/i)).toBeNull();
     });
 
+    // The same guess-dressed-as-fact, from a second direction: a tab left
+    // open across a week boundary (or a program-year switch) remounts with
+    // a STALE week already in state, since createFetchDuck's own FETCH case
+    // keeps `data` on a refetch rather than clearing it. `weekData` is
+    // non-null here even though the fetch this render kicked off has not
+    // answered yet, so the "week has answered and holds no card" branch
+    // must not fire just because *some* week is sitting in the store.
+    it("waits rather than says no card when a stale week is mid-refetch", async () => {
+      renderToday({ role: "coach", week: weekWithoutToday(), loading: true });
+
+      expect(await screen.findByText(/waking up the server/i)).toBeInTheDocument();
+      expect(screen.queryByText(/no card has been written/i)).toBeNull();
+    });
+
     it("shows the error when the week could not be reached", async () => {
       renderToday({ role: "coach", week: null, error: "That could not be reached." });
 
@@ -334,7 +349,12 @@ describe("Today", () => {
       expect(await screen.findByText(/wall day/i)).toBeInTheDocument();
       expect(screen.queryByLabelText("What did you see?")).toBeNull();
       expect(screen.queryByLabelText(/best/i)).toBeNull();
-      expect(screen.queryByLabelText(/20m sprint/i)).toBeNull();
+      // A real label from this file's own MEASURES, not an invented one:
+      // "20m sprint" matches nothing this fixture has ever had (the real
+      // labels are "10-yard sprint", "Broad jump" and "Balance hold,
+      // left"), which made the check below pass whether or not the sheet
+      // was actually kept off her screen.
+      expect(screen.queryByLabelText(/10-yard sprint/i)).toBeNull();
     });
 
     // A viewer who fired these would get 403s she can do nothing about.
@@ -344,6 +364,23 @@ describe("Today", () => {
       expect(asked).not.toContain(journalActions.fetchCoachEntries().type);
       expect(asked).not.toContain(journalActions.fetchAthleteEntries().type);
       expect(asked.some((t) => t.includes("testResults"))).toBe(false);
+    });
+
+    // The positive half of the two negative checks above. Without these, a
+    // broken dep array or a misplaced early return that stopped every
+    // fetch from firing at all would still pass "never asks for a
+    // viewer's" - that test only ever checks for absence.
+    it("asks for the coach's own entries and the test results", async () => {
+      const { dispatched } = renderToday({ role: "coach" });
+      const asked = dispatched.map((a) => a.type);
+      expect(asked).toContain(journalActions.fetchCoachEntries().type);
+      expect(asked).toContain(testResultsActions.fetchResults(42).type);
+    });
+
+    it("asks for the athlete's own entries", async () => {
+      const { dispatched } = renderToday({ role: "athlete" });
+      const asked = dispatched.map((a) => a.type);
+      expect(asked).toContain(journalActions.fetchAthleteEntries().type);
     });
   });
 

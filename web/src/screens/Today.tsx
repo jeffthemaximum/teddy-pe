@@ -146,6 +146,17 @@ export function Today() {
 
       {dayCard ? (
         <TodayCard key={dayCard.id} day={dayCard} onSelectDrill={openDrill} />
+      ) : weekLoading ? (
+        // The early returns above only catch a week that has never loaded.
+        // A tab left open across a week boundary (or a program-year switch)
+        // remounts with a STALE week already in state: createFetchDuck's
+        // own FETCH case keeps `data` on a refetch, on purpose, so a
+        // household with a slow connection still has yesterday's card to
+        // read while today's is on its way. That means weekData is non-null
+        // here even though the fetch this render kicked off has not
+        // answered yet, and saying "no card" in that gap would be exactly
+        // the guess-dressed-as-fact this screen exists to avoid.
+        <Loading label={WAKING_LABEL} />
       ) : (
         <p className="today__no-card">
           {NO_CARD_LABEL} <Link to="/week">This Week</Link>

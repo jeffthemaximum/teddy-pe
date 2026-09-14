@@ -50,8 +50,12 @@ import { Tests } from "./screens/Tests";
 // a route their role may not read. It was "/year" until Today existed; both
 // are "any" routes, so this is the same guarantee, pointed at the screen he
 // actually opens mid-session instead of the one that used to be first. One
-// constant, used in the three places below that all mean "home" rather than
-// each spelling "/today" out on its own.
+// constant, used everywhere below that means "home", the nav item's own
+// `to` included: a route table entry that spelled "/today" out a second
+// time instead of reading HOME could drift from it, and a drift here is
+// not cosmetic, it is a redirect loop (`*` sends you to whatever HOME says,
+// and if that string matches no route in this table, there is nowhere for
+// the browser to land).
 export const HOME = "/today";
 
 export type RoleTier = Role[] | "any";
@@ -82,7 +86,7 @@ export const NAV_ITEMS: NavItem[] = [
   // card, the note under it and the test sheet each gate themselves to
   // what that role's own screen shows (Today.tsx), the same way this table
   // already trusts Year, Month, This Week, Glossary and Progress to.
-  { to: "/today", label: "Today", roles: "any", element: <Today /> },
+  { to: HOME, label: "Today", roles: "any", element: <Today /> },
   { to: "/year", label: "Year", roles: "any", element: <Year /> },
   { to: "/month", label: "Month", roles: "any", element: <Month /> },
   { to: "/week", label: "This Week", roles: "any", element: <ThisWeek /> },

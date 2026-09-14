@@ -280,7 +280,10 @@ describe("direct navigation to a route the role cannot use", () => {
   it("does not render the coach's notes for the athlete", async () => {
     window.history.pushState({}, "", "/notes");
     await renderAs("athlete");
-    expect(window.location.pathname).not.toBe("/notes");
+    // Not just "somewhere other than /notes": Guarded's own fallback is
+    // HOME specifically (routes.tsx), and a bare not.toBe("/notes") would
+    // pass just as well if that fallback drifted to, say, "/glossary".
+    expect(window.location.pathname).toBe("/today");
   });
 
   it("does not render the coach's notes for the viewer", async () => {
