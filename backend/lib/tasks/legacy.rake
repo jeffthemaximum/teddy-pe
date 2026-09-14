@@ -196,9 +196,6 @@ namespace :legacy do
     end
 
     report[:missing].each { |m| puts "MISSING #{m[:kind]} #{m[:key]}" }
-    report[:mismatches].each do |m|
-      puts "DIFFERS #{m[:kind]} #{m[:key]} #{m[:field]}: old #{m[:legacy].inspect}, new #{m[:migrated].inspect}"
-    end
 
     if report[:conflicts].any?
       puts

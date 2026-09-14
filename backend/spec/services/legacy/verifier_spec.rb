@@ -32,7 +32,6 @@ RSpec.describe Legacy::Verifier, :legacy do
     expect(report[:clean?]).to be(true)
     expect(report[:counts]).to eq(legacy_diary: 1, migrated_diary: 1,
                                   legacy_results: 1, migrated_results: 1)
-    expect(report[:mismatches]).to eq([])
     expect(report[:missing]).to eq([])
   end
 
@@ -48,12 +47,13 @@ RSpec.describe Legacy::Verifier, :legacy do
   # The reason this compares fields rather than counting: a migration that
   # wrote the right number of rows carrying the wrong words passes a count.
   #
-  # It lands in :conflicts rather than :mismatches for the same reason a
-  # result that disagrees does. Legacy::JournalMigrator now either writes the
-  # legacy row verbatim or does not write at all, so a diary field that
-  # disagrees can only mean the entry was already there and was kept on
-  # purpose. Calling that a mismatch would read as a migration bug and send
-  # someone hunting for one.
+  # It is a conflict, not "the migration wrote the wrong thing", for the same
+  # reason a result that disagrees is. Legacy::JournalMigrator now either
+  # writes the legacy row verbatim or does not write at all, so a diary field
+  # that disagrees can only mean the entry was already there and was kept on
+  # purpose. There is no :mismatches bucket any more: nothing could ever fill
+  # one, and a named check that never runs is the worst thing to put in front
+  # of a person about to delete the only other copy.
   it "names a diary field that disagrees, as a conflict rather than a migration bug" do
     insert_diary(session_date: "2026-09-16", note: "Good session.")
     Legacy::JournalMigrator.new(coach: coach).run!
@@ -66,7 +66,6 @@ RSpec.describe Legacy::Verifier, :legacy do
       { kind: :diary, key: "2026-09-16", field: :note,
         legacy: "Good session.", kept: "something else entirely" },
     ])
-    expect(report[:mismatches]).to eq([])
   end
 
   # The verifier compared no drill_ratings at all, so a rating that never
@@ -170,7 +169,6 @@ RSpec.describe Legacy::Verifier, :legacy do
     expect(report[:conflicts]).to eq([
       { kind: :result, key: "2026-09:t1", legacy: "4.6", kept: "9.9" },
     ])
-    expect(report[:mismatches]).to eq([])
   end
 
   # A mismatch here would mean "the migration wrote the wrong thing", which
@@ -181,8 +179,8 @@ RSpec.describe Legacy::Verifier, :legacy do
   # kept can only mean the slot was already occupied before the migration
   # ran. That is a conflict Jeff has to look at before the legacy row is
   # deleted for good, not a bug to fix, so it gets its own bucket and its
-  # own words rather than living among :mismatches.
-  it "routes a result whose slot the new system already held into conflicts, not mismatches" do
+  # own words rather than being called a migration bug.
+  it "routes a result whose slot the new system already held into conflicts" do
     TestResult.create!(program_year: year, athlete: year.athlete, test_date: date,
                        battery_measure: measure, recorded_by_user: coach, raw_value: "4.4")
     insert_result(value: "9.9")
@@ -193,7 +191,6 @@ RSpec.describe Legacy::Verifier, :legacy do
     expect(report[:conflicts]).to eq([
       { kind: :result, key: "2026-09:t1", legacy: "9.9", kept: "4.4" },
     ])
-    expect(report[:mismatches]).to eq([])
   end
 
   # The one that stops a deletion of the only copy. comparable_diary returned
@@ -274,7 +271,7 @@ RSpec.describe Legacy::Verifier, :legacy do
 
     # Hand-typed, not read back off the report: a verifier hard-coded to
     # report clean with empty buckets would still pass a bare clean?/missing/
-    # mismatches check. Naming the exact counts this fixture is supposed to
+    # missing check. Naming the exact counts this fixture is supposed to
     # produce (one clean diary entry and one clean result actually compared,
     # against the four rows this fixture also seeded and expects excluded)
     # is what tells "clean because everything agreed" apart from "clean
@@ -283,7 +280,6 @@ RSpec.describe Legacy::Verifier, :legacy do
     expect(report[:counts]).to eq(legacy_diary: 1, migrated_diary: 1,
                                   legacy_results: 1, migrated_results: 1)
     expect(report[:missing]).to eq([])
-    expect(report[:mismatches]).to eq([])
     expect(report[:conflicts]).to eq([])
   end
 end

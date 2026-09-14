@@ -28,7 +28,17 @@ module Legacy
   # because the legacy version is about to be deleted forever and this is the
   # last chance for a person to look at it. That now covers the diary as well
   # as the results: since Legacy::JournalMigrator stopped overwriting, a
-  # diary field that disagrees can only mean the same thing.
+  # diary field or a drill rating that disagrees can only mean the same thing.
+  #
+  # THERE IS NO :mismatches BUCKET, and please do not add one back. Every
+  # disagreement, diary field, drill rating and result alike, is a conflict,
+  # because neither migrator can write a wrong value: each one either copies
+  # the legacy row verbatim or declines and reports. A bucket for "the
+  # migration wrote the wrong thing" would be a name in a safety-critical
+  # report that nothing can ever fill, read by a person deciding whether to
+  # delete the only other copy of a year of Teddy's program. It is not an
+  # extension point either: if a migrator ever did start overwriting,
+  # somebody would still have to write the code that fills the bucket.
   #
   # And a legacy table that is not on this connection is never clean. It used
   # to read as "there were no rows to compare", which is exactly what an
@@ -51,7 +61,6 @@ module Legacy
       Legacy::Record.connect!
 
       tables_missing = Legacy::Mapping.missing_tables(Legacy::DiaryEntry, Legacy::TestResultRow)
-      mismatches = []
       missing = []
       conflicts = []
 
@@ -62,15 +71,10 @@ module Legacy
       results.each { |row| check_result(row, missing, conflicts) }
 
       {
-        clean?: tables_missing.empty? && mismatches.empty? && missing.empty? && conflicts.empty?,
+        clean?: tables_missing.empty? && missing.empty? && conflicts.empty?,
         tables_missing: tables_missing,
         counts: { legacy_diary: diary.size, migrated_diary: migrated_diary_count,
                   legacy_results: results.size, migrated_results: TestResult.count },
-        # Nothing fills this any more. It stays in the report because callers
-        # and the rake task read it, and because the day something does start
-        # filling it is the day a migrator began writing over a row instead
-        # of declining to, which is worth having a name ready for.
-        mismatches: mismatches,
         missing: missing,
         conflicts: conflicts
       }
