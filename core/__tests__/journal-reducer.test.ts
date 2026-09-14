@@ -1,4 +1,5 @@
 import { reducer, actions, selectors } from "../src/ducks/journal";
+import { signOut, sessionExpired } from "../src/ducks/auth/actions";
 import type { AthleteEntry, CoachEntry } from "../src/types";
 
 // Every real column an AthleteEntry has, not the abbreviated shape an old
@@ -130,6 +131,47 @@ describe("the journal reducer", () => {
     expect(shared.athlete["2026-09-17"]!.shared).toBe(true);
     const not = reducer(shared, actions.athleteEntrySaved({ ...mine, shared: false }));
     expect(not.athlete["2026-09-17"]!.shared).toBe(false);
+  });
+
+  it("does not write an optimistic `shared` into state on SET_SHARED itself: only a server response may", () => {
+    // The switch is Teddy's to flip, but the API is the one that gets to say
+    // it actually moved. SET_SHARED only marks the day as saving; whatever
+    // `shared` currently reads stays exactly what the last real response
+    // said, until a new response arrives to replace it.
+    const saved = reducer(undefined, actions.athleteEntrySaved({ ...mine, shared: false }));
+    const s = reducer(saved, actions.setShared({ date: "2026-09-17", shared: true }));
+    expect(s.athlete["2026-09-17"]!.shared).toBe(false);
+    expect(selectors.selectIsSaving("2026-09-17")({ journal: s })).toBe(true);
+  });
+
+  it("clears saved entries, saving flags, and any error on sign-out — a shared device must not keep the last person's writing in memory", () => {
+    const loaded = reducer(
+      reducer(undefined, actions.athleteEntrySaved(mine)),
+      actions.saveCoachEntry({
+        date: "2026-09-18",
+        note: null,
+        overall: null,
+        energy: null,
+        flag_pain: false,
+        pain_note: null,
+        challenge_num: null,
+        ratings: {},
+      }),
+    );
+    // Sanity: there is genuinely something here to lose, before it's gone.
+    expect(loaded.athlete["2026-09-17"]).toEqual(mine);
+    expect(selectors.selectIsSaving("2026-09-18")({ journal: loaded })).toBe(true);
+
+    const out = reducer(loaded, signOut());
+    expect(out).toEqual({ coach: {}, athlete: {}, saving: {}, error: null });
+  });
+
+  it("clears the same way on session expiry — the route a dead 401 token takes, and the one that would otherwise leave that day's saving flag spinning forever", () => {
+    const saving = reducer(undefined, actions.saveAthleteEntry({ date: "2026-09-17", note: "secret", shared: false }));
+    expect(selectors.selectIsSaving("2026-09-17")({ journal: saving })).toBe(true);
+
+    const out = reducer(saving, sessionExpired());
+    expect(out).toEqual({ coach: {}, athlete: {}, saving: {}, error: null });
   });
 });
 

@@ -7,7 +7,8 @@ import { sessionExpired } from "../auth/actions";
 import { selectToken } from "../auth/selectors";
 import { enqueue } from "../outbox/actions";
 import * as outboxActionTypes from "../outbox/actionTypes";
-import type { QueueableAction } from "../outbox/types";
+import { selectQueue } from "../outbox/selectors";
+import type { QueueableAction, QueuedWrite } from "../outbox/types";
 import { selectAthleteEntryFor } from "./selectors";
 import type { CoreConfig } from "../../config";
 import type { AthleteEntry, CoachEntry } from "../../types";
@@ -61,19 +62,53 @@ function* saveCoachEntry(action: ReturnType<typeof actions.saveCoachEntry>) {
   }
 }
 
+// The note a pending queued write carries, if there is one, under this same
+// day's `dedupeKey`. Read through the outbox's own selector rather than
+// reaching into `state.outbox` directly, the same boundary `enqueue` and
+// `outbox/REPLAY_SUCCEEDED` already cross. Guarded rather than cast blindly:
+// nothing here assumes a queued write under an `athlete:` key is necessarily
+// one this duck built.
+function pendingAthleteNote(queue: QueuedWrite[], date: string): string | undefined {
+  const pending = queue.find((w) => w.action.dedupeKey === `athlete:${date}`);
+  const payload = pending?.action.payload;
+  if (
+    payload !== null &&
+    typeof payload === "object" &&
+    typeof (payload as { note?: unknown }).note === "string"
+  ) {
+    return (payload as { note: string }).note;
+  }
+  return undefined;
+}
+
 // Not its own request path. `{ session_date, shared }` alone would satisfy
 // the API — AthleteEntry#assign_attributes only touches keys it is handed —
 // but not the outbox: two writes queued for the same day collapse to
 // whichever was queued last, so a bare `{shared}` queued after a fuller note
 // save would replace it in the queue and the note would never reach the
-// server at all. So this carries the note already on record for the date
-// forward alongside the new `shared`, through the same worker and the same
-// `dedupeKey` a note save uses, and never touches `shared` itself beyond
-// passing it on.
+// server at all. So this carries a note forward alongside the new `shared`,
+// through the same worker and the same `dedupeKey` a note save uses, and
+// never touches `shared` itself beyond passing it on.
+//
+// Which note, though, matters more than it first looks. `selectAthleteEntryFor`
+// is written only by a server response (`athleteEntrySaved`/`coachEntrySaved`);
+// a note typed offline has never been anywhere near the server and is not in
+// there — it exists only as a pending write in the outbox's own queue, under
+// this same day's `dedupeKey`. Falling back straight to that selector (and
+// from there to `""`) is exactly the bug this comment used to describe
+// fixing: offline, type a note, then toggle shared, and the toggle's own
+// save would carry forward an empty note and replace the queued one — the
+// words are gone, having never left the device. So the pending queued write
+// is checked first; only when there is neither a pending write nor a saved
+// entry does this fall back to an empty note, and even then only because
+// there is genuinely nothing to preserve.
 function* setShared(action: ReturnType<typeof actions.setShared>) {
   const { date, shared } = action.payload;
+  const queue: QueuedWrite[] = yield select(selectQueue);
+  const pendingNote = pendingAthleteNote(queue, date);
   const existing: AthleteEntry | null = yield select(selectAthleteEntryFor(date));
-  const payload: SaveAthleteEntryPayload = { date, note: existing?.note ?? "", shared };
+  const note = pendingNote ?? existing?.note ?? "";
+  const payload: SaveAthleteEntryPayload = { date, note, shared };
   yield call(saveAthleteEntry, actions.saveAthleteEntry(payload));
 }
 
@@ -86,8 +121,22 @@ function* setShared(action: ReturnType<typeof actions.setShared>) {
 // `athlete:`/`coach:` is a prefix only this duck assigns. Any other
 // dedupeKey (a test result's, say) is not this duck's business and is left
 // alone.
+// A response with no `session_date` is not a journal entry at all — filing
+// it anyway would key it under the literal string "undefined" and it would
+// sit there forever, matching no real date. Guarded rather than trusted,
+// since `response` crossed the outbox as `unknown` and was never this duck's
+// to begin with until this check says otherwise.
+function isEntryResponse(value: unknown): value is { session_date: string } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { session_date?: unknown }).session_date === "string"
+  );
+}
+
 function* reconcileReplay(action: { type: string; payload: { dedupeKey: string; response: unknown } }) {
   const { dedupeKey, response } = action.payload;
+  if (!isEntryResponse(response)) return;
   if (dedupeKey.startsWith("athlete:")) {
     yield put(actions.athleteEntrySaved(response as AthleteEntry));
     return;

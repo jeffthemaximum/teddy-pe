@@ -8,12 +8,16 @@ import { silentLogger } from "../src/services/logger";
 import { sessionExpired } from "../src/ducks/auth/actions";
 import { enqueue } from "../src/ducks/outbox/actions";
 import type { JournalState } from "../src/ducks/journal";
+import type { OutboxState } from "../src/ducks/outbox";
 
 const config = { baseUrl: "https://api.test", storage: memoryStorage(), logger: silentLogger, timeoutMs: 15000 };
 
 const emptyJournal: JournalState = { coach: {}, athlete: {}, saving: {}, error: null };
+const emptyOutbox: OutboxState = { queue: [], replaying: false };
 
-function harness(journal: JournalState = emptyJournal) {
+function harness(overrides: { journal?: JournalState; outbox?: OutboxState } = {}) {
+  const journal = overrides.journal ?? emptyJournal;
+  const outbox = overrides.outbox ?? emptyOutbox;
   const dispatched: unknown[] = [];
   return {
     dispatched,
@@ -21,7 +25,7 @@ function harness(journal: JournalState = emptyJournal) {
       runSaga(
         {
           dispatch: (a) => dispatched.push(a),
-          getState: () => ({ auth: { token: "a.b.c" }, journal }),
+          getState: () => ({ auth: { token: "a.b.c" }, journal, outbox }),
           context: { config },
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -78,6 +82,7 @@ describe("the journal saga", () => {
       config,
       expect.objectContaining({
         method: "POST",
+        path: "/api/v1/athlete_entries",
         body: { athlete_entry: { session_date: "2026-09-17", note: "x", shared: true } },
       }),
     );
@@ -122,16 +127,28 @@ describe("the journal saga", () => {
     expect(h.dispatched).toContainEqual(actions.coachEntrySaved(savedCoachEntry));
   });
 
-  it("carries the already-saved note forward when only the shared toggle changes", async () => {
-    // A bare {shared} body would be enough for the API but not for the
-    // outbox: replacing an earlier, fuller queued write for the same day
-    // with a partial one would mean the note in that earlier write never
-    // reaches the server at all. So setShared has to know the note already
-    // on record, not just the new value of the switch.
+  // --- setShared: which note it carries forward, proved ordering by ordering ---
+  //
+  // The bug this whole block guards against: a note typed offline is queued
+  // and has never been anywhere near the server, so it is not in
+  // `selectAthleteEntryFor`'s map — that map is written only by a response
+  // the server actually sent (`athleteEntrySaved`). A version of `setShared`
+  // that only ever looks there falls back to `""` for exactly the case that
+  // matters most (type a note offline, then toggle before it ever syncs),
+  // and the toggle's own save replaces the queued write with an empty note.
+  // The words are gone, having never left the device.
+
+  it("carries a note forward from the outbox's pending write (ordering A: note typed offline, then the toggle) — the case the fix exists for", async () => {
     const spy = jest.spyOn(client, "apiRequest").mockResolvedValue({ ...savedAthleteEntry, shared: true });
+    const pendingWrite = actions.saveAthleteEntry({ date: "2026-09-17", note: "Landed three.", shared: false });
     const h = harness({
-      ...emptyJournal,
-      athlete: { "2026-09-17": { ...savedAthleteEntry, note: "Landed three.", shared: false } },
+      // The note exists ONLY here — queued, never saved. `journal.athlete`
+      // stays empty, unlike the old version of this test, which seeded the
+      // note through `athleteEntrySaved` and so could never have caught this.
+      outbox: {
+        queue: [{ id: "1", action: pendingWrite, queuedAt: "2026-09-17T18:00:00Z", attempts: 0 }],
+        replaying: false,
+      },
     });
 
     await h.run(journalWorkers.setShared, actions.setShared({ date: "2026-09-17", shared: true }));
@@ -144,7 +161,53 @@ describe("the journal saga", () => {
     );
   });
 
-  it("sends an empty note rather than inventing one, when nothing was saved for the date yet", async () => {
+  it("prefers the pending queued note over an older saved entry, when both exist for the date", async () => {
+    // The queued write is the more recent truth: it is whatever was typed
+    // most recently and has not reached the server yet, so it must win over
+    // a server response that is now stale.
+    const spy = jest.spyOn(client, "apiRequest").mockResolvedValue({ ...savedAthleteEntry, shared: true });
+    const pendingWrite = actions.saveAthleteEntry({ date: "2026-09-17", note: "Four in a row now.", shared: false });
+    const h = harness({
+      journal: {
+        ...emptyJournal,
+        athlete: { "2026-09-17": { ...savedAthleteEntry, note: "Landed three.", shared: false } },
+      },
+      outbox: {
+        queue: [{ id: "1", action: pendingWrite, queuedAt: "2026-09-17T18:00:00Z", attempts: 0 }],
+        replaying: false,
+      },
+    });
+
+    await h.run(journalWorkers.setShared, actions.setShared({ date: "2026-09-17", shared: true }));
+
+    expect(spy).toHaveBeenCalledWith(
+      config,
+      expect.objectContaining({
+        body: { athlete_entry: { session_date: "2026-09-17", note: "Four in a row now.", shared: true } },
+      }),
+    );
+  });
+
+  it("carries a saved entry's note forward when there is nothing pending (ordering E: note saved online, then the toggle offline)", async () => {
+    const spy = jest.spyOn(client, "apiRequest").mockResolvedValue({ ...savedAthleteEntry, shared: true });
+    const h = harness({
+      journal: {
+        ...emptyJournal,
+        athlete: { "2026-09-17": { ...savedAthleteEntry, note: "Landed three.", shared: false } },
+      },
+    });
+
+    await h.run(journalWorkers.setShared, actions.setShared({ date: "2026-09-17", shared: true }));
+
+    expect(spy).toHaveBeenCalledWith(
+      config,
+      expect.objectContaining({
+        body: { athlete_entry: { session_date: "2026-09-17", note: "Landed three.", shared: true } },
+      }),
+    );
+  });
+
+  it("sends an empty note rather than inventing one, when nothing was saved or queued for the date at all", async () => {
     const spy = jest.spyOn(client, "apiRequest").mockResolvedValue({ ...savedAthleteEntry, note: "", shared: true });
     const h = harness();
 
@@ -215,6 +278,9 @@ describe("the journal saga", () => {
     expect(h.dispatched).not.toContainEqual(
       actions.saveFailed({ date: "2026-09-17", message: "Invalid or missing token." }),
     );
+    // handleSaveFailure dispatches nothing else on this branch: it relies on
+    // the reducer clearing `saving[date]` when SESSION_EXPIRED itself lands
+    // (see journal-reducer.test.ts), not on a second dispatch from here.
   });
 
   it("folds a replayed athlete write's server response into state, id included", async () => {
@@ -251,6 +317,20 @@ describe("the journal saga", () => {
     await h.run(journalWorkers.reconcileReplay, {
       type: "outbox/REPLAY_SUCCEEDED",
       payload: { id: "1", dedupeKey: "result:2026-09:t1", response: { anything: true } },
+    });
+
+    expect(h.dispatched).toHaveLength(0);
+  });
+
+  it("ignores a replayed write whose response is not a journal entry at all, even under its own prefix", async () => {
+    // A malformed or unrelated body under an `athlete:`/`coach:` key must not
+    // get filed under the literal key "undefined" — session_date is what
+    // makes something an entry at all.
+    const h = harness();
+
+    await h.run(journalWorkers.reconcileReplay, {
+      type: "outbox/REPLAY_SUCCEEDED",
+      payload: { id: "1", dedupeKey: "athlete:2026-09-17", response: { error: "nope" } },
     });
 
     expect(h.dispatched).toHaveLength(0);
