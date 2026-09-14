@@ -99,6 +99,7 @@ export function Month() {
   }
 
   const weeks = byNumber(data.weeks);
+  const fullBudget = Math.max(...weeks.map((week) => week.budget));
 
   return (
     <main className="month">
@@ -109,13 +110,20 @@ export function Month() {
       <p className="month__range">{data.range_display}</p>
 
       {weeks.map((week) => (
-        <WeekSection key={week.number} week={week} />
+        <WeekSection key={week.number} week={week} fullBudget={fullBudget} />
       ))}
     </main>
   );
 }
 
-function WeekSection({ week }: { week: WeekPayload }) {
+// `fullBudget` is the largest budget the API sent for this month, and it is
+// what makes a lighter week visible without this file holding any opinion
+// about which weeks are lighter or about what the program calls them. The
+// payload decides, the screen reports. The `week.trials` flag would say the
+// same thing in one boolean, but a minifier cannot rename a property access,
+// so reading it drops the program's own word for that week into a public
+// bundle (see __tests__/bundle-privacy.test.ts).
+function WeekSection({ week, fullBudget }: { week: WeekPayload; fullBudget: number }) {
   const headingId = `month-week-${week.number}-heading`;
   const days = byWeekday(week.days);
 
@@ -125,12 +133,8 @@ function WeekSection({ week }: { week: WeekPayload }) {
         Week {week.number}: {week.theme}
       </h2>
       <p className="month__dates">{week.dates_display}</p>
-      {week.trials && (
-        // The word this marks is program vocabulary that must never sit in
-        // this app's own static bundle text (see
-        // __tests__/bundle-privacy.test.ts), only ever arrive at runtime off
-        // the API, the way week.theme and week.challenge already do below.
-        <p className="month__trials">Half-volume week. A rank-up follows.</p>
+      {week.budget < fullBudget && (
+        <p className="month__lighter">A lighter week than the others this month.</p>
       )}
 
       <p className="month__effort">
@@ -145,7 +149,7 @@ function WeekSection({ week }: { week: WeekPayload }) {
       </ul>
 
       <p className="month__challenge">
-        <strong>Challenge of the week:</strong> {week.challenge}
+        <strong>Challenge:</strong> {week.challenge}
       </p>
 
       <h3>Days</h3>

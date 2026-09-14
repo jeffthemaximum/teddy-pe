@@ -44,7 +44,7 @@ export function DayCard({ day, isToday }: { day: DayCardPayload; isToday: boolea
 
       {day.dad_note && (
         <p className="day-card__dad-note">
-          <strong>Dad&apos;s note:</strong> {day.dad_note}
+          <strong>Note:</strong> {day.dad_note}
         </p>
       )}
 

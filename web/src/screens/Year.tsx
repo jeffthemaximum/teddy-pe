@@ -101,11 +101,11 @@ export function Year() {
       <h1>{data.label}</h1>
       <p className="year__status">Status: {data.status}</p>
       <p className="year__north-star">{data.north_star}</p>
-      <p className="year__ball">Rally ball now: {data.ball_now}</p>
+      <p className="year__ball">Now: {data.ball_now}</p>
       <p className="year__rank-rule">{data.rank_rule}</p>
 
       <section aria-labelledby="year-blocks-heading">
-        <h2 id="year-blocks-heading">The six blocks</h2>
+        <h2 id="year-blocks-heading">Sections of the year</h2>
         <ol>
           {blocks.map((block) => (
             <li key={block.key}>
@@ -122,7 +122,7 @@ export function Year() {
       </section>
 
       <section aria-labelledby="year-area-list-heading">
-        <h2 id="year-area-list-heading">The nine areas</h2>
+        <h2 id="year-area-list-heading">What this covers</h2>
         <dl>
           {areas.map((area) => (
             <div key={area.slug}>
@@ -134,7 +134,7 @@ export function Year() {
       </section>
 
       <section aria-labelledby="year-areas-heading">
-        <h2 id="year-areas-heading">Nine areas, block by block</h2>
+        <h2 id="year-areas-heading">Coverage by section</h2>
         <table>
           <thead>
             <tr>
@@ -161,7 +161,7 @@ export function Year() {
       </section>
 
       <section aria-labelledby="year-patches-heading">
-        <h2 id="year-patches-heading">Nine patches for this rank</h2>
+        <h2 id="year-patches-heading">Awards to earn</h2>
         <ul>
           {patches.map((patch) => (
             <li key={patch.id}>
@@ -172,7 +172,7 @@ export function Year() {
       </section>
 
       <section aria-labelledby="year-gates-heading">
-        <h2 id="year-gates-heading">Tennis ball gates</h2>
+        <h2 id="year-gates-heading">Steps</h2>
         <ul>
           {gates.map((gate) => (
             <li key={gate.position}>
@@ -201,7 +201,7 @@ export function Year() {
       </section>
 
       <section aria-labelledby="year-days-heading">
-        <h2 id="year-days-heading">The week's seven day roles</h2>
+        <h2 id="year-days-heading">Each day of the week</h2>
         <ol>
           {dayRoles.map((role) => (
             <li key={role.dow}>

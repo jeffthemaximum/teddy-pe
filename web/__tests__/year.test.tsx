@@ -269,7 +269,7 @@ describe("the Year view", () => {
     const { store } = renderYear();
     act(() => { store.dispatch({ type: "programYear/SUCCEEDED", payload: YEAR }); });
 
-    const region = screen.getByRole("region", { name: /the six blocks/i });
+    const region = screen.getByRole("region", { name: /sections of the year/i });
     const items = within(region).getAllByRole("listitem");
     const blockNames = items.map((el) => el.querySelector("strong")?.textContent);
     expect(blockNames).toEqual(["Cub", "Fox", "Coyote", "Wolf", "Puma", "Cheetah"]);
@@ -281,7 +281,7 @@ describe("the Year view", () => {
     const { store } = renderYear();
     act(() => { store.dispatch({ type: "programYear/SUCCEEDED", payload: YEAR }); });
 
-    const region = screen.getByRole("region", { name: /the six blocks/i });
+    const region = screen.getByRole("region", { name: /sections of the year/i });
     const items = within(region).getAllByRole("listitem");
 
     const marked = items.filter((el) => /current block/i.test(el.textContent ?? ""));
@@ -293,7 +293,7 @@ describe("the Year view", () => {
     const { store } = renderYear();
     act(() => { store.dispatch({ type: "programYear/SUCCEEDED", payload: YEAR }); });
 
-    const region = screen.getByRole("region", { name: /the six blocks/i });
+    const region = screen.getByRole("region", { name: /sections of the year/i });
     const items = within(region).getAllByRole("listitem");
     const cub = items.find((el) => el.textContent?.includes("Cub"));
     expect(cub?.textContent).toMatch(/2026-09-14 to 2026-10-25/);
@@ -332,7 +332,7 @@ describe("the Year view", () => {
     const { store } = renderYear();
     act(() => { store.dispatch({ type: "programYear/SUCCEEDED", payload: YEAR }); });
 
-    const region = screen.getByRole("region", { name: /tennis ball gates/i });
+    const region = screen.getByRole("region", { name: /steps/i });
     const items = within(region).getAllByRole("listitem");
 
     const active = items.filter((el) => /working on this now/i.test(el.textContent ?? ""));
@@ -350,7 +350,7 @@ describe("the Year view", () => {
     const { store } = renderYear();
     act(() => { store.dispatch({ type: "programYear/SUCCEEDED", payload: YEAR }); });
 
-    const region = screen.getByRole("region", { name: /tennis ball gates/i });
+    const region = screen.getByRole("region", { name: /steps/i });
     const items = within(region).getAllByRole("listitem");
     const active = items.find((el) => /working on this now/i.test(el.textContent ?? ""));
     expect(active?.textContent).toMatch(/green to yellow mini/i);
@@ -369,7 +369,7 @@ describe("the Year view", () => {
     const { store } = renderYear();
     act(() => { store.dispatch({ type: "programYear/SUCCEEDED", payload: YEAR }); });
 
-    const region = screen.getByRole("region", { name: /seven day roles/i });
+    const region = screen.getByRole("region", { name: /each day of the week/i });
     const names = within(region)
       .getAllByRole("listitem")
       .map((el) => el.querySelector("strong")?.textContent);
@@ -389,7 +389,7 @@ describe("the Year view", () => {
     const { store } = renderYear();
     act(() => { store.dispatch({ type: "programYear/SUCCEEDED", payload: YEAR }); });
 
-    const region = screen.getByRole("region", { name: /seven day roles/i });
+    const region = screen.getByRole("region", { name: /each day of the week/i });
     const items = within(region).getAllByRole("listitem");
     const wall = items.find((el) => el.textContent?.includes("Wall Day"));
     expect(wall?.textContent).toMatch(/60 to 90 minutes/);

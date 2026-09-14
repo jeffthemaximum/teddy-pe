@@ -336,18 +336,20 @@ describe("the Month view", () => {
     expect(within(weekRegion(/week 3/i)).getByText(/20 of 20/)).toBeInTheDocument();
   });
 
-  it("marks the Trials week, and only that one", () => {
-    // Assert the other two are NOT marked. Week 8 of every block is Trials
-    // at half volume, so its budget is 20 rather than 40 and that is the
-    // point, not just a label.
+  it("marks the week the API budgeted lighter, and only that one", () => {
+    // Assert the other two are NOT marked. Week 8 of every block is at half
+    // volume, so its budget is 20 rather than 40 and that is the point, not
+    // just a label. The marker reads the budgets rather than the payload's
+    // `trials` flag, because a property access survives minification and
+    // would put that word in a public bundle (bundle-privacy.test.ts).
     const { store } = renderMonth();
     act(() => {
       store.dispatch({ type: "plan/SUCCEEDED", payload: MONTH_PLAN });
     });
 
-    expect(within(weekRegion(/week 3/i)).getByText(/half-volume week/i)).toBeInTheDocument();
-    expect(within(weekRegion(/week 1/i)).queryByText(/half-volume week/i)).not.toBeInTheDocument();
-    expect(within(weekRegion(/week 2/i)).queryByText(/half-volume week/i)).not.toBeInTheDocument();
+    expect(within(weekRegion(/week 3/i)).getByText(/lighter week/i)).toBeInTheDocument();
+    expect(within(weekRegion(/week 1/i)).queryByText(/lighter week/i)).not.toBeInTheDocument();
+    expect(within(weekRegion(/week 2/i)).queryByText(/lighter week/i)).not.toBeInTheDocument();
   });
 
   it("shows all of a week's sub-targets", () => {
