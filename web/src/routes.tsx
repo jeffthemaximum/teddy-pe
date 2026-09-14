@@ -6,6 +6,8 @@ import { ThisWeek } from "./screens/ThisWeek";
 import { Glossary } from "./screens/Glossary";
 import { AthleteJournal } from "./screens/AthleteJournal";
 import { CoachJournal } from "./screens/CoachJournal";
+import { Progress } from "./screens/Progress";
+import { Tests } from "./screens/Tests";
 
 // A screen a person can tap that always answers 403 is worse than no screen
 // at all: it teaches them the app is broken. This table is not a guess, it
@@ -63,8 +65,8 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/month", label: "Month", roles: "any", element: <Month /> },
   { to: "/week", label: "This Week", roles: "any", element: <ThisWeek /> },
   { to: "/glossary", label: "Glossary", roles: "any", element: <Glossary /> },
-  { to: "/progress", label: "Progress", roles: "any", element: <Placeholder title="Progress" /> },
-  { to: "/tests", label: "Tests", roles: "any", element: <Placeholder title="Tests" /> },
+  { to: "/progress", label: "Progress", roles: "any", element: <Progress /> },
+  { to: "/tests", label: "Tests", roles: "any", element: <Tests /> },
   // athlete_entries: closed to a viewer, open to Teddy and Jeff.
   { to: "/journal", label: "Journal", roles: ["coach", "athlete"], element: <AthleteJournal /> },
   // coach_entries: Jeff's own notes, closed to everyone else.
