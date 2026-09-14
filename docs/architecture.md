@@ -199,7 +199,7 @@ Gate checks happen in Trials weeks.
 | 10 | Soccer wall passes | 3m from the wall, 30 s, alternating feet, inside foot. Count controlled returns. | Soccer |
 | + | Height | Shoes off, against a wall. Recorded at every test date to track growth rate. | Growth |
 
-Numbers are typed into the test sheet on the This Week tab and stored in the database, keyed by test window and test id, so every device shows the same sheet. The Progress panel on the Year tab charts them. Each row carries a direction in `data/program.json` (lower, higher, or growth) so the chart knows which way is an improvement; height reports a cm/year pace and raises the growth-load protocol when that pace runs fast.
+Numbers are typed into the test sheet on the This Week tab and stored in the database, keyed by test window and test id, so every device shows the same sheet. The Progress panel on the Year tab charts them. Each row carries a direction in `backend/content/program_years/<year>/program.yml` (lower, higher, or growth) so the chart knows which way is an improvement; height reports a cm/year pace and raises the growth-load protocol when that pace runs fast.
 
 Skill unlocks (pass/fail, checked in Trials): cartwheel over a line; cartwheel both sides; forward roll to standing; wall handstand 10s; 30s single-leg balance eyes closed; 20m backward run; 5 traveling-rings passes; split step on 10 of 10 signals; serve in 6 of 10; basketball layup both hands; keeper collapse dive both sides; 20 soccer juggles.
 
@@ -252,9 +252,9 @@ Rank card with nine patch slots per rank. Patches earned in Trials weeks (early 
 
 ## The coach's diary
 
-Jeff writes one entry per session on the This Week tab: how it went, Teddy's energy, a pain flag, a free line, and a rating for each drill that was on that day's card (not yet, getting there, owns it). There is one entry per session date and the database is the only copy, so the entry he starts on a laptop is the one his phone opens and edits. `tools/pull.py` brings them into `data/diary.json` so the repo stays the memory of the project.
+Jeff writes one entry per session on the This Week tab: how it went, Teddy's energy, a pain flag, a free line, and a rating for each drill that was on that day's card (not yet, getting there, owns it). There is one entry per session date, so the entry he starts on a laptop is the one his phone opens and edits. `bin/rails docs:export` writes them into `docs/journal/<year>/<month>.md` so the repo stays the memory of the project. Teddy keeps his own journal beside it and chooses what to share; anything unshared stays out of the export and out of the API.
 
-The diary proposes; it never edits. Before generating a week or a month, pull the entries and read them, then bring Jeff proposals:
+The diary proposes; it never edits. Before generating a week or a month, export the entries and read them, then bring Jeff proposals:
 
 - A drill rated **owns it** three sessions running is progressed to the next step or retired from the card.
 - A drill rated **not yet** three sessions running drops to an easier entry point rather than being repeated harder.
@@ -265,10 +265,16 @@ What the diary may never change: the fixed day roles, the high-intent effort bud
 
 ## Drill glossary
 
-Every named drill has an entry in `data/drills.json`: what it is, how to do it, what to watch for, a cue in Teddy's language, and an optional video link. `build.py` matches the names and aliases against the prose in daily cards and makes each first mention tappable, so a term nobody has met before explains itself without leaving the card. The same ids are what the diary rates.
+Every named drill has an entry in `backend/content/program_years/<year>/drills.yml`: what it is, how to do it, what to watch for, a cue in Teddy's language, and an optional video link. The seeder matches the names and aliases against the prose in daily cards and makes each first mention tappable, so a term nobody has met before explains itself without leaving the card. The same ids are what the diary rates.
 
-When writing a new month, add entries for any drill the new block introduces. The build prints every card block where no drill matched, which is the list of gaps to fill.
+When writing a new month, add entries for any drill the new block introduces. `bin/rails content:seed` prints every card block where no drill matched, which is the list of gaps to fill.
+
+## How the program reaches Teddy
+
+Three parts. `backend/` is a Rails 8 API on Fly, holding the program, both journals and the test results in Postgres; the program content is YAML under `backend/content/program_years/<year>/` and is seeded on every deploy. `core/` is the shared Redux package, including the offline queue, so the web app and the native app run the same state logic. `web/` is the React app on Vercel. Everything is behind a sign-in and nothing about Teddy ships in the bundle.
+
+The old static build is gone: no `build.py`, no generated page, no passphrase gate. `bin/rails docs:export` is what brings the program back into this repo as readable prose.
 
 ## Regeneration instructions (for future sessions)
 
-Pull the diary and the test results first (`tools/pull.py`) and read anything recorded since the last plan. To generate a month: take the block, list the week themes and sub-targets for that month, map to the fixed day roles, keep HIE budget, place Trials/deload and test weeks. To generate a week of daily cards: use the daily card template, place the week's New Thing in every full session, distribute the sub-targets across Wed/Thu/Fri with tennis heaviest Thursday, and write the Challenge of the Week into Monday/Tuesday and Friday.
+Export the journals and the test results first (`cd backend && bin/rails docs:export`) and read anything recorded since the last plan. To generate a month: take the block, list the week themes and sub-targets for that month, map to the fixed day roles, keep HIE budget, place Trials/deload and test weeks. To generate a week of daily cards: use the daily card template, place the week's New Thing in every full session, distribute the sub-targets across Wed/Thu/Fri with tennis heaviest Thursday, and write the Challenge of the Week into Monday/Tuesday and Friday.
