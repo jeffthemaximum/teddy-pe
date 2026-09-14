@@ -40,15 +40,6 @@ module Api
         }
       end
 
-      # One athlete today. The schema allows a second, and when there is one this
-      # endpoint can no longer guess which child a coach means, so it says nothing
-      # rather than serving the wrong one.
-      def athlete_for(user)
-        return user.athlete if user.athlete
-        athletes = Athlete.order(:id).to_a
-        athletes.one? ? athletes.first : nil
-      end
-
       # Role is deliberately absent. Nobody promotes themselves.
       def update_params = params.require(:user).permit(:name, :password, :current_password)
     end

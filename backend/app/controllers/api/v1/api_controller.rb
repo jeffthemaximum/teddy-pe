@@ -41,6 +41,21 @@ module Api
         payload[:pwd] != JwtService.fingerprint(@current_user.password_digest)
       end
 
+      # Which child this request is about.
+      #
+      # One athlete today. The schema allows a second, and when there is one no
+      # endpoint can guess which child a coach means, so this says nothing
+      # rather than serving the wrong one. /progression used to take
+      # Athlete.first, and its policy never looks at the record, so a second
+      # child's rank history, battery and height would have gone to anyone
+      # signed in. Both callers share this now so they cannot answer
+      # differently.
+      def athlete_for(user)
+        return user.athlete if user&.athlete
+        athletes = Athlete.order(:id).to_a
+        athletes.one? ? athletes.first : nil
+      end
+
       def bearer_token
         header = request.headers["Authorization"].to_s
         header.start_with?("Bearer ") ? header.split(" ", 2).last.presence : nil

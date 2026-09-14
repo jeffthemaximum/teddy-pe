@@ -47,6 +47,32 @@ RSpec.describe "progression", type: :request do
     record(next_year, "2027-09", "h", "140", on: Time.zone.local(2027, 9, 15))
   end
 
+  # /me refuses to guess which child a request means once there are two, with
+  # a comment saying why and a spec pinning it. This endpoint took Athlete.first
+  # instead, and ProgressionPolicy#show? never looks at the record, so a second
+  # child's whole rank history, battery and height series would be served to
+  # anyone signed in, the viewer included. One child today, and the project's
+  # stated position is that nothing may assume that.
+  it "says nothing rather than guessing which child, once there are two" do
+    create(:athlete, name: "A Second Child")
+
+    get "/api/v1/progression", headers: auth(coach)
+
+    expect(response).to have_http_status(:not_found)
+    # Teddy's numbers are in the fixture above. None of them may appear.
+    expect(response.body).not_to include("4.60", "4.05", "128", "140")
+  end
+
+  it "still answers for the coach's own child when the link is set" do
+    create(:athlete, name: "A Second Child")
+    coach.update!(athlete: athlete)
+
+    get "/api/v1/progression", headers: auth(coach)
+
+    expect(response).to have_http_status(:ok)
+    expect(JSON.parse(response.body)["battery"]).to be_present
+  end
+
   it "charts a battery measure across every year, not just this one" do
     get "/api/v1/progression", headers: auth(coach)
     expect(response).to have_http_status(:ok)

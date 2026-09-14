@@ -3,7 +3,9 @@ module Api
     class ProgressionController < ApiController
       # GET /api/v1/progression
       def show
-        athlete = current_user.athlete || Athlete.first
+        # ApiController#athlete_for, the same resolution /me uses. It refuses
+        # to guess once there is a second child rather than taking the first.
+        athlete = athlete_for(current_user)
         return render_not_found if athlete.nil?
 
         authorize athlete, :show?, policy_class: ProgressionPolicy
