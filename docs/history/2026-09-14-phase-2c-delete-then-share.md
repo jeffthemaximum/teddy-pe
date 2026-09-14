@@ -50,3 +50,15 @@ Every new assertion was checked against a deliberately wrong implementation befo
 The ordering that broke is proven on the screen, through the real store and the real sagas with only `fetch` mocked: delete offline, find nothing to share, let the replay run, and one request leaves the device. It is the delete, no row is created, and nothing that went out mentions sharing at all.
 
 Suites after: `core/` 257, `web/` 237, `backend/` 249, all green. Two commits on `feature/rails-react-rewrite`.
+
+## After the report: the seam nobody owned
+
+The coordinator found one thing that had fallen between this task and the one that fixed the route roles, and verified it rather than assuming it.
+
+That task left `/journal` open to both roles, correctly: `athlete_entries#index` answers a coach 200, so Jeff can read what Teddy shared. It then recorded that the live write controls were a within-screen concern belonging to `AthleteJournal.tsx`. This task gated the **delete** on `role === "athlete"` and gated the form, the Save button and the share toggle on nothing at all. Jeff signed in, opened `/journal`, and got a live textarea, a live Save and a button reading "Let Dad see this". All three 403 at the API and the last is the app telling Dad about Dad. The comment in this file describing the situation stopped one line short of acting on it.
+
+**What Jeff gets now.** A heading carrying the athlete's name, read from `/api/v1/me` at runtime and never written into the file, because a name typed into a heading is shipped in the bundle to everyone who loads the site. A line under it saying what the page is. A shared day laid out as four labelled things to read, his son's questions read back as labels rather than asked again. And nothing to press: no form, no Save, no toggle, no delete, proven by role rather than by label so a control added later under a different name is caught too. The branch is `role !== "athlete"` rather than `role === "coach"`, so the page with nothing on it is the default.
+
+**The half that matters.** A day Teddy kept to himself renders exactly the same markup as a day he never wrote. There is one empty message and one branch, and the line explaining what the page is stands whether or not there is an entry, so its presence carries no signal either. The screen also drops an unshared entry itself rather than trusting the Pundit scope, because the journal slice is fed by the week payload's inline `athlete_entry` as well as by the index endpoint, so a serializer that ever leaked one would land it here with nothing else in the way.
+
+The fixture seeds the unshared entry into the store rather than filtering it out on the way in, and compares the rendered markup byte for byte against the never-written render. A screen printing "nothing shared today" beside "nothing written today" fails both new tests; a screen that stopped dropping the unshared entry fails the first. `web/` is 244 after it.
