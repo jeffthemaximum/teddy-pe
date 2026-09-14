@@ -143,23 +143,43 @@ describe("the outbox reducer", () => {
     expect(done.queue).toHaveLength(0);
   });
 
-  it("clears replaying when the replay loop stops at a failure", () => {
+  it("clears replaying when the replay loop stops at a non-permanent failure, even though this session still owes a write", () => {
     // A UI reading this flag to show a syncing spinner needs it to come back
     // down when the loop actually stops, not just to go up when it starts.
-    const queued = reducer(undefined, actions.enqueue(testWrite("day:2026-09-17", "x")));
-    const id = queued.queue[0]!.id;
-    const started = reducer(queued, actions.replay());
+    //
+    // Two writes, both Teddy's, so this can't be satisfied by a hardcoded
+    // `false` that happens to agree with an empty or fully-sent queue: after
+    // the failure, Teddy still owes both writes (a non-permanent failure
+    // keeps the write, it only bumps its attempts), so a reducer that
+    // recomputed this flag from `stillOwing` would say `true` here. This
+    // branch says `false` regardless, because the loop genuinely stopped and
+    // nothing behind the failed write got a turn either.
+    const teddyQueued = reducer(
+      reducer(undefined, signedIn(teddy)),
+      actions.enqueue(testWrite("athlete:2026-09-17", "first")),
+    );
+    const twoQueued = reducer(
+      teddyQueued,
+      actions.enqueue(testWrite("athlete:2026-09-18", "second")),
+    );
+    const id = twoQueued.queue[0]!.id;
+    const started = reducer(twoQueued, actions.replay());
     expect(started.replaying).toBe(true);
     const stopped = reducer(
       started,
       actions.replayFailed({
         id,
-        dedupeKey: "day:2026-09-17",
+        dedupeKey: "athlete:2026-09-17",
         permanent: false,
         message: "No connection.",
       }),
     );
     expect(stopped.replaying).toBe(false);
+    // Both writes are still there: the failed one (retried once) and the one
+    // behind it that the loop never reached.
+    expect(stopped.queue).toHaveLength(2);
+    expect(stopped.queue[0]!.attempts).toBe(1);
+    expect(stopped.queue[1]!.attempts).toBe(0);
   });
 
   it("does not start replaying when there is nothing queued", () => {
@@ -211,16 +231,27 @@ describe("the outbox reducer", () => {
     expect(landed.queue[0]!.userId).toBe(teddy.id);
   });
 
-  it("counts attempts, and drops a write the server permanently rejected", () => {
+  it("counts attempts on the write that failed, and drops only the one the server permanently rejected", () => {
     // A 422 will fail identically forever. Keeping it would block everything
-    // behind it and never resolve.
-    const queued = reducer(undefined, actions.enqueue(testWrite("day:2026-09-17", "x")));
-    const id = queued.queue[0]!.id;
+    // behind it and never resolve. Two writes in the queue, not one: a
+    // one-item fixture would pass just as well against a bug that bumped
+    // every write's attempts, or dropped the whole queue instead of the one
+    // write that was actually rejected.
+    const first = reducer(undefined, actions.enqueue(testWrite("day:2026-09-17", "x")));
+    const both = reducer(first, actions.enqueue(testWrite("day:2026-09-18", "y")));
+    const id = both.queue[0]!.id;
+    const otherId = both.queue[1]!.id;
     const failure = { id, dedupeKey: "day:2026-09-17", message: "A note cannot be blank." };
-    const retried = reducer(queued, actions.replayFailed({ ...failure, permanent: false }));
+    const retried = reducer(both, actions.replayFailed({ ...failure, permanent: false }));
     expect(retried.queue[0]!.attempts).toBe(1);
+    // The other write is untouched by a failure that was not its own.
+    expect(retried.queue[1]!.attempts).toBe(0);
+    expect(retried.queue).toHaveLength(2);
+
     const dropped = reducer(retried, actions.replayFailed({ ...failure, permanent: true }));
-    expect(dropped.queue).toHaveLength(0);
+    // Only the rejected write comes off. The other one is still owed.
+    expect(dropped.queue).toHaveLength(1);
+    expect(dropped.queue[0]!.id).toBe(otherId);
   });
 
   it("replaces the whole queue on restore, whatever storage handed back", () => {

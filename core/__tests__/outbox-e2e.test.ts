@@ -36,6 +36,30 @@ async function waitUntil(predicate: () => boolean, label: string): Promise<void>
   throw new Error(`outbox-e2e: timed out waiting for ${label}`);
 }
 
+const TEDDY_LOGIN = {
+  jwt: "TEDDY-TOKEN",
+  user: { id: 2, email: "teddy@example.com", name: "Teddy", role: "athlete" as const },
+};
+
+const JEFF_LOGIN = {
+  jwt: "JEFF-TOKEN-ONLINE",
+  user: { id: 1, email: "jeff@example.com", name: "Jeff", role: "coach" as const },
+};
+
+// Signs a store in against a mocked /auth/login response, then waits for it
+// to land. Every online save below needs a real token to send, or an
+// assertion that it sent one proves nothing.
+async function signInFor(
+  store: ReturnType<typeof createCoreStore>,
+  login: typeof TEDDY_LOGIN | typeof JEFF_LOGIN,
+): Promise<void> {
+  store.dispatch(authActions.signIn({ email: login.user.email, password: "hunter2" }));
+  await waitUntil(
+    () => authSelectors.selectIsSignedIn(store.getState()),
+    `${login.user.name} to be signed in`,
+  );
+}
+
 describe("outbox end-to-end: a note typed offline reaches the API when the connection comes back", () => {
   afterEach(() => {
     jest.restoreAllMocks();
@@ -44,7 +68,20 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
   it("queues the note while offline, then sends exactly what was typed once fetch works again, and learns the server's id", async () => {
     const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
 
-    const fetchMock = jest.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"));
+    // Signed in before the note is ever typed. A queued write with no
+    // recorded author is never replayed (see ducks/outbox/selectors.ts), so
+    // a fixture that stayed signed out here would only prove the package can
+    // send a write nobody owns, which fix 1 says it must not.
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation((input) =>
+      String(input).endsWith("/api/v1/auth/login")
+        ? respond(200, TEDDY_LOGIN)
+        : Promise.reject(new TypeError("Failed to fetch")),
+    );
+    store.dispatch(authActions.signIn({ email: "teddy@example.com", password: "hunter2" }));
+    await waitUntil(
+      () => authSelectors.selectIsSignedIn(store.getState()),
+      "the sign-in to finish, so the queued write has a real author",
+    );
 
     store.dispatch(
       journalActions.saveAthleteEntry({
@@ -62,13 +99,15 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
     );
 
     // Nothing reached the server: the attempt was made and failed, and
-    // nothing about it is recorded as saved.
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    // nothing about it is recorded as saved. One call for the sign-in, one
+    // for the failed save.
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(journalSelectors.selectAthleteEntryFor("2026-09-17")(store.getState())).toBeNull();
 
-    // The entry is queued rather than lost.
+    // The entry is queued rather than lost, and it is Teddy's.
     const queue = outboxSelectors.selectQueue(store.getState());
     expect(queue[0]!.action.dedupeKey).toBe("athlete:2026-09-17");
+    expect(queue[0]!.userId).toBe(TEDDY_LOGIN.user.id);
 
     // Connectivity is back.
     fetchMock.mockReset();
@@ -99,9 +138,12 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
     );
 
     // The words that were typed, and nothing else, are what actually left
-    // for the server.
+    // for the server, under Teddy's own token: a write with a real author is
+    // never sent anonymously.
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [, init] = fetchMock.mock.calls[0]!;
+    const headers = (init as RequestInit).headers as Record<string, string>;
+    expect(headers.Authorization).toBe(`Bearer ${TEDDY_LOGIN.jwt}`);
     // AthleteEntriesController#create opens with
     // `ProgramYear.find(entry_params.fetch(:program_year_id))`, and `fetch`
     // raises on a missing key, so a body without it is a 400 every time.
@@ -128,7 +170,19 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
     // API. Nothing here seeds state directly: both actions go through the
     // same store a real app would use.
     const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
-    const fetchMock = jest.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"));
+    // Signed in first, the same reason as the test above: an unattributed
+    // write is never replayed, so proving this ordering while signed out
+    // would only reach it by accident.
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation((input) =>
+      String(input).endsWith("/api/v1/auth/login")
+        ? respond(200, TEDDY_LOGIN)
+        : Promise.reject(new TypeError("Failed to fetch")),
+    );
+    store.dispatch(authActions.signIn({ email: "teddy@example.com", password: "hunter2" }));
+    await waitUntil(
+      () => authSelectors.selectIsSignedIn(store.getState()),
+      "the sign-in to finish, so the queued write has a real author",
+    );
 
     store.dispatch(
       journalActions.saveAthleteEntry({
@@ -179,6 +233,8 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
     );
 
     const [, init] = fetchMock.mock.calls[0]!;
+    const headers = (init as RequestInit).headers as Record<string, string>;
+    expect(headers.Authorization).toBe(`Bearer ${TEDDY_LOGIN.jwt}`);
     expect(JSON.parse((init as RequestInit).body as string)).toEqual({
       athlete_entry: {
         program_year_id: 1,
@@ -197,24 +253,27 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
   // starts. Both bugs lived here first: the request the server rejects, and
   // the envelope stored as though it were the entry.
 
-  it("an online athlete save names its program year, unwraps what comes back, and stops the day spinning", async () => {
+  it("an online athlete save names its program year, unwraps what comes back, stops the day spinning, and goes out under the signed-in athlete's own token", async () => {
     const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
-    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation(() =>
-      respond(201, {
-        athlete_entry: {
-          id: 77,
-          session_date: "2026-09-17",
-          program_year_id: 1,
-          day_card_id: null,
-          felt: null,
-          best: null,
-          hard: null,
-          note: "Beat my own record on the ladder.",
-          shared: true,
-          updated_at: "2026-09-17T19:05:00Z",
-        },
-      }),
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation((input) =>
+      String(input).endsWith("/api/v1/auth/login")
+        ? respond(200, TEDDY_LOGIN)
+        : respond(201, {
+            athlete_entry: {
+              id: 77,
+              session_date: "2026-09-17",
+              program_year_id: 1,
+              day_card_id: null,
+              felt: null,
+              best: null,
+              hard: null,
+              note: "Beat my own record on the ladder.",
+              shared: true,
+              updated_at: "2026-09-17T19:05:00Z",
+            },
+          }),
     );
+    await signInFor(store, TEDDY_LOGIN);
 
     store.dispatch(
       journalActions.saveAthleteEntry({
@@ -229,8 +288,14 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
       "the saved entry to reach the slice under its own date",
     );
 
-    const [url, init] = fetchMock.mock.calls[0]!;
+    const [url, init] = fetchMock.mock.calls[1]!;
     expect(String(url)).toBe("https://api.test/api/v1/athlete_entries");
+    const headers = (init as RequestInit).headers as Record<string, string>;
+    // A save with nobody signed in is a bug in the calling screen (see
+    // fetchAthleteEntries's own guard), but the save path itself does not
+    // check, so this is the only place proving it actually carries the
+    // signed-in person's token rather than going out silently anonymous.
+    expect(headers.Authorization).toBe(`Bearer ${TEDDY_LOGIN.jwt}`);
     expect(JSON.parse((init as RequestInit).body as string)).toEqual({
       athlete_entry: {
         program_year_id: 1,
@@ -251,26 +316,29 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
     expect(outboxSelectors.selectQueue(store.getState())).toHaveLength(0);
   });
 
-  it("an online coach save sends ratings beside the entry, not inside it, and lands in the coach map", async () => {
+  it("an online coach save sends ratings beside the entry, not inside it, lands in the coach map, and goes out under the signed-in coach's own token", async () => {
     const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
-    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation(() =>
-      respond(201, {
-        coach_entry: {
-          id: 9,
-          session_date: "2026-09-17",
-          program_year_id: 1,
-          day_card_id: 12,
-          overall: 4,
-          energy: 3,
-          flag_pain: false,
-          pain_note: null,
-          note: "Balance drill needs another week.",
-          challenge_num: "2",
-          ratings: { "cartwheel-prep": "getting" },
-          updated_at: "2026-09-17T19:10:00Z",
-        },
-      }),
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation((input) =>
+      String(input).endsWith("/api/v1/auth/login")
+        ? respond(200, JEFF_LOGIN)
+        : respond(201, {
+            coach_entry: {
+              id: 9,
+              session_date: "2026-09-17",
+              program_year_id: 1,
+              day_card_id: 12,
+              overall: 4,
+              energy: 3,
+              flag_pain: false,
+              pain_note: null,
+              note: "Balance drill needs another week.",
+              challenge_num: "2",
+              ratings: { "cartwheel-prep": "getting" },
+              updated_at: "2026-09-17T19:10:00Z",
+            },
+          }),
     );
+    await signInFor(store, JEFF_LOGIN);
 
     store.dispatch(
       journalActions.saveCoachEntry({
@@ -290,7 +358,9 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
       "the saved coach entry to reach the slice",
     );
 
-    const [, init] = fetchMock.mock.calls[0]!;
+    const [, init] = fetchMock.mock.calls[1]!;
+    const headers = (init as RequestInit).headers as Record<string, string>;
+    expect(headers.Authorization).toBe(`Bearer ${JEFF_LOGIN.jwt}`);
     // `ratings` sits at the top level of the request, not inside
     // `coach_entry`: CoachEntriesController#ratings_param reads
     // `params[:ratings]`, and entry_params does not permit it.
@@ -317,6 +387,41 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
   // same session.
 
   it("fills both journals from the index endpoints, and asks each one the way its controller expects", async () => {
+    // Same date on purpose: Teddy and Jeff can both write about the same
+    // session, and a fixture that gave each side its own date would let a
+    // bug that crossed the two lists hide behind "no entry landed at that
+    // key", not a real check that the right content landed in the right
+    // map. Full-object equality below, not just an id, is what closes the
+    // other half: a swap that happened to preserve an id would still be
+    // caught by every other field disagreeing.
+    const SHARED_DATE = "2026-09-17";
+    const athleteEntry = {
+      id: 4,
+      session_date: SHARED_DATE,
+      program_year_id: 1,
+      day_card_id: 12,
+      felt: null,
+      best: null,
+      hard: null,
+      note: "Landed three in a row.",
+      shared: true,
+      updated_at: "2026-09-17T19:02:00Z",
+    };
+    const coachEntry = {
+      id: 9,
+      session_date: SHARED_DATE,
+      program_year_id: 1,
+      day_card_id: 11,
+      overall: 4,
+      energy: 3,
+      flag_pain: false,
+      pain_note: null,
+      note: "Quick feet all session.",
+      challenge_num: null,
+      ratings: {},
+      updated_at: "2026-09-17T19:10:00Z",
+    };
+
     const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
     const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = String(input);
@@ -327,41 +432,9 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
         });
       }
       if (url.includes("/api/v1/athlete_entries")) {
-        return respond(200, {
-          athlete_entries: [
-            {
-              id: 4,
-              session_date: "2026-09-17",
-              program_year_id: 1,
-              day_card_id: 12,
-              felt: null,
-              best: null,
-              hard: null,
-              note: "Landed three in a row.",
-              shared: true,
-              updated_at: "2026-09-17T19:02:00Z",
-            },
-          ],
-        });
+        return respond(200, { athlete_entries: [athleteEntry] });
       }
-      return respond(200, {
-        coach_entries: [
-          {
-            id: 9,
-            session_date: "2026-09-16",
-            program_year_id: 1,
-            day_card_id: 11,
-            overall: 4,
-            energy: 3,
-            flag_pain: false,
-            pain_note: null,
-            note: "Quick feet all session.",
-            challenge_num: null,
-            ratings: {},
-            updated_at: "2026-09-16T19:10:00Z",
-          },
-        ],
-      });
+      return respond(200, { coach_entries: [coachEntry] });
     });
 
     store.dispatch(authActions.signIn({ email: "jeff@example.com", password: "hunter2" }));
@@ -391,8 +464,17 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
       expect((init as RequestInit).headers).toMatchObject({ Authorization: "Bearer JEFF-TOKEN" });
     }
 
-    expect(journalSelectors.selectAthleteEntryFor("2026-09-17")(store.getState())?.id).toBe(4);
-    expect(journalSelectors.selectCoachEntryFor("2026-09-16")(store.getState())?.id).toBe(9);
+    // The whole entry, not just its id: a fixture bug (or a duck bug) that
+    // put the right id under the wrong side's fields would fail here even
+    // though an id-only check would have missed it.
+    expect(journalSelectors.selectAthleteEntryFor(SHARED_DATE)(store.getState())).toEqual(
+      athleteEntry,
+    );
+    expect(journalSelectors.selectCoachEntryFor(SHARED_DATE)(store.getState())).toEqual(coachEntry);
+    // And each map holds only its own one entry: neither side's fetch also
+    // landed in the other's.
+    expect(journalSelectors.selectAthleteEntries(store.getState())).toEqual([athleteEntry]);
+    expect(journalSelectors.selectCoachEntries(store.getState())).toEqual([coachEntry]);
     // The spinners both stop, and neither list failed.
     expect(journalSelectors.selectIsLoadingAthleteEntries(store.getState())).toBe(false);
     expect(journalSelectors.selectIsLoadingCoachEntries(store.getState())).toBe(false);
