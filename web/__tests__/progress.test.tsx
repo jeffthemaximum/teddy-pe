@@ -234,10 +234,18 @@ describe("the Progress view", () => {
       store.dispatch({ type: "progression/SUCCEEDED", payload: PROGRESSION });
     });
 
+    // "Lower is better." names which way is good for this measure, straight
+    // off `direction`. Whether 5.00 -> 4.00 reads as improving is left to
+    // the reader, with the caption and the chart's own falling shape to
+    // read it by: the screen states direction and the numbers, not a
+    // verdict of its own about the two together (see the removed
+    // trendTone note in Progress.tsx for why two verdicts on one number was
+    // the wrong shape).
     const region = screen.getByRole("region", { name: /quick sprint/i });
     expect(within(region).getByText(/lower is better/i)).toBeInTheDocument();
-    expect(within(region).getByText(/right way/i)).toBeInTheDocument();
-    expect(within(region).queryByText(/wrong way/i)).not.toBeInTheDocument();
+    const values = within(region).getAllByRole("listitem").map((el) => el.textContent ?? "");
+    expect(values[0]).toMatch(/5/);
+    expect(values[1]).toMatch(/4/);
   });
 
   it("shows a measure where higher is better as improving when the number rises", () => {
@@ -248,8 +256,9 @@ describe("the Progress view", () => {
 
     const region = screen.getByRole("region", { name: /standing jump/i });
     expect(within(region).getByText(/higher is better/i)).toBeInTheDocument();
-    expect(within(region).getByText(/right way/i)).toBeInTheDocument();
-    expect(within(region).queryByText(/wrong way/i)).not.toBeInTheDocument();
+    const values = within(region).getAllByRole("listitem").map((el) => el.textContent ?? "");
+    expect(values[0]).toMatch(/100/);
+    expect(values[1]).toMatch(/150/);
   });
 
   it("renders the server's own verdict rather than computing one", () => {

@@ -17,11 +17,10 @@ type SeriesPoint = { window: string; value: string | null };
 // and every series value, height's included (core/src/types.ts's own
 // comment on Progression says why: numeric_value&.to_s, the same choice
 // test_results_controller.rb makes for the same reason). This is the one
-// place that turns one of those strings into a number, for the two things
-// that actually need arithmetic: plotting a point's height on the chart,
-// and comparing first against latest to say which way a measure is
-// trending (see trendTone below). Everywhere else a first/latest value
-// reaches the screen, it is printed exactly as the server sent it.
+// place that turns one of those strings into a number, and it is only ever
+// used to plot a point's position on the chart. first and latest reach the
+// screen printed exactly as the server sent them; nothing here does
+// arithmetic on them (see changeLabel below for why).
 function parseNumeric(value: string | null): number | null {
   if (value === null) return null;
   const parsed = Number(value);
@@ -46,10 +45,17 @@ function toPoints(series: SeriesPoint[]): SparklinePoint[] {
 // The verdict is the server's own word (see core/src/types.ts's comment on
 // Progression: "change" is "better" | "worse" | "same" | null, not a
 // number). This only translates that word into a sentence; it never looks
-// at first, latest or direction to decide which word to show. A screen
-// that computed its own verdict from first and latest would have no way to
-// know the server disagreed with the arithmetic, and the server is the one
-// that knows which direction counts.
+// at first, latest or direction to decide which word to show.
+//
+// An earlier version of this screen also rendered a second, independently
+// computed verdict here (a "trendTone" derived from direction, first and
+// latest, used to color the chart). A contrived fixture proved it could
+// disagree with the server's own change: two verdicts about the same
+// number that can contradict each other is worse than either alone, since
+// a reader has no way to know which to believe. The server is the one that
+// knows which direction counts, what a meaningful change is for that
+// measure, and what the whole year's data says rather than two endpoints
+// of it, so this renders only its word, never a second one of its own.
 function changeLabel(change: BatteryMeasure["change"]): string | null {
   switch (change) {
     case "better":
@@ -61,30 +67,6 @@ function changeLabel(change: BatteryMeasure["change"]): string | null {
     default:
       return null;
   }
-}
-
-// direction says which way is good for this one measure ("lower" for a
-// sprint, "higher" for a jump) and it is never absent on a battery entry.
-// This is a second, independent read of "is this measure trending well",
-// used only to color the chart, never to overrule the server's own change
-// verdict above: it compares the same two numbers change already judged,
-// but through this screen's own eyes rather than the server's, which is
-// why a contrived case can disagree with change (see progress.test.tsx's
-// "Balance hold" fixture) without that being a bug in either one.
-function trendTone(
-  direction: BatteryMeasure["direction"],
-  first: number | null,
-  latest: number | null,
-): "good" | "bad" | undefined {
-  if (first === null || latest === null || first === latest) return undefined;
-  const improving = direction === "lower" ? latest < first : latest > first;
-  return improving ? "good" : "bad";
-}
-
-function toneLabel(tone: "good" | "bad" | undefined): string | null {
-  if (tone === "good") return "Heading the right way.";
-  if (tone === "bad") return "Heading the wrong way.";
-  return null;
 }
 
 function ratingLabel(rating: DrillRatingValue): string {
@@ -241,15 +223,17 @@ export function Progress() {
 function BatteryCard({ measure }: { measure: BatteryMeasure }) {
   const headingId = `progress-battery-${measure.test_id}-heading`;
   const points = toPoints(measure.series);
-  const first = parseNumeric(measure.first);
-  const latest = parseNumeric(measure.latest);
-  const tone = trendTone(measure.direction, first, latest);
   const verdict = changeLabel(measure.change);
-  const toneText = toneLabel(tone);
 
   return (
     <section aria-labelledby={headingId} className="progress__measure">
       <h3 id={headingId}>{measure.label}</h3>
+      {/* direction says which way is good for this one measure and it is
+          never absent on a battery entry. Between this caption and the
+          chart's own shape (falling or rising, drawn straight from the
+          numbers with no judgment of its own), the reader has what they
+          need to read the chart correctly, without a second sentence
+          telling them what to think about it. */}
       <p className="progress__scale">{measure.direction === "lower" ? "Lower is better." : "Higher is better."}</p>
       {points.length > 0 && (
         <Sparkline title={`${measure.label} over time, in ${measure.unit}`} points={points} />
@@ -259,11 +243,6 @@ function BatteryCard({ measure }: { measure: BatteryMeasure }) {
         {measure.unit}.
       </p>
       {verdict && <p className="progress__verdict">{verdict}</p>}
-      {toneText && (
-        <p className="progress__trend" data-tone={tone}>
-          {toneText}
-        </p>
-      )}
     </section>
   );
 }
