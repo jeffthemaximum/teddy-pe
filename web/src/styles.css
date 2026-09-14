@@ -1364,6 +1364,26 @@ legend {
   font-weight: 600;
 }
 
+/* The Challenge of the Week, read once before he types the number under it.
+   Same sunk panel the per-drill fieldsets use, so the two things on this
+   screen that come from the plan rather than from him look alike. */
+.coach-journal__challenge {
+  margin-top: 1.2rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 8px;
+  background: var(--sunk);
+}
+
+.coach-journal__challenge p {
+  margin: 0;
+}
+
+.coach-journal__challenge-heading {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
 .coach-journal__delete {
   margin-top: 2.4rem;
   padding-top: 1.2rem;

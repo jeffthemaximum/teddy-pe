@@ -387,3 +387,18 @@ A whole-branch review of the legacy migration returned "not safe to run against 
 **The whole year came to two rows: one diary entry and one test result.** Nothing unmapped, no conflicts, both migrated, `legacy:verify` clean field by field including drill ratings. The volume was not known until the survey ran. That is the argument for the survey existing and for it writing nothing: the plan was written against a year of records and the honest answer was two, and nobody could have known which without looking first. A migration that had gone straight to writing would have been just as correct here and would have taught nothing about the case where the answer is not two.
 
 **The old rows stay.** `diary_entry` and `test_result` in `neondb` were not dropped and are not on anyone's list to drop. Deleting repository files is reversible through git history; dropping the only copy of a row is not. They cost nothing sitting there and they are the backstop if the migrated values are ever doubted.
+
+## 2026-09-14: the Notes page shows the challenge, and asks for the right number
+
+**What Jeff asked.** On `/notes`, show the actual Challenge of the Week beside the field that records it.
+
+**What the asking turned up.** The field's label and its contents disagreed. It read "Which challenge attempt this was", which asks for 1 or 2. But week 1's challenge is "Silent Landings. 10 jumps off a step, count the silent ones. Monday number, Friday number", and `DocsExporter` writes the value out as "Challenge number". The field holds the score. Jeff confirmed it, so the label now says `Challenge number` and asks for what he actually types.
+
+**Decisions made building it.**
+
+- **The challenge is read off the week, never restated here.** CLAUDE.md gives every week one challenge attempted early and late, and the week payload already carries the whole sentence: what it is, how it is scored, and when the two attempts fall. A screen that summarised it would be a second owner of a program rule.
+- **No new fetch.** `CoachJournal` has read `selectWeek` and `selectDayByDate` since the drill filter landed, so this is the same payload used a second time.
+- **Gated on the day card, not on the week having loaded.** The payload only ever holds the current week, so a date outside it would be shown this week's challenge beside a session that ran under a different one. Wrong and confident is worse than absent.
+- **Nothing is said in its place.** The drill fieldset immediately below already explains that the date is outside this week. A second notice saying the same thing on the same screen is noise, so the block simply does not render and the number field stands on its own.
+- **The export line was already right.** "Challenge number" in `docs_exporter.rb` is what the column has always meant. The label was the thing that had drifted, so only the label moved.
+- **Same sunk panel as the per-drill fieldsets.** The two things on this screen that come from the plan rather than from Jeff now look alike, which is the difference worth showing.
