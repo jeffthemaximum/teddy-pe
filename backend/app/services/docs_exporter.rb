@@ -95,10 +95,18 @@ class DocsExporter
   # never collide on a single date, so nothing currently depends on this, but
   # a second coach account would make output order an accident of physical
   # row placement instead of a fact about the data.
+  # `kept` sits on the two loads rather than beside the `shared` filter
+  # below, and the difference is the whole point. An unshared entry still
+  # marks the month as lived and simply contributes nothing; a deleted entry
+  # has to be invisible further up than that, or a month whose only entry was
+  # deleted would keep writing an empty file and the prune that this exists
+  # to reach would never fire. So this pair of lines is the one place this
+  # layer decides which entries exist at all, and `visible` below is the one
+  # place it decides which of those get written down.
   def export_journal(year)
-    coach_entries = CoachEntry.where(program_year: year).includes(drill_ratings: :drill)
+    coach_entries = CoachEntry.kept.where(program_year: year).includes(drill_ratings: :drill)
                               .order(:session_date, :id).to_a
-    athlete_entries = AthleteEntry.where(program_year: year).order(:session_date, :id).to_a
+    athlete_entries = AthleteEntry.kept.where(program_year: year).order(:session_date, :id).to_a
     return [] if coach_entries.empty? && athlete_entries.empty?
 
     visible = coach_entries + athlete_entries.select(&:shared)

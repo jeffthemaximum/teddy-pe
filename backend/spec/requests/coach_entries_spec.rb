@@ -100,6 +100,61 @@ RSpec.describe "coach entries", type: :request do
     expect(dates).to eq([ "2026-09-16" ])
   end
 
+  # Two entries, one deleted, for the same reason the athlete's own spec uses
+  # two: a list that came back empty would look identical whether the filter
+  # picked the right row or threw away everything.
+  describe "an entry he has deleted" do
+    let!(:kept) do
+      create(:coach_entry, user: coach, program_year: year,
+             session_date: Date.new(2026, 9, 16), note: "Split step landed every time.")
+    end
+    let!(:deleted) do
+      create(:coach_entry, :deleted, user: coach, program_year: year,
+             session_date: Date.new(2026, 9, 17), note: "The note he took back.")
+    end
+
+    it "is gone from the list, and the entry beside it is not" do
+      get "/api/v1/coach_entries", headers: auth(coach)
+
+      listed = JSON.parse(response.body)["coach_entries"]
+      expect(listed.map { |e| e["id"] }).to eq([ kept.id ])
+      expect(listed.first["note"]).to eq("Split step landed every time.")
+      expect(response.body).not_to include("The note he took back.")
+    end
+
+    it "is gone from a date range that contains it" do
+      get "/api/v1/coach_entries?from=2026-09-15&to=2026-09-18", headers: auth(coach)
+
+      dates = JSON.parse(response.body)["coach_entries"].map { |e| e["session_date"] }
+      expect(dates).to eq([ "2026-09-16" ])
+    end
+
+    it "cannot be edited back into view" do
+      patch "/api/v1/coach_entries/#{deleted.id}",
+        params: { coach_entry: { note: "Undeleted" } }, as: :json, headers: auth(coach)
+      expect(response).to have_http_status(:not_found)
+      expect(deleted.reload.note).to eq("The note he took back.")
+    end
+
+    it "keeps every word it had" do
+      expect(CoachEntry.count).to eq(2)
+      expect(deleted.reload.note).to eq("The note he took back.")
+    end
+
+    it "leaves the day free to be written about again, on a new row" do
+      post "/api/v1/coach_entries",
+        params: { coach_entry: { program_year_id: year.id, session_date: "2026-09-17",
+                                 note: "A second go at Thursday." } },
+        as: :json, headers: auth(coach)
+      expect(response).to have_http_status(:ok)
+
+      written = JSON.parse(response.body)["coach_entry"]
+      expect(written["id"]).not_to eq(deleted.id)
+      expect(deleted.reload.note).to eq("The note he took back.")
+      expect(CoachEntry.count).to eq(3)
+    end
+  end
+
   it "refuses the athlete and the viewer" do
     [ teddy, viewer ].each do |user|
       post "/api/v1/coach_entries", params: body, as: :json, headers: auth(user)

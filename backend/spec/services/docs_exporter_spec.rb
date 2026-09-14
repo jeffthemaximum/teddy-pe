@@ -143,6 +143,61 @@ RSpec.describe DocsExporter do
       expect(path.read).not_to include("The cartwheel felt like flying")
     end
 
+    # The prune Phase 1 could not reach. Nothing in the app could perform a
+    # deletion then, so the mechanism existed for a case that could not
+    # happen. A soft delete is that case, and this is it happening.
+    it "drops a soft-deleted entry from the prose while the one beside it stays" do
+      create(:coach_entry, user: coach, program_year: year, session_date: Date.new(2026, 9, 16),
+             note: "Split step landed every time.")
+      removed = create(:coach_entry, user: coach, program_year: year,
+                       session_date: Date.new(2026, 9, 17), note: "The note he took back.")
+      export
+
+      path = root.join("journal/2026-27/2026-09.md")
+      expect(path.read).to include("The note he took back.")
+
+      removed.update!(deleted_at: Time.current)
+      export
+
+      body = path.read
+      expect(body).not_to include("The note he took back.")
+      expect(body).to include("Split step landed every time.")
+    end
+
+    it "drops a soft-deleted athlete entry, and the row keeps its words" do
+      create(:athlete_entry, :shared, user: teddy, program_year: year,
+             session_date: Date.new(2026, 9, 16), best: "The wall rally")
+      removed = create(:athlete_entry, :shared, user: teddy, program_year: year,
+                       session_date: Date.new(2026, 9, 17), best: "The one he took back")
+      export
+
+      path = root.join("journal/2026-27/2026-09.md")
+      expect(path.read).to include("The one he took back")
+
+      removed.update!(deleted_at: Time.current)
+      export
+
+      # The repo and the database deliberately disagree: the prose loses the
+      # words, the row keeps them.
+      expect(path.read).not_to include("The one he took back")
+      expect(path.read).to include("The wall rally")
+      expect(removed.reload.best).to eq("The one he took back")
+    end
+
+    it "prunes a journal file once the only entry that month is soft-deleted" do
+      entry = create(:coach_entry, user: coach, program_year: year,
+                     session_date: Date.new(2026, 9, 17), note: "The only thing that month.")
+      export
+      path = root.join("journal/2026-27/2026-09.md")
+      expect(path).to exist
+
+      entry.update!(deleted_at: Time.current)
+      export
+
+      expect(path).not_to exist
+      expect(CoachEntry.count).to eq(1)
+    end
+
     it "prunes a journal file once every entry that month is deleted" do
       entry = create(:coach_entry, user: coach, program_year: year, session_date: Date.new(2026, 9, 17),
                      note: "Finish stayed high all session.")

@@ -7,5 +7,9 @@ FactoryBot.define do
     overall { 4 }
     energy { 4 }
     note { "Good session." }
+
+    # Same as the athlete factory's: the column is set here directly, not by
+    # calling the code the specs are checking.
+    trait(:deleted) { deleted_at { Time.utc(2026, 9, 18, 9, 0, 0) } }
   end
 end

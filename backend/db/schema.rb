@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_13_202000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_14_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -51,10 +51,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_202000) do
     t.boolean "shared", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
     t.index ["athlete_id"], name: "index_athlete_entries_on_athlete_id"
     t.index ["day_card_id"], name: "index_athlete_entries_on_day_card_id"
     t.index ["program_year_id"], name: "index_athlete_entries_on_program_year_id"
-    t.index ["user_id", "program_year_id", "session_date"], name: "index_athlete_entries_on_author_year_and_date", unique: true
+    t.index ["user_id", "program_year_id", "session_date"], name: "index_athlete_entries_on_author_year_and_date", unique: true, where: "(deleted_at IS NULL)"
     t.index ["user_id"], name: "index_athlete_entries_on_user_id"
   end
 
@@ -141,10 +142,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_13_202000) do
     t.string "challenge_num"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
     t.index ["athlete_id"], name: "index_coach_entries_on_athlete_id"
     t.index ["day_card_id"], name: "index_coach_entries_on_day_card_id"
     t.index ["program_year_id"], name: "index_coach_entries_on_program_year_id"
-    t.index ["user_id", "program_year_id", "session_date"], name: "index_coach_entries_on_author_year_and_date", unique: true
+    t.index ["user_id", "program_year_id", "session_date"], name: "index_coach_entries_on_author_year_and_date", unique: true, where: "(deleted_at IS NULL)"
     t.index ["user_id"], name: "index_coach_entries_on_user_id"
   end
 

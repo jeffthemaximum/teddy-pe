@@ -100,6 +100,43 @@ RSpec.describe "this week", type: :request do
     expect(thu["athlete_entry"].keys).to match_array(from_endpoint.keys)
   end
 
+  # The week payload reads through the same Pundit scope the endpoints do, so
+  # a deleted entry has to vanish from a day card too. Two days, one entry
+  # each, one of them deleted: the surviving card is what makes this a test of
+  # the filter rather than of a lookup that returns nothing for everybody.
+  it "leaves a deleted entry off its day card and keeps the one beside it" do
+    teddy = create(:user, :athlete)
+    create(:athlete_entry, user: teddy, program_year: year,
+           session_date: Date.new(2026, 9, 16), best: "The wall rally")
+    create(:athlete_entry, :deleted, user: teddy, program_year: year,
+           session_date: Date.new(2026, 9, 17), best: "The one he took back")
+
+    get "/api/v1/program_years/#{year.id}/weeks/current?on=2026-09-17", headers: auth(teddy)
+    days = JSON.parse(response.body)["days"]
+
+    wed = days.find { |d| d["date"] == "2026-09-16" }
+    thu = days.find { |d| d["date"] == "2026-09-17" }
+    expect(wed["athlete_entry"]["best"]).to eq("The wall rally")
+    expect(thu["athlete_entry"]).to be_nil
+    expect(response.body).not_to include("The one he took back")
+  end
+
+  it "leaves a deleted coach entry off its day card and keeps the one beside it" do
+    create(:coach_entry, user: coach, program_year: year,
+           session_date: Date.new(2026, 9, 16), note: "Split step landed every time.")
+    create(:coach_entry, :deleted, user: coach, program_year: year,
+           session_date: Date.new(2026, 9, 17), note: "The note he took back.")
+
+    get "/api/v1/program_years/#{year.id}/weeks/current?on=2026-09-17", headers: auth(coach)
+    days = JSON.parse(response.body)["days"]
+
+    wed = days.find { |d| d["date"] == "2026-09-16" }
+    thu = days.find { |d| d["date"] == "2026-09-17" }
+    expect(wed["coach_entry"]["note"]).to eq("Split step landed every time.")
+    expect(thu["coach_entry"]).to be_nil
+    expect(response.body).not_to include("The note he took back.")
+  end
+
   it "carries Teddy his own entry, shared or not" do
     teddy = create(:user, :athlete)
     create(:athlete_entry, user: teddy, program_year: year,
