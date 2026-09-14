@@ -21,7 +21,7 @@ RSpec.describe Legacy::JournalMigrator, :legacy do
     binds = [
       date, row[:note], row[:pain_note], row[:overall], row[:energy], row[:flag_pain],
       row[:challenge_num], row[:ratings].to_json, row[:created_at], row[:dow],
-      row[:plan_month], row[:week], row[:device],
+      row[:plan_month], row[:week], row[:device]
     ]
     ActiveRecord::Base.connection.exec_query(<<~SQL, "diary", binds)
       insert into diary_entry
@@ -83,7 +83,7 @@ RSpec.describe Legacy::JournalMigrator, :legacy do
     described_class.new(coach: coach).run!
 
     ratings = DrillRating.order(:drill_id).pluck(:drill_id, :rating)
-    expect(ratings).to match_array([[skip_drill.id, "owns"], [wall.id, "getting"]])
+    expect(ratings).to match_array([ [ skip_drill.id, "owns" ], [ wall.id, "getting" ] ])
     expect(DrillRating.first.session_date).to eq(Date.new(2026, 9, 16))
     expect(DrillRating.first.program_year).to eq(year)
   end
@@ -99,7 +99,7 @@ RSpec.describe Legacy::JournalMigrator, :legacy do
     report = described_class.new(coach: coach).run!
 
     expect(report[:dropped_ratings]).to eq([
-      { session_date: Date.new(2026, 9, 16), slug: "renamed-drill" },
+      { session_date: Date.new(2026, 9, 16), slug: "renamed-drill" }
     ])
     expect(DrillRating.count).to eq(1)
   end
@@ -160,7 +160,7 @@ RSpec.describe Legacy::JournalMigrator, :legacy do
 
     expect(CoachEntry.count).to eq(0)
     expect(report[:skipped]).to eq([
-      { session_date: Date.new(2020, 1, 1), reason: "no program year contains this date" },
+      { session_date: Date.new(2020, 1, 1), reason: "no program year contains this date" }
     ])
   end
 
@@ -183,7 +183,7 @@ RSpec.describe Legacy::JournalMigrator, :legacy do
     expect(existing.overall).to eq(4)
     expect(report[:migrated]).to eq(0)
     expect(report[:conflicts]).to eq([
-      { session_date: Date.new(2026, 9, 16), fields: [ :overall, :energy, :note ] },
+      { session_date: Date.new(2026, 9, 16), fields: [ :overall, :energy, :note ] }
     ])
   end
 
@@ -200,7 +200,7 @@ RSpec.describe Legacy::JournalMigrator, :legacy do
 
     expect(DrillRating.sole.rating).to eq("getting")
     expect(report[:conflicts]).to eq([
-      { session_date: Date.new(2026, 9, 16), fields: [ "rating:wall-rally" ] },
+      { session_date: Date.new(2026, 9, 16), fields: [ "rating:wall-rally" ] }
     ])
   end
 

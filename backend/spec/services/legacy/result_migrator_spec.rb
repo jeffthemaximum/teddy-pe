@@ -7,7 +7,7 @@ RSpec.describe Legacy::ResultMigrator, :legacy do
   let!(:measure) { create(:battery_measure, program_year: year, test_id: "t1", unit: "s", direction: "lower") }
 
   def insert_result(window:, test_id:, value:, recorded_at: "2026-09-15 14:00:00+00")
-    ActiveRecord::Base.connection.exec_query(<<~SQL, "result", [window, test_id, value, recorded_at])
+    ActiveRecord::Base.connection.exec_query(<<~SQL, "result", [ window, test_id, value, recorded_at ])
       insert into test_result (id, test_window, test_id, value, recorded_at)
       values ($1 || ':' || $2, $1, $2, $3, $4::timestamptz)
     SQL
@@ -56,7 +56,7 @@ RSpec.describe Legacy::ResultMigrator, :legacy do
     expect(TestResult.sole.raw_value).to eq("4.4")
     expect(report[:migrated]).to eq(0)
     expect(report[:conflicts]).to eq([
-      { window: "2026-09", test_id: "t1", legacy_value: "9.9", current_value: "4.4" },
+      { window: "2026-09", test_id: "t1", legacy_value: "9.9", current_value: "4.4" }
     ])
   end
 
@@ -67,7 +67,7 @@ RSpec.describe Legacy::ResultMigrator, :legacy do
 
     expect(TestResult.count).to eq(0)
     expect(report[:skipped]).to eq([
-      { window: "2026-09", test_id: "t99", reason: "no battery measure with this test id" },
+      { window: "2026-09", test_id: "t99", reason: "no battery measure with this test id" }
     ])
   end
 
@@ -78,7 +78,7 @@ RSpec.describe Legacy::ResultMigrator, :legacy do
 
     expect(TestResult.count).to eq(0)
     expect(report[:skipped]).to eq([
-      { window: "2099-01", test_id: "t1", reason: "no test date with this window" },
+      { window: "2099-01", test_id: "t1", reason: "no test date with this window" }
     ])
   end
 
@@ -96,7 +96,7 @@ RSpec.describe Legacy::ResultMigrator, :legacy do
 
     expect(TestResult.count).to eq(0)
     expect(report[:skipped]).to eq([
-      { window: "2026-09", test_id: "t1", reason: "more than one program year has this window" },
+      { window: "2026-09", test_id: "t1", reason: "more than one program year has this window" }
     ])
   end
 
@@ -114,7 +114,7 @@ RSpec.describe Legacy::ResultMigrator, :legacy do
 
     expect(TestResult.count).to eq(0)
     expect(report[:skipped]).to eq([
-      { window: "2026-09", test_id: "t1", reason: "the value was cleared, so there is nothing to migrate" },
+      { window: "2026-09", test_id: "t1", reason: "the value was cleared, so there is nothing to migrate" }
     ])
     expect(report[:failed]).to eq([])
   end

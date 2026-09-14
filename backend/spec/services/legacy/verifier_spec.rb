@@ -64,7 +64,7 @@ RSpec.describe Legacy::Verifier, :legacy do
     expect(report[:clean?]).to be(false)
     expect(report[:conflicts]).to eq([
       { kind: :diary, key: "2026-09-16", field: :note,
-        legacy: "Good session.", kept: "something else entirely" },
+        legacy: "Good session.", kept: "something else entirely" }
     ])
   end
 
@@ -84,7 +84,7 @@ RSpec.describe Legacy::Verifier, :legacy do
     expect(report[:clean?]).to be(false)
     expect(report[:conflicts]).to eq([
       { kind: :diary, key: "2026-09-16", field: "rating:wall-rally",
-        legacy: "owns", kept: "getting" },
+        legacy: "owns", kept: "getting" }
     ])
   end
 
@@ -100,7 +100,7 @@ RSpec.describe Legacy::Verifier, :legacy do
     expect(report[:clean?]).to be(false)
     expect(report[:conflicts]).to eq([
       { kind: :diary, key: "2026-09-16", field: "rating:wall-rally",
-        legacy: "owns", kept: nil },
+        legacy: "owns", kept: nil }
     ])
   end
 
@@ -167,7 +167,7 @@ RSpec.describe Legacy::Verifier, :legacy do
 
     expect(report[:clean?]).to be(false)
     expect(report[:conflicts]).to eq([
-      { kind: :result, key: "2026-09:t1", legacy: "4.6", kept: "9.9" },
+      { kind: :result, key: "2026-09:t1", legacy: "4.6", kept: "9.9" }
     ])
   end
 
@@ -189,7 +189,7 @@ RSpec.describe Legacy::Verifier, :legacy do
 
     expect(report[:clean?]).to be(false)
     expect(report[:conflicts]).to eq([
-      { kind: :result, key: "2026-09:t1", legacy: "9.9", kept: "4.4" },
+      { kind: :result, key: "2026-09:t1", legacy: "9.9", kept: "4.4" }
     ])
   end
 

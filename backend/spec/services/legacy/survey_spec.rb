@@ -109,7 +109,7 @@ RSpec.describe Legacy::Survey, :legacy do
     report = described_class.new.run
 
     expect(report[:already_present_results]).to eq([
-      { window: "2026-09", test_id: "t1", legacy_value: "4.5", current_value: "10" },
+      { window: "2026-09", test_id: "t1", legacy_value: "4.5", current_value: "10" }
     ])
   end
 

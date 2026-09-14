@@ -14,7 +14,7 @@ FactoryBot.define do
         "Basketball: two hand dribble control",
         "Soccer: first touch out of the air",
         "Balance: single leg landings",
-        "Core: hollow body hold",
+        "Core: hollow body hold"
       ]
     end
   end
