@@ -74,7 +74,9 @@ RSpec.describe "content integrity" do
         positions = rows.map { |r| r["position"] }
         expect(positions.uniq.size).to eq(positions.size), "#{name} repeats a position: #{positions.inspect}"
       end
-      expect(checked).to eq(collections.size)
+      # 7 is written here, not read off `collections`, so dropping one of the
+      # seven names above shrinks the loop without shrinking what it owes.
+      expect(checked).to eq(7), "expected 7 ordered collections, walked #{checked}"
     end
   end
 
@@ -106,13 +108,18 @@ RSpec.describe "content integrity" do
     it "has nine for each rank that has any" do
       groups = PROGRAM["patches"].group_by { |p| p["block"] }
 
+      # Read straight off PROGRAM["patches"], not off `groups` above. If a
+      # future edit narrows `groups` to fewer ranks, this stays at the real
+      # count and the mismatch below catches it.
+      ranks_with_patches = PROGRAM["patches"].map { |p| p["block"] }.uniq.size
+
       checked = 0
       groups.each do |block, ps|
         checked += 1
         expect(ps.size).to eq(9), "#{block} has #{ps.size} patches, needs 9"
         expect(ps.map { |p| p["area"] }.uniq.size).to eq(9), "#{block} repeats an area"
       end
-      expect(checked).to eq(groups.size)
+      expect(checked).to eq(ranks_with_patches), "expected #{ranks_with_patches} ranks with patches, walked #{checked}"
       expect(checked).to be >= 1, "the year has no patches at all"
     end
 
@@ -261,7 +268,10 @@ RSpec.describe "content integrity" do
             "#{label} has no #{sport} sub-target"
         end
       end
-      expect(checked).to eq(WEEKS * patterns.size)
+      # 3 is the rule (tennis, basketball, soccer), written here rather than
+      # read off `patterns.size`, so dropping a sport from the hash above
+      # shrinks the loop without shrinking what it owes.
+      expect(checked).to eq(WEEKS * 3), "expected #{WEEKS} weeks x 3 sports, walked #{checked}"
     end
 
     it "puts every day on the role its weekday owns" do
@@ -378,12 +388,10 @@ RSpec.describe "content integrity" do
       # week as its subject from the first one authored, so the rule is live
       # now and turns into the positive form by itself the day week 8 lands.
       checked = 0
-      eights = 0
 
       each_week do |w, label|
         checked += 1
         trials = w["position_in_block"] == 8
-        eights += 1 if trials
 
         expect(w["trials"]).to be(trials),
           "#{label} is position_in_block #{w['position_in_block']} and trials: #{w['trials'].inspect}"
@@ -392,7 +400,12 @@ RSpec.describe "content integrity" do
       end
 
       expect(checked).to eq(WEEKS)
-      expect(eights).to eq(ALL_WEEKS.count { |w| w["position_in_block"] == 8 })
+      # No separate tally of week 8s here on purpose. A count built from
+      # `position_in_block == 8` and checked against a count built the same
+      # way from the same weeks is true no matter what the data says, and it
+      # never looks at the `trials` field at all. The two expects above are
+      # the real guard: they fail the moment a week's `trials` flag disagrees
+      # with its position, which is the actual rule.
     end
 
     it "leaves Saturday's home program off" do
