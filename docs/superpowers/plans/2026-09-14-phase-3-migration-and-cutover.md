@@ -1176,10 +1176,10 @@ Create `docs/cutover.md`:
 
 Run these in order.
 
-**Nothing here waits on Teddy's Baseline being recorded.** The result
-migrator refuses to overwrite anything the new system already holds, which
-makes the two independent in both directions. Record the Baseline whenever
-it suits, on `/tests`.
+**Nothing here waits on Teddy's Baseline being recorded.** Neither migrator
+overwrites anything the new system already holds, which makes the two
+independent in both directions. Record the Baseline whenever it suits, on
+`/tests`.
 
 **What does gate this runbook is a merge.** These rake tasks run on the Fly
 machine, and the Fly machine runs what is deployed from `main`. Until
@@ -1211,20 +1211,36 @@ fly secrets set LEGACY_DATABASE_URL="<the Vercel project's DATABASE_URL>" -a ted
 fly ssh console -a teddy-pe-api -C "bin/rails legacy:migrate COACH_EMAIL=frey.maxim@gmail.com CONFIRM=yes"
 ```
 
-The ordering against Teddy's Baseline does not matter in either direction.
-This never overwrites a result the new system already holds, so numbers
-recorded before it runs are safe, and numbers recorded after it simply land
-on empty rows. It reports what it wrote, what it skipped, and any result it
-left alone.
+The ordering against Teddy's Baseline does not matter in either direction,
+and that now holds for the diary as well as the results. Neither migrator
+overwrites anything the new system already holds: a test result at a slot
+that is already filled is left alone, and so is a diary entry that already
+exists for that date on this coach's account, down to each individual drill
+rating. So a number or a note recorded before this runs is safe, and one
+recorded after it simply lands on a row the migration never touched. The two
+are genuinely independent.
+
+It reports what it wrote, what it skipped, what was already there and agrees,
+and anything it left alone because the old row and the new one disagree.
+Those last ones name the exact fields that differ, because nothing resolves
+them automatically and a person has to decide which version is right before
+Task 6 deletes the old one.
 
 ## 3. Verify
 
 ```bash
-fly ssh console -a teddy-pe-api -C "bin/rails legacy:verify"
+fly ssh console -a teddy-pe-api -C "bin/rails legacy:verify COACH_EMAIL=frey.maxim@gmail.com"
 ```
 
-Compares both databases field by field. It must print "Every old row has a
-match that agrees." Nothing is deleted until it does.
+Give it the same `COACH_EMAIL` step 2 was given. It looks the entries up on
+that account, the way they were written, so a different address here reports
+every entry as missing.
+
+Compares both databases field by field, ratings included. It must print
+"Every old row has a match that agrees." Nothing is deleted until it does.
+If it names a legacy table as not found on this connection, it is refusing
+to call an unreadable table a clean one. Fix `LEGACY_DATABASE_URL` and run
+it again.
 
 ## 4. Export the program back into the repo
 
