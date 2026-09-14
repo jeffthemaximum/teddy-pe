@@ -76,4 +76,27 @@ namespace :legacy do
     puts
     puts "Now run rails legacy:verify. Nothing gets deleted until it reads clean."
   end
+
+  desc "Compare the old Neon rows against the migrated ones, field by field."
+  task verify: :environment do
+    report = Legacy::Verifier.new.run
+    counts = report[:counts]
+
+    puts "diary:   #{counts[:legacy_diary]} to migrate, #{counts[:migrated_diary]} in the new table"
+    puts "results: #{counts[:legacy_results]} to migrate, #{counts[:migrated_results]} in the new table"
+
+    report[:missing].each { |m| puts "MISSING #{m[:kind]} #{m[:key]}" }
+    report[:mismatches].each do |m|
+      puts "DIFFERS #{m[:kind]} #{m[:key]} #{m[:field]}: old #{m[:legacy].inspect}, new #{m[:migrated].inspect}"
+    end
+
+    if report[:clean?]
+      puts
+      puts "Every old row has a match that agrees. Safe to delete the old pipeline."
+    else
+      puts
+      puts "Not clean. Nothing should be deleted until this reads clean."
+      exit(1)
+    end
+  end
 end

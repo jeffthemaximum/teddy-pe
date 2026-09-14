@@ -1,0 +1,131 @@
+module Legacy
+  # Compares the old tables against the new ones field by field.
+  #
+  # Counting alone would pass a migration that wrote the right number of rows
+  # carrying the wrong words, which is the failure that matters here: the old
+  # rows are about to be deleted, so this is the last moment anything can be
+  # checked against them.
+  #
+  # Rows the migrators deliberately skipped are out of scope. A diary entry
+  # dated before the program year has nowhere to go by design, and neither
+  # does a result with a blank value, one whose test id has no measure, or
+  # one whose window belongs to no test date or to more than one program
+  # year. Counting any of those as missing would make a correct migration
+  # read as broken, and this task is the gate on deleting the only other
+  # copy of the rows, so that false alarm is not a safe direction to fail in.
+  #
+  # A row the migrator put in :failed is different: it genuinely did not
+  # arrive, and this verifier has no visibility into :failed lists (it only
+  # ever reads the two databases), so it reports those as missing on its own
+  # by finding no matching row. That is correct and desired.
+  class Verifier
+    DIARY_FIELDS = %i[note pain_note overall energy flag_pain challenge_num].freeze
+
+    def run
+      Legacy::Record.connect!
+
+      mismatches = []
+      missing = []
+
+      diary = comparable_diary
+      diary.each { |row| check_diary(row, mismatches, missing) }
+
+      results = comparable_results
+      results.each { |row| check_result(row, mismatches, missing) }
+
+      {
+        clean?: mismatches.empty? && missing.empty?,
+        counts: { legacy_diary: diary.size, migrated_diary: CoachEntry.kept.count,
+                  legacy_results: results.size, migrated_results: TestResult.count },
+        mismatches: mismatches,
+        missing: missing
+      }
+    end
+
+    private
+
+    def comparable_diary
+      return [] unless Legacy::DiaryEntry.table_present?
+
+      Legacy::DiaryEntry.order(:session_date).select { |row| year_for(row.session_date) }
+    end
+
+    # Mirrors every reason Legacy::ResultMigrator skips a row, on purpose,
+    # rather than migrating it: no test date carries the window, more than
+    # one program year carries it (so which one it belongs to cannot be
+    # known), no battery measure carries the test id, or the value is blank
+    # once stripped. A row the migrator skips for any of these reasons has
+    # nowhere to go by design and so is not comparable to anything.
+    def comparable_results
+      return [] unless Legacy::TestResultRow.table_present?
+
+      Legacy::TestResultRow.order(:test_window, :test_id).select do |row|
+        date = resolve_test_date(row.test_window)
+        next false unless date
+        next false unless BatteryMeasure.exists?(program_year_id: date.program_year_id, test_id: row.test_id)
+
+        row.value.to_s.strip.present?
+      end
+    end
+
+    def check_diary(row, mismatches, missing)
+      key = row.session_date.to_s
+      entry = CoachEntry.kept.find_by(session_date: row.session_date)
+      if entry.nil?
+        missing << { kind: :diary, key: key }
+        return
+      end
+
+      DIARY_FIELDS.each do |field|
+        legacy = normalise(row.public_send(field))
+        migrated = normalise(entry.public_send(field))
+        next if legacy == migrated
+
+        mismatches << { kind: :diary, key: key, field: field, legacy: legacy, migrated: migrated }
+      end
+    end
+
+    def check_result(row, mismatches, missing)
+      key = "#{row.test_window}:#{row.test_id}"
+      date = resolve_test_date(row.test_window)
+      measure = date && BatteryMeasure.find_by(program_year_id: date.program_year_id, test_id: row.test_id)
+      result = measure && TestResult.find_by(test_date: date, battery_measure: measure)
+      if result.nil?
+        missing << { kind: :result, key: key }
+        return
+      end
+
+      legacy = row.value.to_s.strip
+      return if legacy == result.raw_value
+
+      mismatches << { kind: :result, key: key, field: :raw_value,
+                      legacy: legacy, migrated: result.raw_value }
+    end
+
+    # smallint comes back as an Integer on one side and may be nil on the
+    # other, and "" and nil mean the same absence in the old table.
+    def normalise(value)
+      return nil if value.nil? || value == ""
+
+      value
+    end
+
+    def year_for(date)
+      ProgramYear.find_by("starts_on <= ? and ends_on >= ?", date, date)
+    end
+
+    # The unique index on test_dates is (program_year_id, window), so two
+    # program years are allowed to carry a test date with the same window
+    # string. TestDate.find_by(window:) would silently pick whichever came
+    # first, same as it would inside Legacy::ResultMigrator, and file the
+    # comparison under the wrong program year. Refusing to guess and
+    # instead treating an ambiguous window as out of scope keeps this
+    # method in agreement with what the migrator actually did.
+    def resolve_test_date(window)
+      dates = TestDate.where(window: window).to_a
+      return nil unless dates.size == 1
+
+      dates.first
+    end
+  end
+end
