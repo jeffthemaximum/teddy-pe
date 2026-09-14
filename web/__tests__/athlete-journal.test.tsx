@@ -209,6 +209,64 @@ describe("the athlete journal", () => {
     }
   });
 
+  // The one every save response walks into. Each saved entry folds a NEW
+  // object into the slice, so a form that resyncs from the store on the
+  // entry's identity resyncs on a save it started itself, landing a second
+  // or so later, which under autosave is routinely while he is still
+  // writing. Dispatched straight into the store rather than answered over
+  // fetch, because vitest.setup.ts stubs fetch to never resolve and no save
+  // response has ever reached the store in this suite.
+  it("keeps the sentence he is still typing when a save from a moment ago comes back", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { store } = renderJournal();
+    hydrateEmpty(store);
+
+    // The tap is a decision, so it goes straight out, carrying the note as
+    // it stood right then: empty.
+    await user.click(screen.getByRole("button", { name: "4" }));
+    await user.type(screen.getByLabelText(/tell me about today/i), "Landed quiet on eight of ten.");
+
+    // The server answering that tap, with him still in the note field.
+    act(() => {
+      // The raw action, because `athleteEntrySaved` is deliberately off
+      // core's public surface: an app that could dispatch it could put a
+      // fabricated entry into state. The saga puts this one.
+      store.dispatch({
+        type: "journal/ATHLETE_ENTRY_SAVED",
+        payload: entry({
+          felt: 4,
+          best: null,
+          hard: null,
+          note: "",
+          updated_at: "2026-09-16T18:05:00.000Z",
+        }),
+      });
+    });
+
+    expect(screen.getByLabelText(/tell me about today/i)).toHaveValue(
+      "Landed quiet on eight of ten.",
+    );
+    // The tap survives too: it is what the answer agrees with.
+    expect(screen.getByRole("button", { name: "4", pressed: true })).toBeInTheDocument();
+  });
+
+  // The other half of the same rule, and the reason the guard is per field
+  // rather than all or nothing. Every save sends the WHOLE entry, so a form
+  // that refused the whole arriving entry while one box was dirty would show
+  // blanks for the rest and save those blanks over what the server had.
+  it("fills the boxes he has not touched when an entry arrives, and leaves the one he is in alone", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { store } = renderJournal();
+    hydrateEmpty(store);
+
+    await user.type(screen.getByLabelText(/tell me about today/i), "Rope climb went well.");
+    hydrateWith(store, UNSHARED_ENTRY);
+
+    expect(screen.getByLabelText(/what went best today/i)).toHaveValue("The wall rally");
+    expect(screen.getByLabelText(/what was hard today/i)).toHaveValue("Staying low");
+    expect(screen.getByLabelText(/tell me about today/i)).toHaveValue("Rope climb went well.");
+  });
+
   it("says plainly that an entry is not shared, in words a 7 year old reads", () => {
     const { store } = renderJournal();
     hydrateWith(store, UNSHARED_ENTRY);

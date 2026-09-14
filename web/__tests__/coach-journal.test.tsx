@@ -359,6 +359,76 @@ describe("the coach's journal", () => {
     }
   });
 
+  // The one every save response walks into. Each saved entry folds a NEW
+  // object into the slice, so a form that resyncs from the store on the
+  // entry's identity resyncs on a save it started itself, landing a second
+  // or so later, which under autosave is routinely mid-sentence. Dispatched
+  // straight into the store rather than answered over fetch, because
+  // vitest.setup.ts stubs fetch to never resolve and no save response has
+  // ever reached the store in this suite.
+  it("keeps the sentence he is still typing when a save from a moment ago comes back", async () => {
+    const user = userEvent.setup();
+    const { store } = renderCoachJournal(42);
+    loadDrills(store);
+    loadWeek(store);
+    setDate("2026-09-16");
+
+    // The radio is a decision, so it goes straight out, carrying the note as
+    // it stood right then: empty.
+    await user.click(within(ratingGroup("Energy")).getByRole("radio", { name: "4" }));
+    await user.type(screen.getByLabelText(/what did you see/i), "Landed quiet on eight of ten.");
+
+    // The server answering that tap, with him still in the note field.
+    act(() => {
+      // The raw action, because `coachEntrySaved` is deliberately off core's
+      // public surface: an app that could dispatch it could put a fabricated
+      // entry into state. The saga puts this one.
+      store.dispatch({
+        type: "journal/COACH_ENTRY_SAVED",
+        payload: {
+          ...EXISTING_ENTRY,
+          overall: null,
+          energy: 4,
+          flag_pain: false,
+          pain_note: null,
+          note: null,
+          challenge_num: null,
+          ratings: {},
+          updated_at: "2026-09-16T20:05:00.000Z",
+        },
+      });
+    });
+
+    expect(screen.getByLabelText(/what did you see/i)).toHaveValue(
+      "Landed quiet on eight of ten.",
+    );
+    // The tap survives too: it is what the answer agrees with.
+    expect(within(ratingGroup("Energy")).getByRole("radio", { name: "4" })).toBeChecked();
+  });
+
+  // The other half of the same rule, and the reason the guard is per field
+  // rather than all or nothing. Every save sends the WHOLE entry, so a form
+  // that refused the whole arriving entry while one field was dirty would
+  // show blanks for the rest and save those blanks over what the server had.
+  it("fills the fields he has not touched when an entry arrives, and leaves the one he is in alone", async () => {
+    const user = userEvent.setup();
+    const { store } = renderCoachJournal(42);
+    loadDrills(store);
+    loadWeek(store);
+    setDate("2026-09-16");
+
+    await user.type(screen.getByLabelText(/what did you see/i), "Walked home happy.");
+    act(() => {
+      store.dispatch({ type: "journal/COACH_ENTRIES_FETCHED", payload: [EXISTING_ENTRY] });
+    });
+
+    expect(screen.getByLabelText(/challenge number/i)).toHaveValue("1");
+    expect(
+      within(ratingGroup("How the session went overall")).getByRole("radio", { name: "4" }),
+    ).toBeChecked();
+    expect(screen.getByLabelText(/what did you see/i)).toHaveValue("Walked home happy.");
+  });
+
   it("saves the note, the scores and the pain flag together", async () => {
     const user = userEvent.setup();
     const { store } = renderCoachJournal(42);

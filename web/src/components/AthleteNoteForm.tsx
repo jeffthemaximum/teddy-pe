@@ -46,6 +46,38 @@ function formFrom(entry: AthleteEntry | null): FormState {
   };
 }
 
+// Folds a stored entry into a form that is already on screen, one field at
+// a time. A field is taken from the entry only where what is on screen still
+// matches what was last sent: nobody has touched that one since, so the
+// store holds the better copy of it. A field that has moved on from what was
+// sent is one he is typing in right now, so it is left exactly as it is, and
+// `sent` keeps its old value for it so the next blur still recognizes it as
+// changed and saves it.
+//
+// The four `take` calls are the whole of FormState. A fifth field added
+// above needs a fifth line here, and a keyed loop is not the way to avoid
+// that: the fields have different types and a loop over `keyof FormState`
+// widens all of them to their union, which is how `felt` would become
+// assignable a string.
+function foldIn(
+  current: FormState,
+  sent: FormState,
+  incoming: FormState,
+): [FormState, FormState] {
+  const nextForm = { ...current };
+  const nextSent = { ...sent };
+  function take<K extends keyof FormState>(key: K) {
+    if (current[key] !== sent[key]) return;
+    nextForm[key] = incoming[key];
+    nextSent[key] = incoming[key];
+  }
+  take("felt");
+  take("best");
+  take("hard");
+  take("note");
+  return [nextForm, nextSent];
+}
+
 export function AthleteNoteForm({
   programYearId,
   date,
@@ -71,19 +103,52 @@ export function AthleteNoteForm({
   // the form displays. The same shape CoachNoteForm uses.
   const sentRef = useRef<FormState>(form);
 
-  // Reopens the form for whichever date is on screen: the entry that date
-  // already has, or a blank one when it has none. Runs again whenever the
-  // stored entry for this date changes identity, which is what lets a
-  // fetch or a delete that lands after this form mounted fill it in, or
-  // clear it, without a second visit to the screen.
+  // The date this effect last ran for, and whether there was an entry then.
+  // Refs for the same reason sentRef is one: a record of the last run, never
+  // something the form displays.
+  const lastDateRef = useRef(date);
+  const hadEntryRef = useRef(existingEntry !== null);
+
+  // Opens the form on whichever date is on screen, and folds an entry in
+  // when one arrives, WITHOUT overwriting a box he is in the middle of.
+  //
+  // This used to reset every field from the store whenever `existingEntry`
+  // changed identity. Under autosave that loses words, and it is the one
+  // guard the screen this form was extracted from carried and said so:
+  // every save response folds a NEW entry object into the slice, so a felt
+  // tap's own answer, landing a second later, reset the sentence he had
+  // typed since and it was gone. Do not simplify this back.
+  //
+  // Three cases, told apart rather than collapsed into one reset:
+  //   a different date: replace the form whole. That is a different day,
+  //     not news about this one.
+  //   the entry going away (a delete): replace the form whole. The row is
+  //     gone, which is not something to merge into what is on screen.
+  //   anything else (a fetch answering, or a save coming back): fold field
+  //     by field, per foldIn above.
+  //
+  // `form` is read out of the render this effect was built in, and is
+  // deliberately not a dependency: this runs when the date or the stored
+  // entry changes, never on a keystroke.
   useEffect(() => {
-    const next = formFrom(existingEntry);
-    setForm(next);
-    // Reset together with the form. A date change or an entry arriving
-    // from the server makes whatever was last sent irrelevant to what is
-    // now on screen, and a stale ref here would suppress the first real
-    // edit.
-    sentRef.current = next;
+    const replaced =
+      lastDateRef.current !== date || (hadEntryRef.current && existingEntry === null);
+    lastDateRef.current = date;
+    hadEntryRef.current = existingEntry !== null;
+
+    const incoming = formFrom(existingEntry);
+    if (replaced) {
+      setForm(incoming);
+      // Whatever was last sent belongs to the day, or the row, that just
+      // left the screen. A stale ref here would suppress the first real
+      // edit of what replaced it.
+      sentRef.current = incoming;
+      return;
+    }
+
+    const [nextForm, nextSent] = foldIn(form, sentRef.current, incoming);
+    setForm(nextForm);
+    sentRef.current = nextSent;
   }, [date, existingEntry]);
 
   const shared = existingEntry?.shared ?? false;

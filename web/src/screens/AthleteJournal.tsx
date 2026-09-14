@@ -127,11 +127,11 @@ export function AthleteJournal() {
   }, [dispatch, currentId]);
 
   // Whether a fetch has actually told this screen something about today, one
-  // way or the other. AthleteNoteForm hydrates its own fields the instant it
-  // mounts, off whatever `entry` already is; this is only about when it is
-  // safe to mount it at all; showing a blank form before the fetch answers
-  // would read as "he wrote nothing today" for a day the server has not
-  // actually confirmed that about yet.
+  // way or the other. AthleteNoteForm opens on whatever `entry` is the
+  // moment it mounts and folds a later arrival into the boxes he has not
+  // typed in, so it would cope on its own; this gate is about what a blank
+  // form SAYS. Shown before the fetch answers, it reads as "he wrote nothing
+  // today" for a day the server has not confirmed that about yet.
   const hydratedRef = useRef(false);
   const wasLoadingRef = useRef(loading);
   const [hydrated, setHydrated] = useState(false);
