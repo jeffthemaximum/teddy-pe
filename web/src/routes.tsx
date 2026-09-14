@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import type { Role } from "@teddy-pe/core";
+import { Year } from "./screens/Year";
 
 // A screen a person can tap that always answers 403 is worse than no screen
 // at all: it teaches them the app is broken. This table is not a guess, it
@@ -41,10 +42,9 @@ export function navItemsFor(role: Role | null): NavItem[] {
   return NAV_ITEMS.filter((item) => item.roles.includes(role));
 }
 
-// Later tasks (4 through 7) replace these placeholders with the real Year,
-// Month, This Week and Glossary screens, and Phase 2c adds the journal
-// forms and the test sheet. This task's job is the shell around them: the
-// nav, the routes, and who is allowed where.
+// Task 4 replaced /year with the real screen. Tasks 5 through 7 still owe
+// Month, This Week and Glossary, and Phase 2c adds the journal forms and
+// the test sheet.
 function Placeholder({ title }: { title: string }) {
   return (
     <p className="placeholder">
@@ -68,7 +68,7 @@ export function AppRoutes({ role }: { role: Role | null }) {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/year" replace />} />
-      <Route path="/year" element={<Placeholder title="Year" />} />
+      <Route path="/year" element={<Year />} />
       <Route path="/month" element={<Placeholder title="Month" />} />
       <Route path="/week" element={<Placeholder title="This Week" />} />
       <Route path="/glossary" element={<Placeholder title="Glossary" />} />
