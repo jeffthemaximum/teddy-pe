@@ -26,6 +26,21 @@ export { authSelectors };
 export type { AuthState } from "./ducks/auth";
 export type { User, Role, LoginResponse } from "./types";
 
+// The outbox's public surface is deliberately narrow, the same reasoning as
+// authActions above: `replay()` is the only action an app ever dispatches
+// (when connectivity is believed to be back). enqueue, replaySucceeded,
+// replayFailed and queueRestored are saga- and duck-internal; a duck that
+// wants to queue a write (journal, test results) enqueues through its own
+// sibling import of ducks/outbox, not through this surface, because building
+// a QueueableAction (dedupeKey, request) is that duck's job, not an app's.
+import { actions as outboxDuckActions, selectors as outboxSelectors } from "./ducks/outbox";
+
+export const outboxActions = {
+  replay: outboxDuckActions.replay,
+};
+export { outboxSelectors };
+export type { OutboxState, QueueableAction, QueuedWrite } from "./ducks/outbox";
+
 // The six read ducks. Each is already wired into the store by
 // rootReducer/rootSaga; an app dispatches `<duck>.actions.fetch(...)` and
 // reads through `<duck>.selectors` or the derived selectors below.

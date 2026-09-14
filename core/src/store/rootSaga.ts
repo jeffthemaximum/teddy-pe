@@ -1,5 +1,6 @@
 import { all, fork } from "redux-saga/effects";
 import { authSaga } from "../ducks/auth";
+import { outboxSaga } from "../ducks/outbox";
 import { programYears } from "../ducks/programYears";
 import { programYear } from "../ducks/programYear";
 import { plan } from "../ducks/plan";
@@ -10,6 +11,7 @@ import { progression } from "../ducks/progression";
 export function* rootSaga() {
   yield all([
     fork(authSaga),
+    fork(outboxSaga),
     fork(programYears.saga),
     fork(programYear.saga),
     fork(plan.saga),
