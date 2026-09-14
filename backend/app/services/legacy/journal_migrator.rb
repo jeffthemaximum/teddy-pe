@@ -16,19 +16,26 @@ module Legacy
 
     def run!
       Legacy::Record.connect!
-      return empty_report unless Legacy::DiaryEntry.table_present?
+      # A table that is not on this connection is not the same fact as a
+      # table with no rows in it, and reporting both as zeros is how the only
+      # copy of a year of Teddy's program gets deleted. Name it instead.
+      missing = Legacy::Mapping.missing_tables(Legacy::DiaryEntry)
+      return empty_report.merge(tables_missing: missing) if missing.any?
 
       migrated = 0
       Legacy::DiaryEntry.order(:session_date).each do |row|
         migrated += 1 if migrate(row)
       end
 
-      { migrated: migrated, skipped: @skipped, dropped_ratings: @dropped_ratings, failed: @failed }
+      empty_report.merge(migrated: migrated, skipped: @skipped,
+                         dropped_ratings: @dropped_ratings, failed: @failed)
     end
 
     private
 
-    def empty_report = { migrated: 0, skipped: [], dropped_ratings: [], failed: [] }
+    def empty_report
+      { tables_missing: [], migrated: 0, skipped: [], dropped_ratings: [], failed: [] }
+    end
 
     def migrate(row)
       year = year_for(row.session_date)

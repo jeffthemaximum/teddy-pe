@@ -132,6 +132,18 @@ RSpec.describe Legacy::ResultMigrator, :legacy do
     expect(second[:migrated]).to eq(0)
   end
 
+  # Same guard as the journal migrator's. Reporting zeros for a table that
+  # is not on this connection is indistinguishable from reporting zeros for
+  # an empty table, and only one of those is safe to follow with a deletion.
+  it "reports a missing legacy table rather than an empty run" do
+    ActiveRecord::Base.connection.drop_table("test_result")
+
+    report = described_class.new(coach: coach).run!
+
+    expect(report[:tables_missing]).to eq([ "test_result" ])
+    expect(report[:migrated]).to eq(0)
+  end
+
   it "leaves the legacy rows exactly as it found them" do
     insert_result(window: "2026-09", test_id: "t1", value: "4.6")
     before = ActiveRecord::Base.connection.select_all("select * from test_result").to_a

@@ -3,8 +3,23 @@ namespace :legacy do
   task survey: :environment do
     report = Legacy::Survey.new.run
 
-    puts "diary_entry rows:  #{report[:diary_count]}"
-    puts "test_result rows:  #{report[:result_count]}"
+    # A table that is not on this connection has to say so. Printing "0 rows"
+    # for it reads exactly like "there was nothing to migrate", and the task
+    # that follows this one deletes the only other copy of the rows.
+    report[:tables_missing].each do |table|
+      puts "#{table} not found on this connection"
+    end
+    if report[:tables_missing].any?
+      puts "  The old rows are probably in another database. The Vercel functions wrote to their own Neon database,"
+      puts "  and this app reads its own unless you tell it otherwise."
+      puts "  Point it at the old one with LEGACY_DATABASE_URL, set to the Vercel project's DATABASE_URL:"
+      puts "    fly secrets set LEGACY_DATABASE_URL=\"<the Vercel project's DATABASE_URL>\" -a teddy-pe-api"
+      puts "  Treat every count below as unknown until this line is gone."
+      puts
+    end
+
+    puts "diary_entry rows:  #{report[:diary_count]}" unless report[:tables_missing].include?("diary_entry")
+    puts "test_result rows:  #{report[:result_count]}" unless report[:tables_missing].include?("test_result")
 
     section = lambda do |label, items, explain|
       next if items.empty?
@@ -49,6 +64,21 @@ namespace :legacy do
 
     journal = Legacy::JournalMigrator.new(coach: coach).run!
     results = Legacy::ResultMigrator.new(coach: coach).run!
+
+    # First, and loudly. A migration that silently did nothing is the thing
+    # this whole phase is guarding against: zeros with no explanation read
+    # the same as an empty old table, and the next task deletes the only copy.
+    tables_missing = (journal[:tables_missing] + results[:tables_missing]).uniq
+    if tables_missing.any?
+      puts "=" * 60
+      puts "NOTHING WAS MIGRATED from #{tables_missing.join(' or ')}: not found on this connection."
+      puts "The old rows are probably in another database. Set LEGACY_DATABASE_URL to the Vercel project's"
+      puts "DATABASE_URL and run this again:"
+      puts "  fly secrets set LEGACY_DATABASE_URL=\"<the Vercel project's DATABASE_URL>\" -a teddy-pe-api"
+      puts "Do not read the counts below as a finished migration."
+      puts "=" * 60
+      puts
+    end
 
     puts "diary entries written: #{journal[:migrated]}"
     journal[:skipped].each { |s| puts "  skipped #{s[:session_date]}: #{s[:reason]}" }

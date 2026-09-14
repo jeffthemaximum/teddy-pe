@@ -175,6 +175,20 @@ RSpec.describe Legacy::JournalMigrator, :legacy do
     expect(second[:migrated]).to eq(1)
   end
 
+  # A migration that silently did nothing is the thing to avoid. Zeros with
+  # no explanation read the same as "the old table was empty", and the next
+  # task deletes the only copy. The drop is rolled back with the example's
+  # transaction, so later examples still find the table.
+  it "reports a missing legacy table rather than an empty run" do
+    year
+    ActiveRecord::Base.connection.drop_table("diary_entry")
+
+    report = described_class.new(coach: coach).run!
+
+    expect(report[:tables_missing]).to eq([ "diary_entry" ])
+    expect(report[:migrated]).to eq(0)
+  end
+
   it "leaves the legacy rows exactly as it found them" do
     year
     insert_diary(date: "2026-09-16", note: "Good session.")

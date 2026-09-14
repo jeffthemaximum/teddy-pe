@@ -14,19 +14,25 @@ module Legacy
 
     def run!
       Legacy::Record.connect!
-      return empty_report unless Legacy::TestResultRow.table_present?
+      # See Legacy::JournalMigrator#run!. An absent table and an empty table
+      # report identically unless one of them says so out loud.
+      missing = Legacy::Mapping.missing_tables(Legacy::TestResultRow)
+      return empty_report.merge(tables_missing: missing) if missing.any?
 
       migrated = 0
       Legacy::TestResultRow.order(:test_window, :test_id).each do |row|
         migrated += 1 if migrate(row)
       end
 
-      { migrated: migrated, skipped: @skipped, conflicts: @conflicts, failed: @failed }
+      empty_report.merge(migrated: migrated, skipped: @skipped,
+                         conflicts: @conflicts, failed: @failed)
     end
 
     private
 
-    def empty_report = { migrated: 0, skipped: [], conflicts: [], failed: [] }
+    def empty_report
+      { tables_missing: [], migrated: 0, skipped: [], conflicts: [], failed: [] }
+    end
 
     def migrate(row)
       # Legacy::Mapping owns every reason a row maps onto nothing, including

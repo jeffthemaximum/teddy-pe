@@ -113,6 +113,26 @@ RSpec.describe Legacy::Survey, :legacy do
     ])
   end
 
+  # The realistic path this guards: the old rows live in the Vercel Neon
+  # database rather than the Rails one, LEGACY_DATABASE_URL is unset or set
+  # on the wrong Fly app, and every task reports zeros that look exactly like
+  # "there was nothing to migrate". A later task then deletes the only copy.
+  #
+  # Dropping the table inside the example is safe for the examples that
+  # follow: every example runs inside a DatabaseCleaner transaction and
+  # Postgres rolls DDL back with everything else, so the table is there again
+  # before the next one starts. Confirmed by running a probe pair of examples
+  # before writing this.
+  it "names a legacy table that is not on this connection instead of counting zero rows" do
+    year
+    ActiveRecord::Base.connection.drop_table("diary_entry")
+
+    report = described_class.new.run
+
+    expect(report[:tables_missing]).to eq([ "diary_entry" ])
+    expect(report[:diary_count]).to eq(0)
+  end
+
   # The whole point of a survey is that it is safe to run against production
   # on a whim. If it can write, it is not a survey.
   it "writes nothing to either database" do
