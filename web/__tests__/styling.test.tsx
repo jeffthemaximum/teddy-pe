@@ -341,7 +341,13 @@ describe("a block toggle on Today", () => {
   // panel below it, or a glance mid-session lands on the wrong row.
   it("marks the open block with something other than colour", () => {
     const open = declared('.today-card__block-toggle[aria-expanded="true"]', "font-weight");
-    expect(open).not.toBeNull();
+    const closed = declared(".today-card__block-toggle", "font-weight");
+    // Both halves. "A font-weight is declared" is satisfied by `400`, which
+    // is the row's own weight and signals nothing, so this asks that the
+    // open one differs from the closed one AND that it is heavy enough to
+    // read as bold across a room.
+    expect(open).not.toBe(closed);
+    expect(Number(open)).toBeGreaterThanOrEqual(600);
   });
 });
 

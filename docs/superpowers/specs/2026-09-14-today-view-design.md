@@ -106,9 +106,10 @@ is not something this codebase is going to start doing.
 - `backend/content/program_years/2026-27/program.yml` gains both on all five
   windows. It already states them inside `display`.
 - **`display` stops being authored and starts being generated.** The seeder
-  builds it from the two dates and writes the same column, so every reader
-  downstream (`Tests.tsx`, `docs_exporter`, the Progress panel) is
-  untouched. The fact is then written once. The formatter handles a window
+  builds it from the two dates and writes the same column, so the one reader
+  downstream is untouched: `web/src/screens/Tests.tsx`, which puts it in the
+  window picker. `docs_exporter.rb` reads `.label`, and the Progress panel
+  reads neither. The fact is then written once. The formatter handles a window
   inside one month ("Sep 15–17") and one crossing a month ("Jun 28 – Jul 2"),
   with an en dash in both, matching what the YAML says today.
 - `ProgramYearPayload#test_dates` sends `starts_on` and `ends_on` as ISO

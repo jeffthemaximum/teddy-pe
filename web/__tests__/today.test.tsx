@@ -298,6 +298,18 @@ describe("Today", () => {
       expect(await screen.findByText(/watch his contact point/i)).toBeInTheDocument();
     });
 
+    // The fixture's one block carries name "<b>Rings Intro</b>" against
+    // name_tokens that render "Rings Intro" (see fixtures/week.ts). The
+    // toggle flattens the tokens rather than reading the raw column, because
+    // a name can carry a drill token and Tokens renders those as buttons,
+    // which cannot nest inside this one. Without this example a regression
+    // to `b.name` puts the markup on screen and passes.
+    it("titles a block from its tokens, not its raw name", async () => {
+      renderToday({ role: "coach" });
+      const toggle = await screen.findByRole("button", { name: /Rings Intro/ });
+      expect(toggle.querySelector(".today-card__block-name")?.textContent).toBe("Rings Intro");
+    });
+
     it("opens a tapped drill in the glossary", async () => {
       // The same assertion this-week.test.tsx already makes about its own
       // tokens: the screen hands the slug to a callback and the callback
