@@ -1,5 +1,4 @@
 import { reducer, actions, selectors } from "../src/ducks/journal";
-import { signOut, sessionExpired } from "../src/ducks/auth/actions";
 import type { AthleteEntry, CoachEntry } from "../src/types";
 
 // Every real column an AthleteEntry has, not the abbreviated shape an old
@@ -144,35 +143,12 @@ describe("the journal reducer", () => {
     expect(selectors.selectIsSaving("2026-09-17")({ journal: s })).toBe(true);
   });
 
-  it("clears saved entries, saving flags, and any error on sign-out — a shared device must not keep the last person's writing in memory", () => {
-    const loaded = reducer(
-      reducer(undefined, actions.athleteEntrySaved(mine)),
-      actions.saveCoachEntry({
-        date: "2026-09-18",
-        note: null,
-        overall: null,
-        energy: null,
-        flag_pain: false,
-        pain_note: null,
-        challenge_num: null,
-        ratings: {},
-      }),
-    );
-    // Sanity: there is genuinely something here to lose, before it's gone.
-    expect(loaded.athlete["2026-09-17"]).toEqual(mine);
-    expect(selectors.selectIsSaving("2026-09-18")({ journal: loaded })).toBe(true);
-
-    const out = reducer(loaded, signOut());
-    expect(out).toEqual({ coach: {}, athlete: {}, saving: {}, error: null });
-  });
-
-  it("clears the same way on session expiry — the route a dead 401 token takes, and the one that would otherwise leave that day's saving flag spinning forever", () => {
-    const saving = reducer(undefined, actions.saveAthleteEntry({ date: "2026-09-17", note: "secret", shared: false }));
-    expect(selectors.selectIsSaving("2026-09-17")({ journal: saving })).toBe(true);
-
-    const out = reducer(saving, sessionExpired());
-    expect(out).toEqual({ coach: {}, athlete: {}, saving: {}, error: null });
-  });
+  // The journal duck used to clear itself on signOut()/sessionExpired() as a
+  // stopgap, and that behavior was tested here directly. It now lives once,
+  // at the root (store/rootReducer.ts), so this reducer alone no longer
+  // reacts to either action — see __tests__/root-reducer-reset.test.ts for
+  // the reset itself, proven against a real store with several slices
+  // populated, journal included.
 });
 
 describe("the journal selectors", () => {

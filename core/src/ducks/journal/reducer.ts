@@ -1,6 +1,5 @@
 import * as t from "./actionTypes";
 import type { JournalAction } from "./actions";
-import { SIGN_OUT, SESSION_EXPIRED } from "../auth/actionTypes";
 import type { AthleteEntry, CoachEntry } from "../../types";
 
 export interface JournalState {
@@ -79,19 +78,9 @@ export function reducer(
 
     // Journal entries are a promise made to a child about his own writing.
     // On a shared device, whoever signs in next must not find them still
-    // sitting in memory — so both a deliberate sign-out and a 401's
-    // sessionExpired() (the account this data belonged to is no longer the
-    // one signed in, whatever the reason) clear everything: saved entries,
-    // in-flight saving flags included, so a save that failed with an expired
-    // token does not leave that day spinning forever either.
-    //
-    // This is a stopgap in this one duck, ahead of a root-level reset across
-    // every duck; it does not wait for that, because this is the duck
-    // holding a child's private writing.
-    case SIGN_OUT:
-    case SESSION_EXPIRED:
-      return initialState;
-
+    // sitting in memory. That reset used to live here as a stopgap; it now
+    // lives once, at the root, in store/rootReducer.ts, so every duck gets
+    // it and not just this one.
     default:
       return state;
   }
