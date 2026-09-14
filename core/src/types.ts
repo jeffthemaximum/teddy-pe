@@ -179,6 +179,28 @@ export interface Progression {
   drills: unknown[];
 }
 
+// Test-battery shapes belong to the testResults duck (Task 8), declared here
+// ahead of it the same way journal's entry shapes were ahead of Task 6:
+// ProgramYearDetail's `test_dates` and `battery.results` point at these
+// before that duck exists to claim them.
+
+export interface TestDate {
+  id: number;
+  window: string;
+  label: string;
+  display: string;
+  position: number;
+}
+
+export interface TestResult {
+  id: number;
+  test_id: string;
+  window: string;
+  raw_value: string;
+  numeric_value: number | null;
+  updated_at: string;
+}
+
 export interface ProgramYearDetail {
   id: number;
   label: string;
