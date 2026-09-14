@@ -61,6 +61,29 @@ export { journalSelectors };
 export type { JournalState } from "./ducks/journal";
 export type { CoachEntry, AthleteEntry, DrillRatingValue } from "./types";
 
+// The test-results duck's public surface, narrowed the same way authActions,
+// outboxActions and journalActions are. `fetchResults` and `saveResult` are
+// the only two things an app ever dispatches: a save with an empty
+// `rawValue` is how clearing a box is spelled (see ducks/testResults/actions
+// .ts), so there is no separate "clear" action to expose either.
+// `resultsFetched`, `resultSaved`, `resultDeleted`, `saveQueued` and
+// `saveFailed` are saga-internal, dispatched only from inside the saga or
+// from the outbox's own REPLAY_SUCCEEDED — an app that could dispatch
+// `resultSaved` directly could put a height or a time on the board that no
+// server ever recorded.
+import {
+  actions as testResultsDuckActions,
+  selectors as testResultsSelectors,
+} from "./ducks/testResults";
+
+export const testResultsActions = {
+  fetchResults: testResultsDuckActions.fetchResults,
+  saveResult: testResultsDuckActions.saveResult,
+};
+export { testResultsSelectors };
+export type { TestResultsState, SaveResultPayload } from "./ducks/testResults";
+export type { TestResult, TestDate } from "./types";
+
 // The six read ducks. Each is already wired into the store by
 // rootReducer/rootSaga; an app dispatches `<duck>.actions.fetch(...)` and
 // reads through `<duck>.selectors` or the derived selectors below.
@@ -82,3 +105,11 @@ export type {
   Drill,
   Progression as ProgressionPayload,
 } from "./types";
+
+// Typed react-redux hooks. useAppSelector and useAppDispatch are the only
+// way either app should touch the store's dispatch and state types; both
+// are thin wrappers, typed against RootState and this store's own dispatch,
+// so neither app writes its own copy of that typing (or its own untyped
+// useSelector/useDispatch, which is the thing this file exists to prevent).
+export { useAppSelector, useAppDispatch } from "./store/hooks";
+export type { AppDispatch } from "./store/hooks";

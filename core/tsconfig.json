@@ -9,7 +9,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "declaration": true,
-    "types": ["jest"]
+    "types": ["jest", "node"]
   },
   "include": ["src", "__tests__"]
 }
