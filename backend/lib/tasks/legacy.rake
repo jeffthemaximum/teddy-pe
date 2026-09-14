@@ -1,4 +1,21 @@
 namespace :legacy do
+  # A bare KeyError or RecordNotFound backtrace on a Fly console is a puzzle
+  # to whoever typed the command. Say what to pass instead, the way CONFIRM
+  # already does. Both migrate and verify close over this.
+  find_coach = lambda do
+    email = ENV["COACH_EMAIL"].to_s.strip.downcase
+    if email.empty?
+      abort("Set COACH_EMAIL to the coach's sign-in address, for example " \
+            "COACH_EMAIL=frey.maxim@gmail.com. The migration files every diary entry under that account " \
+            "and the verifier looks for them there, so the two have to be given the same one.")
+    end
+
+    User.find_by(email: email, role: "coach") ||
+      abort("No coach account has the email #{email}. Check the spelling, and check it is the coach " \
+            "account rather than Teddy's. `bin/rails runner 'puts User.where(role: :coach).pluck(:email)'` " \
+            "lists the ones that exist.")
+  end
+
   desc "Read the old Neon tables and report what exists and what will not map. Writes nothing."
   task survey: :environment do
     report = Legacy::Survey.new.run
@@ -60,18 +77,16 @@ namespace :legacy do
   task migrate: :environment do
     abort("Set CONFIRM=yes once you have read the survey.") unless ENV["CONFIRM"] == "yes"
 
-    coach = User.find_by!(email: ENV.fetch("COACH_EMAIL").strip.downcase, role: "coach")
-
-    journal = Legacy::JournalMigrator.new(coach: coach).run!
-    results = Legacy::ResultMigrator.new(coach: coach).run!
+    coach = find_coach.call
 
     # First, and loudly. A migration that silently did nothing is the thing
     # this whole phase is guarding against: zeros with no explanation read
     # the same as an empty old table, and the next task deletes the only copy.
-    tables_missing = (journal[:tables_missing] + results[:tables_missing]).uniq
-    if tables_missing.any?
+    say_missing = lambda do |tables|
+      next if tables.empty?
+
       puts "=" * 60
-      puts "NOTHING WAS MIGRATED from #{tables_missing.join(' or ')}: not found on this connection."
+      puts "NOTHING WAS MIGRATED from #{tables.join(' or ')}: not found on this connection."
       puts "The old rows are probably in another database. Set LEGACY_DATABASE_URL to the Vercel project's"
       puts "DATABASE_URL and run this again:"
       puts "  fly secrets set LEGACY_DATABASE_URL=\"<the Vercel project's DATABASE_URL>\" -a teddy-pe-api"
@@ -79,6 +94,12 @@ namespace :legacy do
       puts "=" * 60
       puts
     end
+
+    # Each migrator reports the moment it finishes rather than everything
+    # being held to the end. A dropped fly ssh console used to leave the
+    # writes done and nothing said about them.
+    journal = Legacy::JournalMigrator.new(coach: coach).run!
+    say_missing.call(journal[:tables_missing])
 
     puts "diary entries written: #{journal[:migrated]}"
     if journal[:already_migrated].positive?
@@ -99,6 +120,10 @@ namespace :legacy do
       puts "  Deleting the legacy table drops the old version of exactly those fields, so open each date"
       puts "  on /journal and compare before anything is deleted."
     end
+    $stdout.flush
+
+    results = Legacy::ResultMigrator.new(coach: coach).run!
+    say_missing.call(results[:tables_missing])
 
     puts "test results written: #{results[:migrated]}"
     if results[:already_migrated].positive?
@@ -114,6 +139,7 @@ namespace :legacy do
       puts "  The number on the new site was kept and nothing here was written."
       puts "  Deleting the legacy table drops the old number for good, so look at each one before anything is deleted."
     end
+    $stdout.flush
 
     # These are the rows that did not arrive. They are what tells Jeff
     # whether it is safe to follow this migration with a deletion, so they
@@ -133,16 +159,41 @@ namespace :legacy do
     end
 
     puts
-    puts "Now run rails legacy:verify. Nothing gets deleted until it reads clean."
+    puts "This task is safe to run again. It never writes over an entry or a result the new system"
+    puts "already holds, so a second run writes only what is genuinely not there yet. If this one was"
+    puts "cut off part way, run it again with the same COACH_EMAIL."
+    puts "Then run rails legacy:verify COACH_EMAIL=#{coach.email}. Nothing gets deleted until it reads clean."
   end
 
-  desc "Compare the old Neon rows against the migrated ones, field by field."
+  desc "Compare the old Neon rows against the migrated ones, field by field. COACH_EMAIL="
   task verify: :environment do
-    report = Legacy::Verifier.new.run
+    report = Legacy::Verifier.new(coach: find_coach.call).run
     counts = report[:counts]
 
-    puts "diary:   #{counts[:legacy_diary]} to migrate, #{counts[:migrated_diary]} in the new table"
+    # Never a clean read. An absent table used to look exactly like an empty
+    # one, and the task after this one deletes the only other copy.
+    if report[:tables_missing].any?
+      puts "=" * 60
+      report[:tables_missing].each { |t| puts "#{t} not found on this connection." }
+      puts "Nothing below was compared against anything. The old rows are probably in another database:"
+      puts "  fly secrets set LEGACY_DATABASE_URL=\"<the Vercel project's DATABASE_URL>\" -a teddy-pe-api"
+      puts "=" * 60
+      puts
+    end
+
+    puts "diary:   #{counts[:legacy_diary]} to migrate, #{counts[:migrated_diary]} on the coach's account"
     puts "results: #{counts[:legacy_results]} to migrate, #{counts[:migrated_results]} in the new table"
+
+    # Reported loudly, never blocking. Failed rows and conflicts are
+    # legitimate reasons for a gap, and blocking on a count would fire on
+    # those and teach whoever reads this to walk past the gate.
+    if counts[:legacy_diary] != counts[:migrated_diary]
+      puts
+      puts "The two diary numbers differ by #{(counts[:legacy_diary] - counts[:migrated_diary]).abs}."
+      puts "  Rows that failed to migrate and dates reported as conflicts account for some of that gap."
+      puts "  Anything left over after those means entries exist on this account that this migration"
+      puts "  did not write, or entries it wrote are on a different account. Check COACH_EMAIL."
+    end
 
     report[:missing].each { |m| puts "MISSING #{m[:kind]} #{m[:key]}" }
     report[:mismatches].each do |m|
@@ -151,11 +202,13 @@ namespace :legacy do
 
     if report[:conflicts].any?
       puts
-      puts "Slots where the old and new numbers disagree and the new one is being kept:"
+      puts "Slots where the old row and the new one disagree and the new one is being kept:"
       report[:conflicts].each do |c|
-        puts "  #{c[:key]}: old #{c[:legacy].inspect}, keeping #{c[:kept].inspect}"
+        field = c[:field] ? " #{c[:field]}" : ""
+        puts "  #{c[:kind]} #{c[:key]}#{field}: old #{c[:legacy].inspect}, keeping #{c[:kept].inspect}"
       end
-      puts "  Deleting the old table drops the old number for good. Look at each one above before anything is deleted."
+      puts "  Nothing was written for any of these. Deleting the old tables drops the old version for good,"
+      puts "  so look at each line above and decide which one is right before anything is deleted."
     end
 
     if report[:clean?]
