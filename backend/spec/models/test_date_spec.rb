@@ -35,4 +35,30 @@ RSpec.describe TestDate do
     expect(date).not_to be_valid
     expect(date.errors[:ends_on]).to be_present
   end
+
+  describe ".display_for" do
+    # The string this replaces was hand-written beside the dates it
+    # describes, which is the same fact written twice with nothing checking
+    # that the two agree. These four cases are every shape the year can
+    # produce; the first is the only one the 2026-27 content actually uses.
+    it "keeps a window inside one month short" do
+      expect(described_class.display_for(Date.new(2026, 9, 15), Date.new(2026, 9, 17)))
+        .to eq("Sep 15–17")
+    end
+
+    it "names both months when a window crosses one" do
+      expect(described_class.display_for(Date.new(2027, 6, 28), Date.new(2027, 7, 2)))
+        .to eq("Jun 28 – Jul 2")
+    end
+
+    it "names both years when a window crosses one" do
+      expect(described_class.display_for(Date.new(2026, 12, 30), Date.new(2027, 1, 2)))
+        .to eq("Dec 30 – Jan 2")
+    end
+
+    it "writes a single day once" do
+      expect(described_class.display_for(Date.new(2026, 9, 15), Date.new(2026, 9, 15)))
+        .to eq("Sep 15")
+    end
+  end
 end

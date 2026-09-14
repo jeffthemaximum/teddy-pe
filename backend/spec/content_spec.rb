@@ -232,6 +232,16 @@ RSpec.describe "content integrity" do
       end
       expect(checked).to eq(TEST_DATES)
     end
+
+    it "states the range once, as dates" do
+      checked = 0
+      PROGRAM["test_dates"].each do |d|
+        expect(d).not_to have_key("display"),
+          "#{d['window']} still hand-writes display; the seeder generates it from the dates"
+        checked += 1
+      end
+      expect(checked).to eq(TEST_DATES)
+    end
   end
 
   describe "day roles" do
