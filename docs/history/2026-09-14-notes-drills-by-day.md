@@ -41,4 +41,6 @@ Eleven tests written before this filter existed rendered the form with no week i
 
 ## What is still owed
 
-Nothing from this change. The two things already open elsewhere still are: `WEB_ORIGIN` on the Fly app, without which nobody can sign in to the site at all, and the October plan.
+Nothing from this change.
+
+`WEB_ORIGIN` was the thing standing between this and anyone seeing it. Jeff set it the same afternoon, and it was checked against the running API rather than taken on trust: a preflight from the Vercel origin answers with that origin in `access-control-allow-origin`, and a preflight from a foreign origin answers with no such header, so the allowed list is one entry long the way it was meant to be. The October plan is still owed.
