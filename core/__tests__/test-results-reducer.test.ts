@@ -27,6 +27,25 @@ describe("selectDefaultWindow", () => {
   it("returns null for an empty list rather than throwing", () => {
     expect(selectDefaultWindow([], new Date("2026-09-16"))).toBeNull();
   });
+
+  // The brief's three-window fixture above (Sep, Dec, Mar) is three months
+  // apart each way, so no date sits at an exact tie between any two of
+  // them: every case above passes with `<` and would pass just as well
+  // with `<=`, the same shape as a drill named "Cartwheel" with the alias
+  // "wheel", where the alias search can never fail because the name
+  // matches too. A fixture that cannot produce a tie proves nothing about
+  // how a tie is broken.
+  //
+  // June and August are two months apart; July 15 sits exactly one month
+  // from each, so both distances are equal and the tie-break is what
+  // decides it.
+  it("keeps the earlier window on an exact tie, rather than sliding forward into one that has not happened yet", () => {
+    const tieDates: TestDate[] = [
+      { id: 1, window: "2026-06", label: "June", display: "Jun 8-10", position: 1 },
+      { id: 2, window: "2026-08", label: "August", display: "Aug 8-10", position: 2 },
+    ];
+    expect(selectDefaultWindow(tieDates, new Date("2026-07-15"))).toBe("2026-06");
+  });
 });
 
 // Every real column a TestResult has, not an abbreviated shape: id,
