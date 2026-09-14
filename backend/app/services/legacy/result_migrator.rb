@@ -10,6 +10,7 @@ module Legacy
       @skipped = []
       @conflicts = []
       @failed = []
+      @already_migrated = 0
     end
 
     def run!
@@ -24,14 +25,15 @@ module Legacy
         migrated += 1 if migrate(row)
       end
 
-      empty_report.merge(migrated: migrated, skipped: @skipped,
-                         conflicts: @conflicts, failed: @failed)
+      empty_report.merge(migrated: migrated, skipped: @skipped, conflicts: @conflicts,
+                         failed: @failed, already_migrated: @already_migrated)
     end
 
     private
 
     def empty_report
-      { tables_missing: [], migrated: 0, skipped: [], conflicts: [], failed: [] }
+      { tables_missing: [], migrated: 0, already_migrated: 0,
+        skipped: [], conflicts: [], failed: [] }
     end
 
     def migrate(row)
@@ -64,8 +66,18 @@ module Legacy
 
       existing = TestResult.find_by(program_year: year, test_date: date, battery_measure: measure)
       if existing
-        @conflicts << { window: row.test_window, test_id: row.test_id,
-                        legacy_value: row.value, current_value: existing.raw_value }
+        # Comparing the values, not just noticing that a row is there. Every
+        # row this migration already wrote is "there" on the second run, and
+        # calling each of those a conflict buried any real disagreement in a
+        # wall of "old 4.4, current 4.4". A conflict is something a person
+        # has to decide about; a row that agrees with itself is not one.
+        # Same :already_migrated key as Legacy::JournalMigrator uses.
+        if value == existing.raw_value
+          @already_migrated += 1
+        else
+          @conflicts << { window: row.test_window, test_id: row.test_id,
+                          legacy_value: row.value, current_value: existing.raw_value }
+        end
         return false
       end
 

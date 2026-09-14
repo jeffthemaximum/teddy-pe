@@ -101,9 +101,18 @@ namespace :legacy do
     end
 
     puts "test results written: #{results[:migrated]}"
+    if results[:already_migrated].positive?
+      puts "  #{results[:already_migrated]} result(s) were already there and already agree. Nothing was rewritten."
+    end
     results[:skipped].each { |s| puts "  skipped #{s[:window]} #{s[:test_id]}: #{s[:reason]}" }
-    results[:conflicts].each do |c|
-      puts "  left alone #{c[:window]} #{c[:test_id]}: old #{c[:legacy_value]}, current #{c[:current_value]}"
+    if results[:conflicts].any?
+      puts
+      puts "Results the new system already holds, where the old row says a different number (#{results[:conflicts].size}):"
+      results[:conflicts].each do |c|
+        puts "  #{c[:window]} #{c[:test_id]}: old #{c[:legacy_value]}, kept #{c[:current_value]}"
+      end
+      puts "  The number on the new site was kept and nothing here was written."
+      puts "  Deleting the legacy table drops the old number for good, so look at each one before anything is deleted."
     end
 
     # These are the rows that did not arrive. They are what tells Jeff

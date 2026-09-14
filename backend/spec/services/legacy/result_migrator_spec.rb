@@ -119,17 +119,36 @@ RSpec.describe Legacy::ResultMigrator, :legacy do
     expect(report[:failed]).to eq([])
   end
 
-  it "can be run twice without making a second copy" do
+  # A second run used to call every row it had already migrated a conflict,
+  # without ever comparing the two values, so the output was a wall of
+  # "left alone, old 4.4, current 4.4" with any real disagreement buried in
+  # it. A conflict is a thing a person has to decide about, and a row that
+  # agrees with itself is not one.
+  it "can be run twice without making a second copy, and calls none of it a conflict" do
     insert_result(window: "2026-09", test_id: "t1", value: "4.6")
 
     described_class.new(coach: coach).run!
     second = described_class.new(coach: coach).run!
 
     expect(TestResult.count).to eq(1)
-    # The second run finds its own work already there, which is a conflict
-    # with itself and reports as one. That is honest: a human reading the
-    # output should see that nothing new was written.
     expect(second[:migrated]).to eq(0)
+    expect(second[:already_migrated]).to eq(1)
+    expect(second[:conflicts]).to eq([])
+  end
+
+  # The legacy column is text and the migrator writes row.value.to_s.strip,
+  # so a value with whitespace around it has already agreed once it is
+  # stripped. Comparing the raw column would call this a conflict.
+  it "counts a result that already holds the same value as already migrated" do
+    TestResult.create!(program_year: year, athlete: year.athlete, test_date: date,
+                       battery_measure: measure, recorded_by_user: coach,
+                       raw_value: "4.6", recorded_at: Time.utc(2026, 9, 16))
+    insert_result(window: "2026-09", test_id: "t1", value: "  4.6 ")
+
+    report = described_class.new(coach: coach).run!
+
+    expect(report[:already_migrated]).to eq(1)
+    expect(report[:conflicts]).to eq([])
   end
 
   # Same guard as the journal migrator's. Reporting zeros for a table that
