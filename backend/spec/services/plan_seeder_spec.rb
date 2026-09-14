@@ -29,10 +29,22 @@ RSpec.describe "seeding the month plan" do
   it "reads Thursday's card the way it is written" do
     expect(thursday.name).to eq("Wall & Ball")
     expect(thursday.date).to eq(Date.new(2026, 9, 17))
-    expect(thursday.day_blocks.count).to eq(9)
-    expect(thursday.day_blocks.tests.count).to eq(2)
+    expect(thursday.day_blocks.count).to eq(10)
+    expect(thursday.day_blocks.tests.count).to eq(3)
     expect(thursday.day_blocks.challenges.count).to eq(1)
-    expect(thursday.dad_note).to start_with("Form over volume on the tennis.")
+    expect(thursday.dad_note).to start_with("Rope first, while he is fresh")
+  end
+
+  # Moved off Tuesday on 14 September because there was no rope in the house
+  # that day. Asserted from both ends rather than only its new one: a card
+  # that gained the test while Tuesday kept it would pass a one-sided check
+  # and hand Teddy the same test twice in one week.
+  it "tests the jump rope on Thursday and not on Tuesday" do
+    tuesday = week1.day_cards.find_by!(dow: "tue")
+
+    expect(thursday.day_blocks.pluck(:name)).to include("Test: Jump rope")
+    expect(tuesday.day_blocks.pluck(:name)).not_to include("Test: Jump rope")
+    expect(tuesday.summary_lines.join(" ")).not_to include("jump rope")
   end
 
   it "carries the high-intent effort counts" do

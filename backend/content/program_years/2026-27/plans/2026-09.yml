@@ -82,7 +82,7 @@ weeks:
     minutes: 75–90
     intensity: 2
     summary_lines:
-    - 'Tests: dead hang, overhand throw R/L, jump rope, single-leg balance, height'
+    - 'Tests: dead hang, overhand throw R/L, single-leg balance, height'
     - Riverside rings intro, goal 3 passes
     - 'Soccer: wall touch both feet, 300 touches'
     - HORSE
@@ -109,10 +109,6 @@ weeks:
       name: 'Test: Overhand throw'
       body: Tennis ball, from a step. 3 throws right, 3 throws left. Mark the best
         with a cone, pace it. Record both arms.
-      tag: test
-    - minutes: '8'
-      name: 'Test: Jump rope'
-      body: Consecutive singles without a miss. Best of 3. Record.
       tag: test
     - minutes: '5'
       name: Single-leg balance
@@ -209,16 +205,19 @@ weeks:
     date: '2026-09-17'
     name: Wall & Ball
     role: Wall Day
-    minutes: 110–120
+    minutes: 115–125
     intensity: 2
     summary_lines:
+    - 'Test: jump rope singles, best of 3'
     - 'Cartwheel step 2: hand-hand-foot-foot'
     - Step-and-throw at wall target 15 R / 10 L
     - 'Tennis: drop-feed FH/BH ×20, rally count test'
     - 'Basketball: jump stop + pivot, chest pass target, cone weave test'
-    dad_note: Form over volume on the tennis. If the finish starts dropping, stop
-      the set at 10, not 20. The basketball cone weave will be slow with the left
-      hand; record it without comment. High-intent efforts stay near zero today.
+    dad_note: 'Rope first, while he is fresh: give him a practice minute to find
+      the rhythm before the three counted tries. Form over volume on the tennis,
+      and if the finish starts dropping, stop the set at 10, not 20. The basketball
+      cone weave will be slow with the left hand; record it without comment.
+      High-intent efforts stay near zero today.'
     hie: 2
     blocks:
     - minutes: '10'
@@ -226,6 +225,10 @@ weeks:
       body: Animal medley, skips, then 10 shadow forehands and 10 shadow backhands
         with a full unit turn.
       tag:
+    - minutes: '8'
+      name: 'Test: Jump rope'
+      body: Consecutive singles without a miss. Best of 3. Record.
+      tag: test
     - minutes: '15'
       name: New Thing
       body: 'Cartwheel step 2: <q>hand, hand, foot, foot</q>. Chalk a line. Lunge,
