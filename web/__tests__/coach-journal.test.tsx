@@ -83,7 +83,8 @@ const WEEK: WeekPayload = {
   theme: "Baseline & Land",
   dates_display: "Sep 14 to Sep 20",
   targets: ["Tennis: drop-feed rally"],
-  challenge: "Silent Landings.",
+  challenge:
+    "Silent Landings. 10 jumps off a step, count the silent ones. Monday number, Friday number.",
   trials: false,
   block_key: "cub",
   high_intent_efforts: 32,
@@ -322,7 +323,7 @@ describe("the coach's journal", () => {
     expect(screen.getByLabelText(/what hurt, and where/i)).toHaveValue(
       "Tight right calf, iced after.",
     );
-    expect(screen.getByLabelText(/which challenge attempt/i)).toHaveValue("1");
+    expect(screen.getByLabelText(/challenge number/i)).toHaveValue("1");
 
     expect(within(ratingGroup("Star Jump")).getByRole("radio", { name: "owns" })).toBeChecked();
     expect(within(ratingGroup("Wall Taps")).getByRole("radio", { name: "getting" })).toBeChecked();
@@ -352,7 +353,7 @@ describe("the coach's journal", () => {
     expect(within(ratingGroup("Energy")).queryAllByRole("radio", { checked: true })).toHaveLength(0);
     expect(screen.getByLabelText(/something hurt/i)).not.toBeChecked();
     expect(screen.queryByLabelText(/what hurt, and where/i)).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/which challenge attempt/i)).toHaveValue("");
+    expect(screen.getByLabelText(/challenge number/i)).toHaveValue("");
     for (const drill of DRILLS) {
       expect(within(ratingGroup(drill.name)).queryAllByRole("radio", { checked: true })).toHaveLength(0);
     }
@@ -371,7 +372,7 @@ describe("the coach's journal", () => {
     await user.click(within(ratingGroup("Energy")).getByRole("radio", { name: "5" }));
     await user.click(screen.getByLabelText(/something hurt/i));
     await user.type(screen.getByLabelText(/what hurt, and where/i), "Sore left ankle, iced after.");
-    await user.type(screen.getByLabelText(/which challenge attempt/i), "2");
+    await user.type(screen.getByLabelText(/challenge number/i), "2");
     await user.click(screen.getByRole("button", { name: /save/i }));
 
     const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
@@ -812,6 +813,64 @@ describe("the coach's journal", () => {
       const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
       const payload = saves[0]?.payload as { ratings: Record<string, unknown> };
       expect(payload.ratings).toEqual({ "star-jump": "owns", "wall-taps": "getting" });
+    });
+  });
+  // ---- the Challenge of the Week ------------------------------------------
+  describe("the challenge", () => {
+    const CHALLENGE =
+      "Silent Landings. 10 jumps off a step, count the silent ones. Monday number, Friday number.";
+
+    it("shows this week's challenge above the number he types" , () => {
+      const { store } = renderCoachJournal(42);
+      loadDrills(store);
+      loadWeek(store);
+
+      setDate("2026-09-16");
+
+      expect(screen.getByText(CHALLENGE)).toBeInTheDocument();
+    });
+
+    it("asks for the number he got rather than which attempt it was", async () => {
+      // challenge_num is the score: week 1 says "count the silent ones,
+      // Monday number, Friday number", and docs_exporter writes it out as
+      // "Challenge number". The label used to ask which attempt it was,
+      // which is a different question with a different answer.
+      const user = userEvent.setup();
+      const { store } = renderCoachJournal(42);
+      loadDrills(store);
+      loadWeek(store);
+      setDate("2026-09-16");
+      const dispatched = trackDispatch(store);
+
+      await user.type(screen.getByLabelText(/challenge number/i), "7");
+      await user.click(screen.getByRole("button", { name: /save/i }));
+
+      const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
+      expect((saves[0]?.payload as { challenge_num: unknown }).challenge_num).toBe("7");
+    });
+
+    it("shows no challenge for a date outside this week", () => {
+      // The week payload only ever holds the current week, so showing its
+      // challenge beside an older date would name the wrong one. The drill
+      // fieldset below already says the date is outside the week, so this
+      // says nothing a second time and simply shows no challenge.
+      const { store } = renderCoachJournal(42);
+      loadDrills(store);
+      loadWeek(store);
+
+      setDate("2026-09-07");
+
+      expect(screen.queryByText(CHALLENGE)).not.toBeInTheDocument();
+      expect(screen.getByLabelText(/challenge number/i)).toBeInTheDocument();
+    });
+
+    it("shows no challenge while the week is still on its way", async () => {
+      const { store } = renderCoachJournal(42);
+      loadDrills(store);
+      await settle();
+
+      expect(screen.queryByText(CHALLENGE)).not.toBeInTheDocument();
+      expect(screen.getByLabelText(/challenge number/i)).toBeInTheDocument();
     });
   });
 });

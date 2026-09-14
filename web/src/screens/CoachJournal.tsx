@@ -59,6 +59,19 @@ const NO_DRILLS_LABEL = "This day's card lists no drills.";
 const OUTSIDE_WEEK_LABEL = "This date is outside this week, so every drill is listed.";
 const NO_WEEK_LABEL = "This week could not be reached, so every drill is listed.";
 
+// The Challenge of the Week, shown beside the number he records for it.
+// CLAUDE.md has one challenge a week, attempted early and late, and the
+// week payload carries the whole sentence: what it is, how it is scored and
+// when the two attempts fall. Reading it off the week means this screen
+// never restates a program rule it would then own a second copy of.
+const CHALLENGE_HEADING = "Challenge of the Week";
+
+// What the field actually stores is the number he got, which is why week 1
+// reads "count the silent ones. Monday number, Friday number" and why
+// docs_exporter writes it out as "Challenge number". The label asked which
+// attempt it was until 14 September 2026, which is a different question.
+const CHALLENGE_NUMBER_LABEL = "Challenge number";
+
 // The delete, in the same two steps Teddy's screen uses. It is the same
 // irreversible act and he taps it on a phone with one thumb straight after a
 // session, so one pattern, asked once, in both places.
@@ -364,7 +377,20 @@ export function CoachJournal() {
           </>
         )}
 
-        <label htmlFor="coach-journal-challenge">Which challenge attempt this was</label>
+        {/* Gated on the day card rather than on the week having loaded. The
+            payload only ever holds the current week, so a date outside it
+            would be shown this week's challenge beside a session that ran
+            under a different one. Nothing is said in its place: the drill
+            fieldset just below already explains that the date is outside
+            this week, and saying it twice on one screen is noise. */}
+        {dayCard && weekData && (
+          <div className="coach-journal__challenge">
+            <p className="coach-journal__challenge-heading">{CHALLENGE_HEADING}</p>
+            <p>{weekData.challenge}</p>
+          </div>
+        )}
+
+        <label htmlFor="coach-journal-challenge">{CHALLENGE_NUMBER_LABEL}</label>
         <input
           id="coach-journal-challenge"
           type="text"
