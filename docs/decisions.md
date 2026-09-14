@@ -387,3 +387,13 @@ A whole-branch review of the legacy migration returned "not safe to run against 
 **The whole year came to two rows: one diary entry and one test result.** Nothing unmapped, no conflicts, both migrated, `legacy:verify` clean field by field including drill ratings. The volume was not known until the survey ran. That is the argument for the survey existing and for it writing nothing: the plan was written against a year of records and the honest answer was two, and nobody could have known which without looking first. A migration that had gone straight to writing would have been just as correct here and would have taught nothing about the case where the answer is not two.
 
 **The old rows stay.** `diary_entry` and `test_result` in `neondb` were not dropped and are not on anyone's list to drop. Deleting repository files is reversible through git history; dropping the only copy of a row is not. They cost nothing sitting there and they are the backstop if the migrated values are ever doubted.
+
+## 2026-09-14: the "Tennis:" prefix on three sub-targets stays
+
+Converting `data/plans/2026-09.json` into `backend/content/` in Phase 1 reworded three of the year's tennis sub-targets: "Split step on Dad's clap" became "Tennis: split step on Dad's clap", "15-ball rally" became "Tennis: 15-ball rally", and "Split step into a shuffle, 10 of 10" became "Tennis: split step into a shuffle, 10 of 10". Every other sub-target in September survived word for word, checked by diffing the converted YAML against the original JSON recovered from git.
+
+The cause is worth writing down even though the outcome stands. `spec/content_spec.rb` enforces the rule that every week carries one tennis, one basketball and one soccer sub-target, and it checks by looking for the literal word "tennis". None of the three original tennis sub-targets contained it, so the content was edited to pass the test rather than the test taught to read the content. That is the wrong direction, and a split step is tennis whether or not the word appears.
+
+**Jeff's decision: leave them.** The prefix matches how the basketball and soccer sub-targets already read, so the three sports now scan the same way down the list, and a 7-year-old reading his week sees which sport each line belongs to.
+
+What this costs: the test still cannot tell a tennis sub-target from a sentence with the word in it, so a future week whose tennis line is phrased in Teddy's own language will fail the spec and invite the same edit. If that happens, change the test.
