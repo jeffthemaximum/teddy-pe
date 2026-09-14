@@ -58,17 +58,24 @@ interface SavePayload {
 // `role` is a parameter because this screen is open to Jeff as well
 // (routes.tsx: /journal is roles ["coach", "athlete"]), and what the screen
 // offers differs by who is holding it.
+// The athlete /api/v1/me reports. Deliberately not the real child's name:
+// the heading that shows it must read it out of this payload, and a fixture
+// carrying the name the app is actually about would pass either way. It also
+// keeps his name out of a file that has no reason to hold it.
+const ATHLETE = { id: 7, name: "Robin", birthday: "2019-01-09" };
+
 function seedAuth(
   store: ReturnType<typeof createCoreStore>,
   currentProgramYearId: number | null,
   role: "athlete" | "coach" = "athlete",
+  athlete: typeof ATHLETE | null = ATHLETE,
 ) {
   store.dispatch({
     type: "auth/RESTORE_FINISHED",
     payload: {
       jwt: "a.b.c",
       user: { id: 1, email: "teddy@example.com", name: "Teddy", role },
-      athlete: null,
+      athlete,
       current_program_year_id: currentProgramYearId,
     },
   });
@@ -77,9 +84,10 @@ function seedAuth(
 function renderJournal(
   currentProgramYearId: number | null = 555,
   role: "athlete" | "coach" = "athlete",
+  athlete: typeof ATHLETE | null = ATHLETE,
 ) {
   const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
-  seedAuth(store, currentProgramYearId, role);
+  seedAuth(store, currentProgramYearId, role, athlete);
   return {
     store,
     ...render(
@@ -455,8 +463,9 @@ describe("the athlete journal", () => {
 
       expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
       // And the entry really is on screen, so this is a missing control
-      // rather than a missing entry.
-      expect(screen.getByLabelText(/what went best today/i)).toHaveValue("The wall rally");
+      // rather than a missing entry. He reads it; it is not in a box he can
+      // type in.
+      expect(screen.getByText("The wall rally")).toBeInTheDocument();
     });
 
     it("asks before it does anything", async () => {
@@ -633,6 +642,147 @@ describe("the athlete journal", () => {
       expect(screen.queryByText(/deleted here/i)).not.toBeInTheDocument();
       expect(screen.getByLabelText(/tell me about today/i)).toHaveValue("");
       expect(screen.getByText(/only you can see this/i)).toBeInTheDocument();
+    });
+  });
+
+  // ---- what Dad gets on the same route ------------------------------------
+  //
+  // /journal is open to him on purpose: athlete_entries#index answers him 200
+  // and hands him what his son shared. Everything that writes on this page
+  // answers him 403, and one of those controls was a button reading "Let Dad
+  // see this", shown to Dad.
+  describe("Dad reading it", () => {
+    it("gives him nothing at all to press", () => {
+      // Asserted by role rather than by the words on the controls, so a
+      // control added later under a different label is caught too. He is
+      // holding a page, not a form.
+      const { store } = renderJournal(555, "coach");
+      hydrateWith(store, SHARED_ENTRY);
+
+      expect(screen.queryAllByRole("button")).toHaveLength(0);
+      expect(screen.queryAllByRole("textbox")).toHaveLength(0);
+      expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+      expect(screen.queryAllByRole("radio")).toHaveLength(0);
+      expect(screen.queryAllByRole("combobox")).toHaveLength(0);
+      expect(screen.queryAllByRole("spinbutton")).toHaveLength(0);
+    });
+
+    it("shows him what was shared, as something to read", () => {
+      const { store } = renderJournal(555, "coach");
+      hydrateWith(store, SHARED_ENTRY);
+
+      expect(screen.getByText("The wall rally")).toBeInTheDocument();
+      expect(screen.getByText("Staying low")).toBeInTheDocument();
+      expect(screen.getByText("Good day at the wall.")).toBeInTheDocument();
+      expect(screen.getByText("4 out of 5")).toBeInTheDocument();
+    });
+
+    it("says whose page it is, in the name the API gave it", () => {
+      // He has his own journal one tab away and the two tabs read "Journal"
+      // and "Notes", so the heading is the only thing telling him which one
+      // he is on. The name is asserted against the /me fixture rather than
+      // against anything in the app: a heading with a name written into it
+      // would ship that name in the bundle to anyone who loads the site.
+      const dads = renderJournal(555, "coach");
+      hydrateWith(dads.store, SHARED_ENTRY);
+
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(`${ATHLETE.name}'s`);
+      dads.unmount();
+
+      // Teddy's own page never says whose it is, because he already knows,
+      // and it must not start saying it: the same heading on both would put
+      // his name where a stranger reading the bundle could find it.
+      const his = renderJournal(555, "athlete");
+      hydrateWith(his.store, SHARED_ENTRY);
+      const heading = screen.getByRole("heading", { level: 1 });
+      expect(heading).toHaveTextContent("Today");
+      expect(heading).not.toHaveTextContent(ATHLETE.name);
+    });
+
+    it("still names the page when the session carries no athlete", () => {
+      const { store } = renderJournal(555, "coach", null);
+      hydrateWith(store, SHARED_ENTRY);
+
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/journal/i);
+    });
+
+    // The one that matters. Teddy wrote today and kept it to himself; Teddy
+    // wrote nothing at all. Those are different facts about a 7-year-old's
+    // day, and which of the two it was is exactly what the toggle exists to
+    // keep from his dad. The API is already careful: the Pundit scope hands
+    // Jeff the shared rows and no others, so both arrive as the same
+    // silence. A screen that said "nothing shared today" for one and
+    // "nothing written today" for the other would give it straight back.
+    //
+    // The unshared entry is seeded into the slice rather than filtered out
+    // on the way in, which is the whole strength of the fixture. The journal
+    // slice has three sources and one of them is the week payload's inline
+    // `athlete_entry`, folded in by core on week/SUCCEEDED, so an entry the
+    // index endpoint would never have sent him can still land here. A test
+    // that filtered first would prove only that nothing renders nothing.
+    it("shows him the same thing for a day kept private as for a day never written", () => {
+      const wroteButKeptIt = renderJournal(555, "coach");
+      hydrateWith(wroteButKeptIt.store, UNSHARED_ENTRY);
+      const withPrivateEntry = wroteButKeptIt.container.innerHTML;
+
+      const neverWrote = renderJournal(555, "coach");
+      hydrateEmpty(neverWrote.store);
+      const withNothing = neverWrote.container.innerHTML;
+
+      // Identical markup, not merely two renders that each lack a word
+      // somebody thought to check for.
+      expect(withPrivateEntry).toBe(withNothing);
+      // And the private entry really was in the store, so this is the screen
+      // refusing to show it rather than a fixture that never held it.
+      expect(
+        wroteButKeptIt.store.getState().journal.athlete[TODAY]?.note,
+      ).toBe(UNSHARED_ENTRY.note);
+      // None of what he wrote reached the page.
+      expect(withPrivateEntry).not.toContain("The wall rally");
+      expect(withPrivateEntry).not.toContain("Staying low");
+      expect(withPrivateEntry).not.toContain("Good day at the wall.");
+    });
+
+    it("says the same one thing on an empty day, with no second version of it", () => {
+      // The leak above would most likely arrive as two empty-state
+      // messages, so this pins that there is one. It is worded as a fact
+      // about the page rather than about today, and the line explaining what
+      // the page is stands whether or not there is an entry, so its presence
+      // says nothing either.
+      const empty = renderJournal(555, "coach");
+      hydrateEmpty(empty.store);
+      expect(screen.getByText("Nothing here for today.")).toBeInTheDocument();
+      expect(screen.getByText(/chooses to share/i)).toBeInTheDocument();
+      empty.unmount();
+
+      const full = renderJournal(555, "coach");
+      hydrateWith(full.store, SHARED_ENTRY);
+      expect(screen.queryByText("Nothing here for today.")).not.toBeInTheDocument();
+      // The same standing line, on a day that is not empty.
+      expect(screen.getByText(/chooses to share/i)).toBeInTheDocument();
+    });
+
+    it("does not put his son's own questions to him", () => {
+      // Every string on Teddy's half of this screen is written for a
+      // 7-year-old talking about his dad. "What went best today?" is
+      // addressed to the boy writing it, and "Dad can see this too" is the
+      // app telling Dad about Dad. Read as Jeff would read them, they are
+      // the app talking to the wrong person.
+      const { store } = renderJournal(555, "coach");
+      hydrateWith(store, SHARED_ENTRY);
+
+      expect(screen.queryByText(/how did today feel/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/what went best today\?/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/what was hard today\?/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/tell me about today/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/let dad see this/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/keep this to yourself/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/only you can see this/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/dad can see this too/i)).not.toBeInTheDocument();
+      // What he does get instead: the same four things, named rather than
+      // asked.
+      expect(screen.getByText("What went best")).toBeInTheDocument();
+      expect(screen.getByText("What was hard")).toBeInTheDocument();
     });
   });
 

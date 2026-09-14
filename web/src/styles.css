@@ -838,6 +838,53 @@ legend {
   align-self: flex-start;
 }
 
+/* Jeff reading his son's journal. It has to look unlike his own Notes tab
+   at a glance, so the heading carries a name and the line under it says what
+   the page is, on every visit rather than only on an empty day. */
+.athlete-journal__whose {
+  margin: -0.4rem 0 0.4rem;
+  color: var(--ink-soft);
+  max-width: 46ch;
+}
+
+.athlete-journal__nothing {
+  margin: 0.6rem 0 0;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--sunk);
+  color: var(--ink-soft);
+}
+
+.athlete-journal__read {
+  margin: 0.6rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.athlete-journal__read > div {
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.athlete-journal__read dt {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.athlete-journal__read dd {
+  margin: 0.3rem 0 0;
+  font-size: 1.1rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
 /* A day he deleted, with the delete still waiting for a connection. It
    stands where the form would be, so the page is never blank at him, and it
    is the quiet card rather than the alarm colours below: nothing has gone

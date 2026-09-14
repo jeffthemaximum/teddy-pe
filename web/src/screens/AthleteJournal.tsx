@@ -45,19 +45,72 @@ const DELETE_QUEUED_TEXT = "Deleted here. It will tell the server once you're ba
 const DELETE_QUEUED_DETAIL =
   "Today is off this page and Dad cannot see it. Once it sends you can write about today again.";
 
+// ---- What Jeff reads, on the same route --------------------------------
+//
+// `/journal` is open to him on purpose (routes.tsx): `athlete_entries#index`
+// answers him 200 and hands him whatever his son has shared. `create` and
+// the destroy policy are athlete-only, so every write control on this page
+// would 403 for him, and one of them is a button reading "Let Dad see this"
+// shown to Dad. routes.tsx says keeping the controls off his screen belongs
+// here rather than to the route table. This is that.
+
+// Whose page this is. He has his own journal one tab away and the two tabs
+// read "Journal" and "Notes", so nothing but this heading tells him which of
+// the two he is looking at.
+//
+// The name arrives from /api/v1/me at runtime and is never written down in
+// this file. A child's name typed into a heading is shipped in the bundle to
+// everyone who loads the site, which is the rule __tests__/bundle-privacy
+// .test.ts keeps. The fallback covers a session that has no athlete on it.
+const COACH_TITLE_FALLBACK = "Your athlete's journal";
+function coachTitle(name: string | undefined): string {
+  return name ? `${name}'s journal` : COACH_TITLE_FALLBACK;
+}
+
+// Rendered on every one of his visits, with an entry and without one, and
+// that is the whole reason it is worded as a standing fact about the page
+// rather than a remark about today. Shown only when a day is empty, its
+// presence would itself be a signal.
+const COACH_SUBTITLE = "Today. You see the days he chooses to share with you.";
+
+// What an empty day says to him, and it says the same thing whether Teddy
+// wrote nothing or wrote something and kept it to himself. The API is
+// already careful not to tell him which: the Pundit scope hands him the
+// shared rows and no others, so both cases arrive as the same silence. A
+// screen offering "nothing shared today" beside "nothing written today"
+// would hand back from the client exactly the fact the toggle exists to
+// keep, so there is one message and one branch.
+const COACH_NOTHING = "Nothing here for today.";
+
+// A box Teddy left empty inside a day he did share. No privacy question in
+// this one: an entry is shared or it is not, field by field is not a thing
+// the switch can do, so this is only about the rows keeping their shape.
+const COACH_BLANK_FIELD = "He left this one empty.";
+
+// His own four questions, read back as labels rather than asked again. "What
+// went best today?" is addressed to the boy writing it; Jeff is reading.
+const COACH_FELT_LABEL = "How today felt";
+const COACH_BEST_LABEL = "What went best";
+const COACH_HARD_LABEL = "What was hard";
+const COACH_NOTE_LABEL = "About today";
+
 export function AthleteJournal() {
   const dispatch = useAppDispatch();
   const currentId = useAppSelector(authSelectors.selectCurrentProgramYearId);
   const today = todayISODate();
 
   const entry = useAppSelector(journalSelectors.selectAthleteEntryFor(today));
-  // Whose entry this is. This screen is open to Jeff as well (see
-  // routes.tsx: /journal is roles ["coach", "athlete"]), and what he sees
-  // there is whatever Teddy has shared with him, so the entry on screen is
-  // not always the signed-in person's. Only its owner gets a delete control,
-  // and the API draws the same line in AthleteEntryPolicy#destroy? whatever
-  // this renders.
+  // Whose hands this is in. The screen is open to Jeff as well (routes.tsx:
+  // /journal is roles ["coach", "athlete"]), and what he sees is whatever
+  // Teddy has shared, so the entry on screen is not always the signed-in
+  // person's. He gets a different page below: everything that writes here
+  // answers 403 for him at the API, and the whole point of the delete and
+  // the share toggle is that they are his son's to press.
   const role = useAppSelector(authSelectors.selectRole);
+  // The athlete this app is about, from /api/v1/me. For Jeff this is his
+  // son, because the API falls back to the only athlete on record when the
+  // signed-in user is not one; it is what already gives him a program year.
+  const athlete = useAppSelector(authSelectors.selectAthlete);
   const queued = useAppSelector(journalSelectors.selectIsEntryQueued("athlete", today));
   // Whether today was deleted with no signal and has not been written again
   // since. It is a different question from `queued`, and the difference is
@@ -148,6 +201,63 @@ export function AthleteJournal() {
     return <WaitingForYearId label={FINDING_YEAR_LABEL} />;
   }
 
+  // Jeff's half of this route: a page to read, with nothing on it to press.
+  // It comes before every branch below because none of them are his. The
+  // form, Save, the share toggle and the delete all 403 for him, and the
+  // deleted-day notice below is about a write he cannot have made, since the
+  // outbox only ever shows a person their own.
+  //
+  // Written as "anyone who is not the athlete reads" rather than "the coach
+  // reads", so the safe page is the default one. `athlete_entries#create` is
+  // athlete-only, and the route table is what keeps everyone but Jeff and
+  // Teddy off this screen at all; if that ever slipped, the wrong person
+  // would land on a page with nothing to press rather than on a form.
+  if (role !== "athlete") {
+    if (!hydrated) {
+      if (loading) return <Loading label={WAKING_LABEL} />;
+      if (error) return <ErrorNote message={error} />;
+      return null;
+    }
+    // What he may see, which is not simply what the slice is holding. The
+    // Pundit scope already drops an unshared entry before it ever reaches
+    // him, and this agrees with it from the other end, because the scope is
+    // not the only thing that fills this slice: core folds the week
+    // payload's inline `athlete_entry` into it too (ducks/journal/sagas.ts
+    // on week/SUCCEEDED), so a serializer that ever leaked one would put it
+    // here with nothing else between it and his screen. Teddy's switch
+    // decides, wherever the row came from.
+    const readable = entry !== null && entry.shared ? entry : null;
+    return (
+      <div className="athlete-journal athlete-journal--reading">
+        <h1>{coachTitle(athlete?.name)}</h1>
+        <p className="athlete-journal__whose">{COACH_SUBTITLE}</p>
+        {error && <ErrorNote message={error} />}
+        {readable === null ? (
+          <p className="athlete-journal__nothing">{COACH_NOTHING}</p>
+        ) : (
+          <dl className="athlete-journal__read">
+            <div>
+              <dt>{COACH_FELT_LABEL}</dt>
+              <dd>{readable.felt === null ? COACH_BLANK_FIELD : `${readable.felt} out of 5`}</dd>
+            </div>
+            <div>
+              <dt>{COACH_BEST_LABEL}</dt>
+              <dd>{readable.best || COACH_BLANK_FIELD}</dd>
+            </div>
+            <div>
+              <dt>{COACH_HARD_LABEL}</dt>
+              <dd>{readable.hard || COACH_BLANK_FIELD}</dd>
+            </div>
+            <div>
+              <dt>{COACH_NOTE_LABEL}</dt>
+              <dd>{readable.note || COACH_BLANK_FIELD}</dd>
+            </div>
+          </dl>
+        )}
+      </div>
+    );
+  }
+
   // A day he deleted with no signal, before anything has replaced it. It
   // comes before the loading and hydration branches below, because what the
   // queue says he asked for is already settled whether or not a fetch has
@@ -189,11 +299,10 @@ export function AthleteJournal() {
   // called long after this render.
   const programYearId = currentId;
   const entryId = entry?.id ?? null;
-  // Only his own, and only one the server has actually got. Jeff reading a
-  // shared entry here gets no delete control, which is the same line
-  // AthleteEntryPolicy#destroy? draws server-side; this is the polite half
-  // of it, not the enforcement.
-  const canDelete = entryId !== null && role === "athlete";
+  // Only an entry the server has actually got: the route is addressed by id.
+  // Whose it is has already been settled above, since everything from here
+  // down renders for the athlete alone.
+  const canDelete = entryId !== null;
 
   function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
