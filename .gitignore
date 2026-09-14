@@ -3,6 +3,7 @@
 __pycache__/
 *.pyc
 node_modules/
+web/dist/
 .claude/worktrees/
 .worktrees/
 .claude/settings.local.json
