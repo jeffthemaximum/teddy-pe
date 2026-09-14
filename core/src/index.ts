@@ -59,6 +59,7 @@ export const journalActions = {
 };
 export { journalSelectors };
 export type { JournalState } from "./ducks/journal";
+export type { SaveAthleteEntryPayload, SaveCoachEntryPayload } from "./ducks/journal";
 export type { CoachEntry, AthleteEntry, DrillRatingValue } from "./types";
 
 // The test-results duck's public surface, narrowed the same way authActions,
@@ -84,15 +85,74 @@ export { testResultsSelectors };
 export type { TestResultsState, SaveResultPayload } from "./ducks/testResults";
 export type { TestResult, TestDate } from "./types";
 
-// The six read ducks. Each is already wired into the store by
-// rootReducer/rootSaga; an app dispatches `<duck>.actions.fetch(...)` and
-// reads through `<duck>.selectors` or the derived selectors below.
-export { programYears } from "./ducks/programYears";
-export { programYear } from "./ducks/programYear";
-export { plan } from "./ducks/plan";
-export { week, selectWeek, selectDayByDate, selectWeekBudget, selectWeekSpend } from "./ducks/week";
-export { drills, selectDrills, selectDrillBySlug, selectDrillsMatching } from "./ducks/drills";
-export { progression } from "./ducks/progression";
+// The six read ducks. Each is built by createFetchDuck (lib/createFetchDuck
+// .ts), which bundles the app-facing pieces (actions.fetch, the read
+// selectors) together with saga-internal ones (actions.succeeded,
+// actions.failed, the raw reducer/saga/worker) in one object, because the
+// store's own wiring needs all of it and an app needs only some of it.
+// Re-exporting that object whole hands an app `actions.succeeded`, which is
+// dispatchable and which the reducer folds straight into state with no
+// server involved: `programYears.actions.succeeded({ fabricated: true })`
+// would overwrite real program-year data with invented content, no
+// different from an app dispatching `signInSucceeded` directly. So each of
+// the six is narrowed here to the same shape authActions/outboxActions/
+// journalActions/testResultsActions were: `fetch` is the one thing an app
+// ever dispatches, and the three read selectors are the one thing an app
+// ever reads through.
+//
+// `path` and `name` stay off the surface too, deliberately. They exist so
+// createFetchDuck's own saga has exactly one copy of a duck's URL, and so
+// rootReducer's wiring can be checked against it (see the comment on
+// createFetchDuck's return value) — an internal convenience for the saga
+// that already runs inside this package, not something an app has any
+// reason to call. An app that could read `path` and build its own request
+// from it would be building a second, competing way to reach the same
+// endpoint, which is the exact drift `path` exists to prevent in the first
+// place.
+import { programYears as programYearsDuck } from "./ducks/programYears";
+import { programYear as programYearDuck } from "./ducks/programYear";
+import { plan as planDuck } from "./ducks/plan";
+import {
+  week as weekDuck,
+  selectWeek,
+  selectDayByDate,
+  selectWeekBudget,
+  selectWeekSpend,
+} from "./ducks/week";
+import {
+  drills as drillsDuck,
+  selectDrills,
+  selectDrillBySlug,
+  selectDrillsMatching,
+} from "./ducks/drills";
+import { progression as progressionDuck } from "./ducks/progression";
+
+export const programYears = {
+  actions: { fetch: programYearsDuck.actions.fetch },
+  selectors: programYearsDuck.selectors,
+};
+export const programYear = {
+  actions: { fetch: programYearDuck.actions.fetch },
+  selectors: programYearDuck.selectors,
+};
+export const plan = {
+  actions: { fetch: planDuck.actions.fetch },
+  selectors: planDuck.selectors,
+};
+export const week = {
+  actions: { fetch: weekDuck.actions.fetch },
+  selectors: weekDuck.selectors,
+};
+export { selectWeek, selectDayByDate, selectWeekBudget, selectWeekSpend };
+export const drills = {
+  actions: { fetch: drillsDuck.actions.fetch },
+  selectors: drillsDuck.selectors,
+};
+export { selectDrills, selectDrillBySlug, selectDrillsMatching };
+export const progression = {
+  actions: { fetch: progressionDuck.actions.fetch },
+  selectors: progressionDuck.selectors,
+};
 
 export type {
   ProgramYearSummary,

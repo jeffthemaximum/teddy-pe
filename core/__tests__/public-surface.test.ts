@@ -80,6 +80,21 @@ function exportedNamesOf(filePath: string): ExportNames {
           const isType = statement.isTypeOnly || spec.isTypeOnly;
           record(exportedName, isType);
         }
+      } else {
+        // `export * from "./module"` (no exportClause at all) or
+        // `export * as ns from "./module"` (a NamespaceExport clause)
+        // re-exports a set of names this parser cannot see one at a time —
+        // it would have to open "./module" too, and whatever it re-exports
+        // from, and so on, which is a bundler's job, not this test's. Refuse
+        // the construct outright rather than silently walk past it: every
+        // name on this surface is meant to be a deliberate decision, and a
+        // wildcard is the one export form that cannot name what it exposes.
+        throw new Error(
+          `core/src/index.ts contains "${statement.getText(sourceFile)}", a wildcard re-export this ` +
+            "exact-set test cannot verify by name. The public surface must name every export " +
+            "explicitly (export { a, b } / export type { A, B }), not re-export a module's entire " +
+            "namespace.",
+        );
       }
       continue;
     }
@@ -172,6 +187,8 @@ const EXPECTED_TYPES = [
   "QueueableAction",
   "QueuedWrite",
   "JournalState",
+  "SaveAthleteEntryPayload",
+  "SaveCoachEntryPayload",
   "CoachEntry",
   "AthleteEntry",
   "DrillRatingValue",
