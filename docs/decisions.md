@@ -420,3 +420,16 @@ Thursday is Wall Day, low intent by design, and its dad note already said high-i
 - **Tuesday stays inside its fixed range.** Rings Day is fixed at 75 to 90 minutes. Its blocks drop from 86 to 78, still inside, so the declared range is unchanged. Thursday's blocks go from 117 to 125 and its range moves from 110-120 to 115-125.
 - **The dad note gained a line.** A card that quietly grows a test its note never mentions is a worse card. Thursday now opens with what to watch on the rope, and the tennis and basketball notes follow unchanged.
 - **The move is pinned by a test that can fail.** `plan_seeder_spec.rb` asserts the rope is on Thursday and absent from Tuesday, both ends. A one-sided check would pass a card that gained the test while Tuesday kept it, which would hand Teddy the same test twice in one week. It was run against the old content first and failed there.
+
+## 2026-09-14 (Today view): the screen he opens on the court, six rulings
+
+**What this is.** `/today` is a new screen, and the app's home now. Design in `docs/superpowers/specs/2026-09-14-today-view-design.md`, built as twelve tasks off `docs/superpowers/plans/2026-09-14-today-view.md`. Full account of what Jeff asked and answered in `docs/history/2026-09-14-today-view.md`.
+
+**Rulings.**
+
+- **Today is the app's home.** `/today` is first in the nav and where sign-in, `/` and a refused route all land. Year was home because it was the first screen built, not because it is the one anybody opens mid-session.
+- **`test_dates` carries `starts_on` and `ends_on`.** The range existed only inside the `display` prose, so nothing could answer whether a test was due today without parsing a string.
+- **`display` is generated from those dates by the seeder.** It used to be hand-written beside them, which is one fact written twice with nothing checking the two agreed.
+- **Both journals autosave, and Save stays as the retry.** A session written up on a phone that locks was a session lost. Save force-sends whether or not anything changed, which is the one thing autosave cannot do: a write the outbox gave up on does not go again until a field is touched.
+- **An entry row now comes into being on the first tap rather than on Save.** Scoring energy and walking away leaves a real row, and the delete control appears with it. That is the trade for not losing a session.
+- **Delete is not on Today.** It stays on the tab screens. Today is tapped one-handed between drills and an irreversible act does not belong there.

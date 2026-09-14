@@ -21,6 +21,7 @@ Update this file whenever something is built, decided, or left open. It is the f
 - Teddy's own journal, with a share toggle per day. Unshared entries stay out of the API's responses and out of the export. Both journals soft delete.
 - Test results and the Progress panel: one row per test window and test id; the sheet on This Week reads and writes it; the Year tab charts each test as a card with its latest value, change since baseline in the direction that counts as progress, and a sparkline. Height reports a cm/year pace and flags the growth-load protocol.
 - Sign-in on the whole site, three accounts, Pundit deciding what each may see. The web bundle ships no program vocabulary at all, and a test in `web/` builds the app for real and reads the built output to prove it.
+- Today: the app's home, `/today`, first in the nav and where sign-in, `/` and a refused route all land. One screen holding the day's card (role, minutes, theme, dad note, an accordion of blocks with one open at a time), the signed-in person's own journal entry (autosaving as he writes, Save staying as the retry for a write the offline queue gave up on), and the test sheet when today falls inside a test window. Delete is not on Today; it stays on the tab screens. Each of the three accounts sees only what the API answers for them. The suites stand at `backend/` 319, `core/` 271, `web/` 327, all clean and typechecking clean. See `docs/decisions.md` and `docs/history/2026-09-14-today-view.md`.
 
 ## Branches
 
@@ -51,6 +52,18 @@ If the program itself needs changing while the rewrite is in flight (a new month
 - Pre-existing 20px horizontal overflow on the Year tab at phone width, from a timeline marker. Not caused by the glossary or diary work and left alone.
 
 ## Next
+
+- **Today needs an API deploy before the test sheet appears on it.** The
+  test windows' `starts_on` and `ends_on` reach production only when the
+  seeder runs, and the seeder runs on a deploy:
+
+  ```bash
+  cd backend && fly deploy -a teddy-pe-api
+  ```
+
+  Run it from a checkout of `main` after merging. Until then Today shows the
+  card and the note and no test section, which is what it is built to do
+  when the server has not sent the dates.
 
 - **Sep 15 to 17: record the baseline.** Open This Week, pick Baseline in the test sheet, type the numbers. They save as you go and the Year tab starts charting immediately. This now happens on the new site, https://teddy-pe-mlfs.vercel.app.
 

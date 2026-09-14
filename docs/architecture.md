@@ -201,6 +201,8 @@ Gate checks happen in Trials weeks.
 
 Numbers are typed into the test sheet on the This Week tab and stored in the database, keyed by test window and test id, so every device shows the same sheet. The Progress panel on the Year tab charts them. Each row carries a direction in `backend/content/program_years/<year>/program.yml` (lower, higher, or growth) so the chart knows which way is an improvement; height reports a cm/year pace and raises the growth-load protocol when that pace runs fast.
 
+Each test window itself carries `starts_on` and `ends_on`, so the app can answer whether a test is due today without parsing anything. `display` (the "Sep 15–17" prose) is generated from those two dates by the seeder rather than authored beside them, so the range is a single fact instead of two that could disagree.
+
 Skill unlocks (pass/fail, checked in Trials): cartwheel over a line; cartwheel both sides; forward roll to standing; wall handstand 10s; 30s single-leg balance eyes closed; 20m backward run; 5 traveling-rings passes; split step on 10 of 10 signals; serve in 6 of 10; basketball layup both hands; keeper collapse dive both sides; 20 soccer juggles.
 
 ## Weekly structure
@@ -272,6 +274,8 @@ When writing a new month, add entries for any drill the new block introduces. `b
 ## How the program reaches Teddy
 
 Three parts. `backend/` is a Rails 8 API on Fly, holding the program, both journals and the test results in Postgres; the program content is YAML under `backend/content/program_years/<year>/` and is seeded on every deploy. `core/` is the shared Redux package, including the offline queue, so the web app and the native app run the same state logic. `web/` is the React app on Vercel. Everything is behind a sign-in and nothing about Teddy ships in the bundle.
+
+The app opens on Today, not on the Year view. It holds the day's card, the day's journal entry for whoever is signed in, and the test sheet when today falls inside a test window, so the day's activities, its write-up and its numbers are all one screen on a phone at the court. Year, the month, This Week, Progress, Tests, both journals, Notes and the Glossary all still exist as their own tabs and still do what they did before; Today is a fourth way into the same data, not a replacement for any of them.
 
 The old static build is gone: no `build.py`, no generated page, no passphrase gate. `bin/rails docs:export` is what brings the program back into this repo as readable prose.
 
