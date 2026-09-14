@@ -101,7 +101,17 @@ function* saveCoachEntry(action: ReturnType<typeof actions.saveCoachEntry>) {
 // `outbox/REPLAY_SUCCEEDED` already cross. Guarded rather than cast blindly:
 // nothing here assumes a queued write under an `athlete:` key is necessarily
 // one this duck built.
-function pendingAthleteNote(queue: QueuedWrite[], date: string): string | undefined {
+// The whole pending write for this date, if there is one, not merely its
+// note. `felt`, `best` and `hard` are as much a part of what he actually
+// typed as the note is, and they travel together for the same reason: the
+// payload is read back as one record rather than field by field, so a
+// pending `felt: null` (he rated nothing) comes back as exactly that,
+// instead of being read one field at a time and mistaken for "nothing to
+// carry forward" the way a naive `pending.felt ?? existing.felt` would.
+function pendingAthleteWrite(
+  queue: QueuedWrite[],
+  date: string,
+): SaveAthleteEntryPayload | undefined {
   const pending = queue.find((w) => w.action.dedupeKey === athleteDedupeKey(date));
   const payload = pending?.action.payload;
   if (
@@ -109,7 +119,7 @@ function pendingAthleteNote(queue: QueuedWrite[], date: string): string | undefi
     typeof payload === "object" &&
     typeof (payload as { note?: unknown }).note === "string"
   ) {
-    return (payload as { note: string }).note;
+    return payload as SaveAthleteEntryPayload;
   }
   return undefined;
 }
@@ -117,31 +127,43 @@ function pendingAthleteNote(queue: QueuedWrite[], date: string): string | undefi
 // Not its own request path. `{ session_date, shared }` alone would satisfy
 // the API (AthleteEntry#assign_attributes only touches keys it is handed)
 // but not the outbox: two writes queued for the same day collapse to
-// whichever was queued last, so a bare `{shared}` queued after a fuller note
-// save would replace it in the queue and the note would never reach the
-// server at all. So this carries a note forward alongside the new `shared`,
-// through the same worker and the same `dedupeKey` a note save uses, and
-// never touches `shared` itself beyond passing it on.
+// whichever was queued last, so a bare `{shared}` queued after a fuller save
+// would replace it in the queue and everything else he wrote would never
+// reach the server at all. So this carries the rest of the entry forward
+// alongside the new `shared`, through the same worker and the same
+// `dedupeKey` a note save uses, and never touches `shared` itself beyond
+// passing it on.
 //
-// Which note, though, matters more than it first looks. `selectAthleteEntryFor`
+// Which entry, though, matters more than it first looks. `selectAthleteEntryFor`
 // is written only by a server response (`athleteEntrySaved`, an index fetch,
 // or the week payload); a note typed offline has never been anywhere near
 // the server and is not in there. It exists only as a pending write in the
 // outbox's own queue, under this same day's `dedupeKey`. Falling back
-// straight to that selector (and from there to `""`) is exactly the bug this
-// comment used to describe fixing: offline, type a note, then toggle shared,
-// and the toggle's own save would carry forward an empty note and replace
-// the queued one, so the words are gone, having never left the device. The
-// pending queued write is checked first; only when there is neither a
-// pending write nor a saved entry does this fall back to an empty note, and
-// even then only because there is genuinely nothing to preserve.
+// straight to that selector (and from there to `""` or `null`) is exactly
+// the bug this comment used to describe fixing: offline, type a note, then
+// toggle shared, and the toggle's own save would carry forward an empty
+// note and replace the queued one, so the words are gone, having never left
+// the device. The same is true of `felt`, `best` and `hard` now that they
+// are real fields on this payload: a toggle that reached past a pending
+// write to the stale saved entry, or that invented `null` for them outright,
+// would erase whatever he wrote there the same way the note bug once did.
+//
+// A pending write, once found, is used whole rather than merged field by
+// field with the saved entry: it is the more recent truth for every field
+// on it, including one that is genuinely `null`, and `??`-ing across the
+// two sources per field would read that `null` as "nothing pending" and
+// reach past it to a stale value. Only when there is no pending write at
+// all does this fall back to what the server already has, or to nothing.
 function* setShared(action: ReturnType<typeof actions.setShared>) {
   const { programYearId, date, shared } = action.payload;
   const queue: QueuedWrite[] = yield select(selectQueue);
-  const pendingNote = pendingAthleteNote(queue, date);
+  const pending = pendingAthleteWrite(queue, date);
   const existing: AthleteEntry | null = yield select(selectAthleteEntryFor(date));
-  const note = pendingNote ?? existing?.note ?? "";
-  const payload: SaveAthleteEntryPayload = { programYearId, date, note, shared };
+  const note = pending?.note ?? existing?.note ?? "";
+  const felt = pending ? pending.felt : (existing?.felt ?? null);
+  const best = pending ? pending.best : (existing?.best ?? null);
+  const hard = pending ? pending.hard : (existing?.hard ?? null);
+  const payload: SaveAthleteEntryPayload = { programYearId, date, felt, best, hard, note, shared };
   yield call(saveAthleteEntry, actions.saveAthleteEntry(payload));
 }
 

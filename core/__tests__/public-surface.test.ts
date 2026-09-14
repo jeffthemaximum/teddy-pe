@@ -188,6 +188,7 @@ const EXPECTED_TYPES = [
   "QueueableAction",
   "QueuedWrite",
   "JournalState",
+  "JournalSide",
   "SaveAthleteEntryPayload",
   "SaveCoachEntryPayload",
   "CoachEntry",

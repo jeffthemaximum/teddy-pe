@@ -93,7 +93,13 @@ export const journalActions = {
 };
 export { journalSelectors };
 export type { JournalState } from "./ducks/journal";
-export type { SaveAthleteEntryPayload, SaveCoachEntryPayload } from "./ducks/journal";
+// `JournalSide` joins the surface here for the first time, alongside the
+// two payload types: `journalSelectors.selectIsEntryQueued` takes one as
+// its first argument (a screen already knows whether it is the athlete or
+// the coach side; this is just its name for that), so an app now has a
+// real reason to name the type rather than only ever pass a bare string
+// literal through.
+export type { SaveAthleteEntryPayload, SaveCoachEntryPayload, JournalSide } from "./ducks/journal";
 export type { CoachEntry, AthleteEntry, DrillRatingValue } from "./types";
 
 // The test-results duck's public surface, narrowed the same way authActions,

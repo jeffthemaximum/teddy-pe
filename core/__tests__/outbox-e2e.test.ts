@@ -89,6 +89,9 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
         // with `ProgramYear.find(entry_params.fetch(:program_year_id))`.
         programYearId: 1,
         date: "2026-09-17",
+        felt: null,
+        best: null,
+        hard: null,
         note: "Landed three in a row on the low balance beam.",
         shared: false,
       }),
@@ -153,6 +156,9 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
       athlete_entry: {
         program_year_id: 1,
         session_date: "2026-09-17",
+        felt: null,
+        best: null,
+        hard: null,
         note: "Landed three in a row on the low balance beam.",
         shared: false,
       },
@@ -190,6 +196,9 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
       journalActions.saveAthleteEntry({
         programYearId: 1,
         date: "2026-09-17",
+        felt: 5,
+        best: "Landed three in a row.",
+        hard: "Staying steady on the beam.",
         note: "Landed three in a row.",
         shared: false,
       }),
@@ -241,6 +250,12 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
       athlete_entry: {
         program_year_id: 1,
         session_date: "2026-09-17",
+        // Carried forward from the pending write the toggle replaced, the
+        // same way the note is: reaching past it to nothing (or to a stale
+        // saved value) is exactly the loss fix 1 exists to stop.
+        felt: 5,
+        best: "Landed three in a row.",
+        hard: "Staying steady on the beam.",
         note: "Landed three in a row.",
         shared: true,
       },
@@ -289,6 +304,9 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
       journalActions.saveAthleteEntry({
         programYearId: 1,
         date: "2026-09-17",
+        felt: null,
+        best: null,
+        hard: null,
         note: "Beat my own record on the ladder.",
         shared: true,
       }),
@@ -312,6 +330,9 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
       athlete_entry: {
         program_year_id: 1,
         session_date: "2026-09-17",
+        felt: null,
+        best: null,
+        hard: null,
         note: "Beat my own record on the ladder.",
         shared: true,
       },
@@ -558,6 +579,9 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
       journalActions.saveAthleteEntry({
         programYearId: 1,
         date: "2026-09-17",
+        felt: null,
+        best: null,
+        hard: null,
         note: "",
         shared: false,
       }),

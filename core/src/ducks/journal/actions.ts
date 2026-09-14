@@ -7,10 +7,15 @@ import type { QueueableAction } from "../outbox/types";
 // policies, so a screen loading one must not spin or fail the other.
 export type JournalSide = "athlete" | "coach";
 
-// What Teddy edits about his own day: his note and the one switch he
-// controls. `felt`, `best` and `hard` are real columns (see types.ts) but no
-// form built against them exists yet in this phase, so this payload stays
-// exactly as wide as what a save actually sends today.
+// What Teddy edits about his own day: how it felt, what was best, what was
+// hard, his note, and the one switch he controls. `felt`, `best` and `hard`
+// are his own words about his own training (see docs/architecture.md on the
+// Champion's Log), and AthleteEntriesController#create permits all three
+// alongside `note` and `shared`. They are all nullable and stay that way all
+// the way to the wire: he might rate how it felt and write nothing about
+// what was hard, and a field he left blank must reach the server as `null`,
+// never as `""`, so a screen rendering "nothing yet" can tell it apart from
+// "he wrote an empty string on purpose."
 //
 // `programYearId` is required, not inferred. AthleteEntriesController#create
 // opens with `ProgramYear.find(entry_params.fetch(:program_year_id))`, and
@@ -20,6 +25,9 @@ export type JournalSide = "athlete" | "coach";
 export interface SaveAthleteEntryPayload {
   programYearId: number;
   date: string;
+  felt: number | null;
+  best: string | null;
+  hard: string | null;
   note: string;
   shared: boolean;
 }
@@ -89,6 +97,9 @@ function athleteRequest(payload: SaveAthleteEntryPayload): QueueableAction["requ
       athlete_entry: {
         program_year_id: payload.programYearId,
         session_date: payload.date,
+        felt: payload.felt,
+        best: payload.best,
+        hard: payload.hard,
         note: payload.note,
         shared: payload.shared,
       },

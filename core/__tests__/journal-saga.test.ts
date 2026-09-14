@@ -115,7 +115,70 @@ describe("the journal saga", () => {
 
     await h.run(
       journalWorkers.saveAthleteEntry,
-      actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", note: "x", shared: true }),
+      actions.saveAthleteEntry({
+        programYearId: 1,
+        date: "2026-09-17",
+        felt: 4,
+        best: "Landed three in a row.",
+        hard: "Staying balanced on the low beam.",
+        note: "x",
+        shared: true,
+      }),
+    );
+
+    expect(spy).toHaveBeenCalledWith(
+      config,
+      expect.objectContaining({
+        method: "POST",
+        path: "/api/v1/athlete_entries",
+        // Only the field this particular test is about. `felt`, `best` and
+        // `hard` are on the real body too now (see the next test, which
+        // checks the whole permitted list); `objectContaining` here on
+        // purpose, so this test stays about `program_year_id` and does not
+        // start failing every time another field is added to the payload.
+        body: expect.objectContaining({
+          athlete_entry: expect.objectContaining({
+            program_year_id: 1,
+            session_date: "2026-09-17",
+            note: "x",
+            shared: true,
+          }),
+        }),
+      }),
+    );
+  });
+
+  // The body is asserted against `entry_params.permit(:program_year_id,
+  // :session_date, :felt, :best, :hard, :note, :shared)`, read straight off
+  // AthleteEntriesController, not against whatever `athleteRequest` happens
+  // to build today. That distinction is the whole point of this test: the
+  // one it replaces asserted a body with only `program_year_id`,
+  // `session_date`, `note` and `shared` on it, which passed for months
+  // while `felt`, `best` and `hard` were silently dropped before the wire,
+  // because that body was every field the OLD `SaveAthleteEntryPayload`
+  // happened to have, not every field the controller actually permits. A
+  // test built from the same narrow idea of "an athlete save" the code
+  // itself held could never have caught the code being wrong about that
+  // idea.
+  //
+  // Delete `felt`, `best` or `hard` from `athleteRequest`'s body today and
+  // this fails, because the object below is the permitted list transcribed
+  // by hand from the controller, not copied from `actions.ts`.
+  it("sends every field AthleteEntriesController permits, felt/best/hard included, not only note and shared", async () => {
+    const spy = jest.spyOn(client, "apiRequest").mockResolvedValue(athleteEnvelope);
+    const h = harness();
+
+    await h.run(
+      journalWorkers.saveAthleteEntry,
+      actions.saveAthleteEntry({
+        programYearId: 1,
+        date: "2026-09-17",
+        felt: 4,
+        best: "Landed three in a row.",
+        hard: "Staying balanced on the low beam.",
+        note: "Good day today.",
+        shared: true,
+      }),
     );
 
     expect(spy).toHaveBeenCalledWith(
@@ -127,12 +190,45 @@ describe("the journal saga", () => {
           athlete_entry: {
             program_year_id: 1,
             session_date: "2026-09-17",
-            note: "x",
+            felt: 4,
+            best: "Landed three in a row.",
+            hard: "Staying balanced on the low beam.",
+            note: "Good day today.",
             shared: true,
           },
         },
       }),
     );
+  });
+
+  // A blank field is not the same as a field nobody asked about: he might
+  // rate how it felt and write nothing for what was hard, and that nothing
+  // has to reach the server as `null`, never as `""`, or a screen reading
+  // the save back could not tell "he skipped this" from "he wrote an empty
+  // string on purpose."
+  it("sends null for a reflection field he left blank, not an empty string", async () => {
+    const spy = jest.spyOn(client, "apiRequest").mockResolvedValue(athleteEnvelope);
+    const h = harness();
+
+    await h.run(
+      journalWorkers.saveAthleteEntry,
+      actions.saveAthleteEntry({
+        programYearId: 1,
+        date: "2026-09-17",
+        felt: null,
+        best: null,
+        hard: "Staying balanced on the low beam.",
+        note: "x",
+        shared: true,
+      }),
+    );
+
+    const body = spy.mock.calls[0]![1].body as {
+      athlete_entry: { felt: unknown; best: unknown; hard: unknown };
+    };
+    expect(body.athlete_entry.felt).toBeNull();
+    expect(body.athlete_entry.best).toBeNull();
+    expect(body.athlete_entry.hard).toBe("Staying balanced on the low beam.");
   });
 
   it("sends shared exactly as given, without interpreting it, and files the entry out of its envelope", async () => {
@@ -141,7 +237,15 @@ describe("the journal saga", () => {
 
     await h.run(
       journalWorkers.saveAthleteEntry,
-      actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", note: "x", shared: true }),
+      actions.saveAthleteEntry({
+        programYearId: 1,
+        date: "2026-09-17",
+        felt: null,
+        best: null,
+        hard: null,
+        note: "x",
+        shared: true,
+      }),
     );
 
     // The entry, not the wrapper around it. `athleteEntrySaved(envelope)`
@@ -201,7 +305,15 @@ describe("the journal saga", () => {
 
     await h.run(
       journalWorkers.saveAthleteEntry,
-      actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", note: "x", shared: true }),
+      actions.saveAthleteEntry({
+        programYearId: 1,
+        date: "2026-09-17",
+        felt: null,
+        best: null,
+        hard: null,
+        note: "x",
+        shared: true,
+      }),
     );
 
     expect(h.dispatched.filter((a) => (a as { type: string }).type === "journal/ATHLETE_ENTRY_SAVED")).toHaveLength(0);
@@ -213,7 +325,7 @@ describe("the journal saga", () => {
     );
   });
 
-  // --- setShared: which note it carries forward, proved ordering by ordering ---
+  // --- setShared: which entry it carries forward, proved ordering by ordering ---
   //
   // The bug this whole block guards against: a note typed offline is queued
   // and has never been anywhere near the server, so it is not in
@@ -223,20 +335,36 @@ describe("the journal saga", () => {
   // back to `""` for exactly the case that matters most (type a note
   // offline, then toggle before it ever syncs), and the toggle's own save
   // replaces the queued write with an empty note. The words are gone, having
-  // never left the device.
+  // never left the device. `felt`, `best` and `hard` now travel the same
+  // path `note` does, so every test below carries them too, not as
+  // decoration: a `setShared` that reached past a pending `felt`/`best`/
+  // `hard` to a stale saved value, or invented `null` outright, would erase
+  // exactly what fix 1 exists to stop losing.
 
-  it("carries a note forward from the outbox's pending write for THIS date (ordering A: note typed offline, then the toggle), the case the fix exists for", async () => {
+  it("carries an entry forward from the outbox's pending write for THIS date (ordering A: written offline, then the toggle), the case the fix exists for", async () => {
     // A queue holding only one write cannot tell "the write for this date"
     // apart from "the first write in the queue": `queue.find(matching
     // dedupeKey)` and `queue[0]` return the same thing, and a version that
-    // carries Tuesday's note into Wednesday's entry would pass anyway. So
-    // this queues three writes: one for a different date under the same
+    // carries Tuesday's entry into Wednesday's would pass anyway. So this
+    // queues three writes: one for a different date under the same
     // `athlete:` prefix, one for the same date but the `coach:` prefix (a
     // different person's writing on the same day), and the one that
     // actually belongs to this save, in an order where the wrong one, not
-    // the right one, sits at index 0.
+    // the right one, sits at index 0. Each of the two athlete writes carries
+    // its own distinct `felt`/`best`/`hard`, not just its own note, so a
+    // version of `setShared` that carried the wrong write's note forward
+    // correctly but still reached for the wrong write's (or no write's)
+    // reflection fields would still be caught here.
     const spy = jest.spyOn(client, "apiRequest").mockResolvedValue(athleteEnvelope);
-    const wrongDate = actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-16", note: "Tuesday's note.", shared: false });
+    const wrongDate = actions.saveAthleteEntry({
+      programYearId: 1,
+      date: "2026-09-16",
+      felt: 2,
+      best: "Tuesday's best.",
+      hard: "Tuesday's hard part.",
+      note: "Tuesday's note.",
+      shared: false,
+    });
     const wrongPrefixSameDate = actions.saveCoachEntry({
       programYearId: 1,
       date: "2026-09-17",
@@ -248,9 +376,17 @@ describe("the journal saga", () => {
       challenge_num: null,
       ratings: {},
     });
-    const correctWrite = actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", note: "Landed three.", shared: false });
+    const correctWrite = actions.saveAthleteEntry({
+      programYearId: 1,
+      date: "2026-09-17",
+      felt: 5,
+      best: "Landed three in a row.",
+      hard: "Staying steady on the beam.",
+      note: "Landed three.",
+      shared: false,
+    });
     const h = harness({
-      // The note exists ONLY here: queued, never saved. `journal.athlete`
+      // The entry exists ONLY here: queued, never saved. `journal.athlete`
       // stays empty, unlike the old version of this test, which seeded the
       // note through `athleteEntrySaved` and so could never have caught this.
       outbox: {
@@ -276,6 +412,9 @@ describe("the journal saga", () => {
           athlete_entry: {
             program_year_id: 1,
             session_date: "2026-09-17",
+            felt: 5,
+            best: "Landed three in a row.",
+            hard: "Staying steady on the beam.",
             note: "Landed three.",
             shared: true,
           },
@@ -284,16 +423,34 @@ describe("the journal saga", () => {
     );
   });
 
-  it("prefers the pending queued note over an older saved entry, when both exist for the date", async () => {
+  it("prefers the pending queued entry over an older saved one, when both exist for the date", async () => {
     // The queued write is the more recent truth: it is whatever was typed
     // most recently and has not reached the server yet, so it must win over
-    // a server response that is now stale.
+    // a server response that is now stale, for `felt`/`best`/`hard` exactly
+    // as much as for `note`.
     const spy = jest.spyOn(client, "apiRequest").mockResolvedValue(athleteEnvelope);
-    const pendingWrite = actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", note: "Four in a row now.", shared: false });
+    const pendingWrite = actions.saveAthleteEntry({
+      programYearId: 1,
+      date: "2026-09-17",
+      felt: 5,
+      best: "Four in a row now.",
+      hard: "Nothing, today went great.",
+      note: "Four in a row now.",
+      shared: false,
+    });
     const h = harness({
       journal: {
         ...emptyJournal,
-        athlete: { "2026-09-17": { ...savedAthleteEntry, note: "Landed three.", shared: false } },
+        athlete: {
+          "2026-09-17": {
+            ...savedAthleteEntry,
+            felt: 3,
+            best: "Landed three.",
+            hard: "Wobbled on the dismount.",
+            note: "Landed three.",
+            shared: false,
+          },
+        },
       },
       outbox: {
         queue: [{ id: "1", action: pendingWrite, queuedAt: "2026-09-17T18:00:00Z", attempts: 0, userId: SIGNED_IN_USER }],
@@ -314,6 +471,9 @@ describe("the journal saga", () => {
           athlete_entry: {
             program_year_id: 1,
             session_date: "2026-09-17",
+            felt: 5,
+            best: "Four in a row now.",
+            hard: "Nothing, today went great.",
             note: "Four in a row now.",
             shared: true,
           },
@@ -322,12 +482,21 @@ describe("the journal saga", () => {
     );
   });
 
-  it("carries a saved entry's note forward when there is nothing pending (ordering E: note saved online, then the toggle offline)", async () => {
+  it("carries a saved entry forward when there is nothing pending (ordering E: saved online, then the toggle offline)", async () => {
     const spy = jest.spyOn(client, "apiRequest").mockResolvedValue(athleteEnvelope);
     const h = harness({
       journal: {
         ...emptyJournal,
-        athlete: { "2026-09-17": { ...savedAthleteEntry, note: "Landed three.", shared: false } },
+        athlete: {
+          "2026-09-17": {
+            ...savedAthleteEntry,
+            felt: 4,
+            best: "Landed three.",
+            hard: "Keeping my arms straight.",
+            note: "Landed three.",
+            shared: false,
+          },
+        },
       },
     });
 
@@ -343,6 +512,9 @@ describe("the journal saga", () => {
           athlete_entry: {
             program_year_id: 1,
             session_date: "2026-09-17",
+            felt: 4,
+            best: "Landed three.",
+            hard: "Keeping my arms straight.",
             note: "Landed three.",
             shared: true,
           },
@@ -351,7 +523,7 @@ describe("the journal saga", () => {
     );
   });
 
-  it("sends an empty note rather than inventing one, when nothing was saved or queued for the date at all", async () => {
+  it("sends an empty note and null reflection fields rather than inventing any of them, when nothing was saved or queued for the date at all", async () => {
     const spy = jest.spyOn(client, "apiRequest").mockResolvedValue({
       athlete_entry: { ...savedAthleteEntry, note: "", shared: true },
     });
@@ -369,6 +541,9 @@ describe("the journal saga", () => {
           athlete_entry: {
             program_year_id: 1,
             session_date: "2026-09-17",
+            felt: null,
+            best: null,
+            hard: null,
             note: "",
             shared: true,
           },
@@ -400,7 +575,7 @@ describe("the journal saga", () => {
     jest.spyOn(client, "apiRequest").mockRejectedValue(new ApiError(0, "offline", "No connection."));
     const h = harness();
 
-    const action = actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", note: "Landed three.", shared: false });
+    const action = actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", felt: null, best: null, hard: null, note: "Landed three.", shared: false });
     await h.run(journalWorkers.saveAthleteEntry, action);
 
     expect(h.dispatched).toContainEqual(enqueue(action));
@@ -412,7 +587,7 @@ describe("the journal saga", () => {
   it("also queues on a timeout, not only a dead connection", async () => {
     jest.spyOn(client, "apiRequest").mockRejectedValue(new ApiError(0, "timeout", "That took too long."));
     const h = harness();
-    const action = actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", note: "x", shared: false });
+    const action = actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", felt: null, best: null, hard: null, note: "x", shared: false });
 
     await h.run(journalWorkers.saveAthleteEntry, action);
 
@@ -429,7 +604,7 @@ describe("the journal saga", () => {
 
     await h.run(
       journalWorkers.saveAthleteEntry,
-      actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", note: "", shared: false }),
+      actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", felt: null, best: null, hard: null, note: "", shared: false }),
     );
 
     expect(h.dispatched.filter((a) => (a as { type: string }).type === "outbox/ENQUEUE")).toHaveLength(0);
@@ -442,7 +617,7 @@ describe("the journal saga", () => {
 
     await h.run(
       journalWorkers.saveAthleteEntry,
-      actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", note: "x", shared: false }),
+      actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", felt: null, best: null, hard: null, note: "x", shared: false }),
     );
 
     expect(h.dispatched).toContainEqual(sessionExpired());

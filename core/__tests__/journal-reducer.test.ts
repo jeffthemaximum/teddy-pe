@@ -1,5 +1,6 @@
 import { reducer, actions, selectors } from "../src/ducks/journal";
 import type { AthleteEntry, CoachEntry } from "../src/types";
+import type { OutboxState } from "../src/ducks/outbox";
 
 // Every real column an AthleteEntry has, not the abbreviated shape an old
 // draft of the brief once had. program_year_id/day_card_id/felt/best/hard
@@ -70,13 +71,13 @@ describe("the journal reducer", () => {
   });
 
   it("tracks saving per date, so one day saving does not spin every day", () => {
-    const s = reducer(undefined, actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", note: "x", shared: false }));
+    const s = reducer(undefined, actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", felt: null, best: null, hard: null, note: "x", shared: false }));
     expect(selectors.selectIsSaving("2026-09-17")({ journal: s })).toBe(true);
     expect(selectors.selectIsSaving("2026-09-18")({ journal: s })).toBe(false);
   });
 
   it("stops saving when the save lands", () => {
-    const saving = reducer(undefined, actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", note: "x", shared: false }));
+    const saving = reducer(undefined, actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", felt: null, best: null, hard: null, note: "x", shared: false }));
     const done = reducer(saving, actions.athleteEntrySaved(mine));
     expect(selectors.selectIsSaving("2026-09-17")({ journal: done })).toBe(false);
   });
@@ -110,7 +111,7 @@ describe("the journal reducer", () => {
     // Offline is neither success nor a reportable error. The day's saving
     // flag has to clear anyway, or a queued write leaves the UI spinning for
     // that date until the app happens to save it again directly.
-    const saving = reducer(undefined, actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", note: "x", shared: false }));
+    const saving = reducer(undefined, actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", felt: null, best: null, hard: null, note: "x", shared: false }));
     const queued = reducer(saving, actions.saveQueued({ date: "2026-09-17" }));
     expect(selectors.selectIsSaving("2026-09-17")({ journal: queued })).toBe(false);
     // And it did not fabricate a save: no entry appeared, no error either.
@@ -119,7 +120,7 @@ describe("the journal reducer", () => {
   });
 
   it("clears saving and records the message on a real failure", () => {
-    const saving = reducer(undefined, actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", note: "", shared: false }));
+    const saving = reducer(undefined, actions.saveAthleteEntry({ programYearId: 1, date: "2026-09-17", felt: null, best: null, hard: null, note: "", shared: false }));
     const failed = reducer(saving, actions.saveFailed({ date: "2026-09-17", message: "A note cannot be blank." }));
     expect(selectors.selectIsSaving("2026-09-17")({ journal: failed })).toBe(false);
     expect(selectors.selectJournalError({ journal: failed })).toBe("A note cannot be blank.");
@@ -306,5 +307,113 @@ describe("the journal selectors", () => {
     const s = reducer(undefined, actions.coachEntriesFetched([jeffs]));
     expect(selectors.selectCoachEntries({ journal: s })).toEqual([jeffs]);
     expect(selectors.selectAthleteEntries({ journal: s })).toEqual([]);
+  });
+});
+
+describe("selectIsEntryQueued", () => {
+  // The state a screen actually reads through: `selectIsEntryQueued` reaches
+  // past `journal` into `outbox` (and, through `selectQueue`, `auth`), so
+  // the bare `{ journal: s }` fixture the rest of this file uses is not
+  // enough on its own. `journal` itself is never read at all by this
+  // selector (it needs no saved entry to answer "is a write queued"), and
+  // is included below only because `WithJournal` is still part of the type
+  // every other selector in this file shares.
+  const SIGNED_IN_USER = 3;
+  const emptyJournalState = reducer(undefined, { type: "@@INIT" });
+
+  function stateWith(queue: OutboxState["queue"]) {
+    return {
+      journal: emptyJournalState,
+      outbox: { queue, replaying: false, signedInUserId: SIGNED_IN_USER },
+      auth: { token: "a.b.c", user: { id: SIGNED_IN_USER } },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+  }
+
+  it("answers true for the side and date a queued write actually names, and false for a neighboring date", () => {
+    const write = {
+      id: "1",
+      action: actions.saveAthleteEntry({
+        programYearId: 1,
+        date: "2026-09-17",
+        felt: null,
+        best: null,
+        hard: null,
+        note: "Landed three.",
+        shared: false,
+      }),
+      queuedAt: "2026-09-17T18:00:00Z",
+      attempts: 0,
+      userId: SIGNED_IN_USER,
+    };
+    const s = stateWith([write]);
+
+    expect(selectors.selectIsEntryQueued("athlete", "2026-09-17")(s)).toBe(true);
+    // A neighboring date's dedupeKey is `athlete:2026-09-18`, a different
+    // string entirely, not merely "close": a version of this selector that
+    // matched on date substring rather than the exact key would pass this
+    // test for the wrong reason.
+    expect(selectors.selectIsEntryQueued("athlete", "2026-09-18")(s)).toBe(false);
+  });
+
+  it("does not answer true for the other side's write on the same date, even though the date matches", () => {
+    // The point of prefixing the dedupeKey at all: `athlete:2026-09-17` and
+    // `coach:2026-09-17` are Teddy's and Jeff's own writing on the same day,
+    // and a selector that only checked the date half of the key would tell
+    // Teddy his entry is queued because his dad's is.
+    const coachWrite = {
+      id: "1",
+      action: actions.saveCoachEntry({
+        programYearId: 1,
+        date: "2026-09-17",
+        note: "Jeff's note.",
+        overall: null,
+        energy: null,
+        flag_pain: false,
+        pain_note: null,
+        challenge_num: null,
+        ratings: {},
+      }),
+      queuedAt: "2026-09-17T18:00:00Z",
+      attempts: 0,
+      userId: SIGNED_IN_USER,
+    };
+    const s = stateWith([coachWrite]);
+
+    expect(selectors.selectIsEntryQueued("coach", "2026-09-17")(s)).toBe(true);
+    expect(selectors.selectIsEntryQueued("athlete", "2026-09-17")(s)).toBe(false);
+  });
+
+  it("answers false against an empty queue", () => {
+    expect(selectors.selectIsEntryQueued("athlete", "2026-09-17")(stateWith([]))).toBe(false);
+  });
+
+  it("reads through the outbox's own signed-in scoping, not the raw queue: a write with no author here is nobody's", () => {
+    // `selectQueue` (outbox/selectors.ts) is what already narrows the queue
+    // to the signed-in person's own writes; this selector is built on top
+    // of it rather than on `state.outbox.queue` directly. A write queued
+    // with no recorded author (see ducks/outbox/types.ts on `userId: null`)
+    // is exactly the case that tells the two apart: it is really sitting in
+    // the queue, under the right dedupeKey, and a version reading the raw
+    // queue would say so, but it belongs to nobody signed in and
+    // `selectQueue` excludes it.
+    const orphanedWrite = {
+      id: "1",
+      action: actions.saveAthleteEntry({
+        programYearId: 1,
+        date: "2026-09-17",
+        felt: null,
+        best: null,
+        hard: null,
+        note: "Queued before anyone was signed in.",
+        shared: false,
+      }),
+      queuedAt: "2026-09-17T18:00:00Z",
+      attempts: 0,
+      userId: null,
+    };
+    const s = stateWith([orphanedWrite]);
+
+    expect(selectors.selectIsEntryQueued("athlete", "2026-09-17")(s)).toBe(false);
   });
 });
