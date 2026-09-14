@@ -27,6 +27,25 @@ RSpec.describe "test results", type: :request do
     expect(result.test_date.window).to eq("2026-09")
   end
 
+  # The offline queue replays a write onto the same row by design, so a phone
+  # that has been offline two days can overwrite what the laptop saved
+  # yesterday. It can only notice that it is about to when the payload says how
+  # old the row it is holding is. Phase 2 cannot add this from the client.
+  it "stamps every result with when it was last written" do
+    post_result(coach, test_id: "t1", value: "4.42")
+    written = JSON.parse(response.body)["test_result"]
+    expect(written["updated_at"]).to be_present
+
+    get "/api/v1/test_results?program_year_id=#{year.id}", headers: auth(coach)
+    listed = JSON.parse(response.body)["test_results"].first
+    expect(listed["updated_at"]).to eq(written["updated_at"])
+
+    # A second write has to move it, or a client comparing stamps can never
+    # tell a stale replay from a fresh one.
+    travel_to(2.days.from_now) { post_result(coach, test_id: "t1", value: "4.31") }
+    expect(JSON.parse(response.body)["test_result"]["updated_at"]).to be > written["updated_at"]
+  end
+
   it "keeps a value it cannot parse rather than dropping it" do
     post_result(coach, test_id: "t8", value: "15 to 18")
     expect(response).to have_http_status(:ok)

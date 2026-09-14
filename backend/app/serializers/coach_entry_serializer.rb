@@ -11,7 +11,7 @@
 class CoachEntrySerializer < ActiveModel::Serializer
   attributes :id, :session_date, :program_year_id, :day_card_id,
              :overall, :energy, :flag_pain, :pain_note, :note,
-             :challenge_num, :ratings
+             :challenge_num, :ratings, :updated_at
 
   def ratings = object.drill_ratings.to_h { |r| [ r.drill.slug, r.rating ] }
 end

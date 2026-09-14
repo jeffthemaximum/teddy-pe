@@ -9,6 +9,28 @@ RSpec.describe "athlete entries", type: :request do
   let(:viewer) { create(:user) }
   def auth(user) = { "Authorization" => "Bearer #{JwtService.encode(user: user)}" }
 
+  let(:stamp_body) do
+    { athlete_entry: { program_year_id: year.id, session_date: "2026-09-17", felt: 5 } }
+  end
+
+  # Same reason as the coach's entry: the offline queue can replay a stale
+  # write onto a newer one, and nothing in the payload said how old the row
+  # the client is holding was.
+  it "stamps the entry with when it was last written" do
+    post "/api/v1/athlete_entries", params: stamp_body, as: :json, headers: auth(teddy)
+    written = JSON.parse(response.body)["athlete_entry"]
+    expect(written["updated_at"]).to be_present
+
+    get "/api/v1/athlete_entries", headers: auth(teddy)
+    expect(JSON.parse(response.body)["athlete_entries"].first["updated_at"]).to eq(written["updated_at"])
+
+    travel_to(2.days.from_now) do
+      patch "/api/v1/athlete_entries/#{written['id']}",
+        params: { athlete_entry: { best: "Actually the jump rope" } }, as: :json, headers: auth(teddy)
+    end
+    expect(JSON.parse(response.body)["athlete_entry"]["updated_at"]).to be > written["updated_at"]
+  end
+
   let(:body) do
     { athlete_entry: { program_year_id: year.id, session_date: "2026-09-17", felt: 5,
                        best: "The cartwheel felt like flying", hard: "Left hand dribbling" } }

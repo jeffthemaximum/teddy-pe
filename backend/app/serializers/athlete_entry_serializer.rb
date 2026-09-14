@@ -5,5 +5,5 @@
 # with the switch showing where Teddy left it, or saving the form back flips it.
 class AthleteEntrySerializer < ActiveModel::Serializer
   attributes :id, :session_date, :program_year_id, :day_card_id,
-             :felt, :best, :hard, :note, :shared
+             :felt, :best, :hard, :note, :shared, :updated_at
 end

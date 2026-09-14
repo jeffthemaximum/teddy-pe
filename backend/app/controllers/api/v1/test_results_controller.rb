@@ -35,10 +35,15 @@ module Api
         params.require(:test_result).permit(:program_year_id, :window, :test_id, :value)
       end
 
+      # recorded_at is when the measurement was taken. updated_at is when this
+      # row was last written, which is the one the offline queue needs: a
+      # replay from a phone that has been offline two days lands on the same
+      # row by design, and without a stamp neither end can tell it overwrote
+      # something newer.
       def serialize(result)
         { id: result.id, window: result.test_date.window, test_id: result.battery_measure.test_id,
           raw_value: result.raw_value, numeric_value: result.numeric_value&.to_s,
-          recorded_at: result.recorded_at }
+          recorded_at: result.recorded_at, updated_at: result.updated_at }
       end
     end
   end

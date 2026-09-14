@@ -16,6 +16,25 @@ RSpec.describe "coach entries", type: :request do
       ratings: { "split-step" => "owns", "cartwheel-step-2" => "getting" } }
   end
 
+  # The queue replays a write onto the same row on purpose. Without a stamp on
+  # the payload, a phone that has been offline two days overwrites yesterday's
+  # laptop edit and neither end can tell. Two devices and one coach makes that
+  # uncommon, not impossible, and the day it happens Jeff loses a session note.
+  it "stamps the entry with when it was last written" do
+    post "/api/v1/coach_entries", params: body, as: :json, headers: auth(coach)
+    written = JSON.parse(response.body)["coach_entry"]
+    expect(written["updated_at"]).to be_present
+
+    get "/api/v1/coach_entries", headers: auth(coach)
+    expect(JSON.parse(response.body)["coach_entries"].first["updated_at"]).to eq(written["updated_at"])
+
+    travel_to(2.days.from_now) do
+      patch "/api/v1/coach_entries/#{written['id']}",
+        params: { coach_entry: { note: "Second thoughts." } }, as: :json, headers: auth(coach)
+    end
+    expect(JSON.parse(response.body)["coach_entry"]["updated_at"]).to be > written["updated_at"]
+  end
+
   it "creates an entry with its drill ratings" do
     post "/api/v1/coach_entries", params: body, as: :json, headers: auth(coach)
     expect(response).to have_http_status(:ok)
