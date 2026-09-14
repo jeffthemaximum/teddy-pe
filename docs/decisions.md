@@ -178,3 +178,17 @@ A record of the planning conversation, the pushbacks, and what Jeff decided. New
 
 - The Rails 8.1 upgrade. Needs `bundle update rails` and a deploy, both Jeff's. Due before 2026-11-07 and the suite will say so.
 - Most of the review's 22 minor findings, and five of its twelve important ones. Named at the end of the history file. The ones worth a decision: nothing can delete a journal entry, `test_results#index` returns every athlete's rows, and there is no `after_action :verify_authorized`.
+
+## 2026-09-13 (late): two answers from Jeff, both shaping Phase 2
+
+**Deleting a journal entry: yes, but nothing actually leaves the database.** Jeff and Teddy can each delete their own entries, and a delete sets `deleted_at` rather than removing the row. This answers the open item from the review pass above.
+
+Three things follow from that, and they are worth writing down before Phase 2 starts rather than discovering them in it.
+
+- **A soft-deleted entry has to be excluded everywhere an unshared one is.** The Pundit scope, both payloads, the progression payload and `DocsExporter` all already have exactly one place each where visibility is decided, because the share toggle needed it. `deleted_at` rides the same path. If it gets its own filter in a second place, the two will drift, which is the defect this project found three times with the growth sum.
+- **It makes the export's prune reachable.** `DocsExporter` learned to remove a file whose source is gone, and the review noted that nothing in the app could actually perform a deletion, so the whole mechanism existed for a case that could not occur. It can now: Teddy deletes an entry, the next export drops it from `docs/`.
+- **The repo and the database deliberately disagree.** The row keeps every word, and the committed prose loses it. That is the correct direction: `CLAUDE.md` says this repo is the complete memory of the project, and a child who deleted something did not consent to it being the memory. Recovery is a console, and it is Jeff's.
+
+Each person deletes only their own. Teddy cannot delete Dad's notes and Dad cannot delete Teddy's entries, which is the same line the share toggle already draws.
+
+**Redeploy as soon as the re-review clears the seeder.** Production is currently running the pre-fix code, so it has a health check that cannot see a dead database, no login throttle, and the Neon host in its error text. The trade is that the deploy runs the newly pruning seeder against the live database for the first time. Conditional on a clean re-review, and the content rows get counted before and after.
