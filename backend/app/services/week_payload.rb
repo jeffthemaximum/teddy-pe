@@ -59,6 +59,11 @@ class WeekPayload
     )
   end
 
+  # The same serializer the entry's own endpoint uses. Dumping the record with
+  # as_json instead gave the form a different shape from the one it saves back
+  # to, missing the drill ratings and carrying two ids nobody wanted.
+  SERIALIZERS = { CoachEntry => CoachEntrySerializer, AthleteEntry => AthleteEntrySerializer }.freeze
+
   # Whatever the current user is allowed to see for this date, so the journal
   # form opens filled in rather than fetching a second time. The policy scope
   # does the filtering, which is how an unshared entry is absent rather than
@@ -67,13 +72,19 @@ class WeekPayload
   def entry_for(klass, card)
     return nil if @user.nil?
     entry = entries_by_date(klass)[card.date]
-    entry && entry.as_json(except: %i[created_at updated_at])
+    entry && SERIALIZERS.fetch(klass).new(entry).as_json
   end
 
   def entries_by_date(klass)
     @entries_by_date ||= {}
-    @entries_by_date[klass] ||= Pundit.policy_scope!(@user, klass)
-      .where(program_year_id: @week.month_plan.program_year_id, session_date: @week.day_cards.map(&:date))
-      .index_by(&:session_date)
+    @entries_by_date[klass] ||= begin
+      scope = Pundit.policy_scope!(@user, klass)
+      # Ratings are part of a coach entry now, so they get preloaded with it.
+      # Without this the week costs one more query per entry that has any.
+      scope = scope.includes(drill_ratings: :drill) if klass == CoachEntry
+      scope.where(program_year_id: @week.month_plan.program_year_id,
+                  session_date: @week.day_cards.map(&:date))
+           .index_by(&:session_date)
+    end
   end
 end

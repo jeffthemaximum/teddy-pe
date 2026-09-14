@@ -65,6 +65,41 @@ RSpec.describe "this week", type: :request do
     expect(thu["athlete_entry"]).to be_nil
   end
 
+  # One record, one shape. The week payload exists so the journal form opens
+  # filled in, and a form cannot open filled in from a record that is missing
+  # half its fields. Comparing key sets rather than listing them means adding a
+  # field to one serializer and forgetting the other fails here, whatever the
+  # field turns out to be called.
+  it "serves a coach entry in the shape /coach_entries serves it" do
+    coach = create(:user, :coach)
+    create(:coach_entry, user: coach, program_year: year, session_date: Date.new(2026, 9, 17))
+
+    get "/api/v1/coach_entries", headers: auth(coach)
+    from_endpoint = JSON.parse(response.body)["coach_entries"].first
+
+    get "/api/v1/program_years/#{year.id}/weeks/current?on=2026-09-17", headers: auth(coach)
+    thu = JSON.parse(response.body)["days"].find { |d| d["dow"] == "thu" }
+
+    expect(from_endpoint).to be_present
+    expect(thu["coach_entry"]).to be_present
+    expect(thu["coach_entry"].keys).to match_array(from_endpoint.keys)
+  end
+
+  it "serves an athlete entry in the shape /athlete_entries serves it" do
+    teddy = create(:user, :athlete)
+    create(:athlete_entry, user: teddy, program_year: year, session_date: Date.new(2026, 9, 17))
+
+    get "/api/v1/athlete_entries", headers: auth(teddy)
+    from_endpoint = JSON.parse(response.body)["athlete_entries"].first
+
+    get "/api/v1/program_years/#{year.id}/weeks/current?on=2026-09-17", headers: auth(teddy)
+    thu = JSON.parse(response.body)["days"].find { |d| d["dow"] == "thu" }
+
+    expect(from_endpoint).to be_present
+    expect(thu["athlete_entry"]).to be_present
+    expect(thu["athlete_entry"].keys).to match_array(from_endpoint.keys)
+  end
+
   it "carries Teddy his own entry, shared or not" do
     teddy = create(:user, :athlete)
     create(:athlete_entry, user: teddy, program_year: year,

@@ -45,11 +45,9 @@ module Api
         )
       end
 
-      def serialize(entry)
-        { id: entry.id, session_date: entry.session_date, program_year_id: entry.program_year_id,
-          day_card_id: entry.day_card_id, felt: entry.felt, best: entry.best,
-          hard: entry.hard, note: entry.note, shared: entry.shared }
-      end
+      # AthleteEntrySerializer, not a hash written here, because WeekPayload
+      # serves the same record and the two had drifted apart.
+      def serialize(entry) = AthleteEntrySerializer.new(entry).as_json
     end
   end
 end

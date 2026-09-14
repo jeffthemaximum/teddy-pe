@@ -55,15 +55,9 @@ module Api
         raw.to_unsafe_h.select { |slug, _| slug.to_s.match?(/\A[a-z0-9-]{1,64}\z/) }
       end
 
-      def serialize(entry)
-        {
-          id: entry.id, session_date: entry.session_date, program_year_id: entry.program_year_id,
-          day_card_id: entry.day_card_id, overall: entry.overall, energy: entry.energy,
-          flag_pain: entry.flag_pain, pain_note: entry.pain_note, note: entry.note,
-          challenge_num: entry.challenge_num,
-          ratings: entry.drill_ratings.to_h { |r| [ r.drill.slug, r.rating ] }
-        }
-      end
+      # CoachEntrySerializer, not a hash written here, because WeekPayload
+      # serves the same record and the two had drifted apart.
+      def serialize(entry) = CoachEntrySerializer.new(entry).as_json
     end
   end
 end
