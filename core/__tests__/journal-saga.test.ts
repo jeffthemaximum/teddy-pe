@@ -960,4 +960,255 @@ describe("the journal saga", () => {
 
     expect(h.dispatched).toContainEqual(actions.coachEntrySaved(nullNoteEntry));
   });
+
+  // ---- deleting an entry --------------------------------------------------
+  //
+  // The route and the answer are transcribed by hand from the Rails side, not
+  // imported from anywhere in this package:
+  //
+  //   resources :athlete_entries, only: %i[index show create update destroy]
+  //   resources :coach_entries,   only: %i[index create update destroy]
+  //
+  //   def destroy
+  //     entry = policy_scope(AthleteEntry).find(params[:id])
+  //     authorize entry
+  //     entry.soft_delete!
+  //     render json: { deleted: { id: entry.id, session_date: entry.session_date } }
+  //   end
+  //
+  // so the path is /api/v1/athlete_entries/:id, the method is DELETE, there
+  // is no body, and the answer is {deleted: {id, session_date}}. Every
+  // expectation below is written from those five lines. Change the path in
+  // actions.ts and this fails; change it in routes.rb and the backend's own
+  // request specs fail.
+  describe("deleting an entry", () => {
+    const DELETE_ACK = { deleted: { id: 4, session_date: "2026-09-17" } };
+
+    it("calls the id-addressed route, with no body", async () => {
+      const spy = jest.spyOn(client, "apiRequest").mockResolvedValue(DELETE_ACK);
+      const h = harness();
+
+      await h.run(
+        journalWorkers.deleteEntry,
+        actions.deleteEntry({ side: "athlete", date: "2026-09-17", id: 4 }),
+      );
+
+      expect(spy).toHaveBeenCalledWith(config, {
+        path: "/api/v1/athlete_entries/4",
+        method: "DELETE",
+        token: "a.b.c",
+      });
+      // Spelled out separately because `toHaveBeenCalledWith` on an exact
+      // object already covers it, and this is the half a future
+      // objectContaining would quietly stop covering: a body would add a
+      // Content-Type header to a request that carries nothing.
+      expect(spy.mock.calls[0]![1]).not.toHaveProperty("body");
+    });
+
+    it("uses the coach's own route for a coach entry", async () => {
+      const spy = jest.spyOn(client, "apiRequest").mockResolvedValue({
+        deleted: { id: 9, session_date: "2026-09-17" },
+      });
+      const h = harness();
+
+      await h.run(
+        journalWorkers.deleteEntry,
+        actions.deleteEntry({ side: "coach", date: "2026-09-17", id: 9 }),
+      );
+
+      expect(spy).toHaveBeenCalledWith(
+        config,
+        expect.objectContaining({ path: "/api/v1/coach_entries/9", method: "DELETE" }),
+      );
+    });
+
+    it("takes the entry out of state once the server says it is gone", async () => {
+      jest.spyOn(client, "apiRequest").mockResolvedValue(DELETE_ACK);
+      const h = harness();
+
+      await h.run(
+        journalWorkers.deleteEntry,
+        actions.deleteEntry({ side: "athlete", date: "2026-09-17", id: 4 }),
+      );
+
+      expect(h.dispatched).toEqual([
+        actions.entryDeleted({ side: "athlete", date: "2026-09-17" }),
+      ]);
+    });
+
+    // The guard that makes the answer's shape matter. An entry envelope is
+    // exactly what the other four actions on these controllers send back, so
+    // this is the plausible wrong answer, not an invented one.
+    it("removes nothing when the answer is not a delete acknowledgement", async () => {
+      jest.spyOn(client, "apiRequest").mockResolvedValue(athleteEnvelope);
+      const h = harness();
+
+      await h.run(
+        journalWorkers.deleteEntry,
+        actions.deleteEntry({ side: "athlete", date: "2026-09-17", id: 4 }),
+      );
+
+      expect(h.dispatched).toEqual([
+        actions.saveFailed({
+          date: "2026-09-17",
+          message: "That did not delete. Try again.",
+        }),
+      ]);
+    });
+
+    it("queues the delete when there is no connection, and still honours it here", async () => {
+      jest
+        .spyOn(client, "apiRequest")
+        .mockRejectedValue(new ApiError(0, "offline", "No connection. Check the network and try again."));
+      const h = harness();
+      const action = actions.deleteEntry({ side: "athlete", date: "2026-09-17", id: 4 });
+
+      await h.run(journalWorkers.deleteEntry, action);
+
+      // The exact action, verbatim, so the queued copy cannot drift from
+      // what was attempted. And the entry goes from the slice: he asked for
+      // it gone, and the write is now the outbox's to deliver.
+      expect(h.dispatched).toEqual([
+        enqueue(action),
+        actions.entryDeleted({ side: "athlete", date: "2026-09-17" }),
+      ]);
+    });
+
+    it("queues it on a timeout too, which is what a sleeping server looks like", async () => {
+      jest
+        .spyOn(client, "apiRequest")
+        .mockRejectedValue(new ApiError(0, "timeout", "That took too long. Try again."));
+      const h = harness();
+      const action = actions.deleteEntry({ side: "coach", date: "2026-09-20", id: 9 });
+
+      await h.run(journalWorkers.deleteEntry, action);
+
+      expect(h.dispatched).toEqual([
+        enqueue(action),
+        actions.entryDeleted({ side: "coach", date: "2026-09-20" }),
+      ]);
+    });
+
+    // The scope already excludes a deleted entry, so the controller's `find`
+    // raises and ApiController renders 404. That is the state he asked for,
+    // reached by a second device or by a replay that actually landed, so it
+    // is a success rather than something to apologise for.
+    it("treats a 404 as already gone rather than as a failure", async () => {
+      jest.spyOn(client, "apiRequest").mockRejectedValue(new ApiError(404, "not_found", "Not found."));
+      const h = harness();
+
+      await h.run(
+        journalWorkers.deleteEntry,
+        actions.deleteEntry({ side: "athlete", date: "2026-09-17", id: 4 }),
+      );
+
+      expect(h.dispatched).toEqual([
+        actions.entryDeleted({ side: "athlete", date: "2026-09-17" }),
+      ]);
+    });
+
+    // A coach reaching for Teddy's entry is refused by the policy, not by
+    // this package. Nothing is removed locally on a refusal.
+    it("reports a refusal and leaves the entry where it is", async () => {
+      jest
+        .spyOn(client, "apiRequest")
+        .mockRejectedValue(new ApiError(403, "forbidden", "You do not have access to that."));
+      const h = harness();
+
+      await h.run(
+        journalWorkers.deleteEntry,
+        actions.deleteEntry({ side: "athlete", date: "2026-09-17", id: 4 }),
+      );
+
+      expect(h.dispatched).toEqual([
+        actions.saveFailed({ date: "2026-09-17", message: "You do not have access to that." }),
+      ]);
+    });
+
+    it("signs out on a dead token rather than removing anything", async () => {
+      jest
+        .spyOn(client, "apiRequest")
+        .mockRejectedValue(new ApiError(401, "unauthorized", "Invalid or missing token."));
+      const h = harness();
+
+      await h.run(
+        journalWorkers.deleteEntry,
+        actions.deleteEntry({ side: "athlete", date: "2026-09-17", id: 4 }),
+      );
+
+      expect(h.dispatched).toEqual([sessionExpired()]);
+    });
+
+    // Written as a comparison of two independently built keys rather than a
+    // literal string, because the point is that they are the same key, not
+    // what the key happens to spell.
+    it("queues under the same key a save for that day uses, so the later one wins", () => {
+      const save = actions.saveAthleteEntry({
+        programYearId: 1,
+        date: "2026-09-17",
+        felt: null,
+        best: null,
+        hard: null,
+        note: "Something he then took back.",
+        shared: false,
+      });
+      const remove = actions.deleteEntry({ side: "athlete", date: "2026-09-17", id: 4 });
+
+      expect(remove.dedupeKey).toBe(save.dedupeKey);
+
+      // And a different day never collides with either.
+      const otherDay = actions.deleteEntry({ side: "athlete", date: "2026-09-18", id: 5 });
+      expect(otherDay.dedupeKey).not.toBe(remove.dedupeKey);
+
+      // Nor does the coach's own key for the same day.
+      const coachSameDay = actions.deleteEntry({ side: "coach", date: "2026-09-17", id: 9 });
+      expect(coachSameDay.dedupeKey).not.toBe(remove.dedupeKey);
+    });
+
+    // The replay end of the same thing. The app was closed between queueing
+    // and replaying, so the entry was fetched back into state in the
+    // meantime; when the delete finally lands, it has to leave again.
+    it("removes the entry when a queued delete replays successfully", async () => {
+      const h = harness();
+
+      await h.run(journalWorkers.reconcileReplay, {
+        type: "outbox/REPLAY_SUCCEEDED",
+        payload: { id: "1", dedupeKey: "athlete:2026-09-17", response: DELETE_ACK },
+      });
+
+      expect(h.dispatched).toEqual([
+        actions.entryDeleted({ side: "athlete", date: "2026-09-17" }),
+      ]);
+    });
+
+    it("removes the coach's entry when his own queued delete replays", async () => {
+      const h = harness();
+
+      await h.run(journalWorkers.reconcileReplay, {
+        type: "outbox/REPLAY_SUCCEEDED",
+        payload: {
+          id: "1",
+          dedupeKey: "coach:2026-09-20",
+          response: { deleted: { id: 9, session_date: "2026-09-20" } },
+        },
+      });
+
+      expect(h.dispatched).toEqual([actions.entryDeleted({ side: "coach", date: "2026-09-20" })]);
+    });
+
+    it("leaves another duck's replayed delete alone", async () => {
+      const h = harness();
+
+      await h.run(journalWorkers.reconcileReplay, {
+        type: "outbox/REPLAY_SUCCEEDED",
+        payload: {
+          id: "1",
+          dedupeKey: "result:2026-09:t1",
+          response: { deleted: { id: 3, session_date: "2026-09-17" } },
+        },
+      });
+
+      expect(h.dispatched).toHaveLength(0);
+    });
+  });
 });

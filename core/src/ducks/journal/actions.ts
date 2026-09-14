@@ -162,6 +162,63 @@ export const saveCoachEntry = (payload: SaveCoachEntryPayload) =>
 export const setShared = (payload: { programYearId: number; date: string; shared: boolean }) =>
   ({ type: t.SET_SHARED, payload }) as const;
 
+// Deleting an entry. `id` is required and comes from the entry already on
+// record, because the route is addressed by it:
+// `resources :athlete_entries, only: %i[index show create update destroy]`,
+// so the path is /api/v1/athlete_entries/:id and there is no such thing as
+// deleting "today" without knowing which row today is. That also draws the
+// line for a screen: an entry that exists only as a write still sitting in
+// the outbox has no id, has never been near the server, and is not something
+// this action can be built for.
+//
+// `side` rather than two separate actions, because everything that follows
+// is identical apart from the path and which half of the slice loses a row.
+export interface DeleteEntryPayload {
+  side: JournalSide;
+  date: string;
+  id: number;
+}
+
+const DELETE_PATHS: Record<JournalSide, string> = {
+  athlete: "/api/v1/athlete_entries",
+  coach: "/api/v1/coach_entries",
+};
+
+function deleteRequest(payload: DeleteEntryPayload): QueueableAction["request"] {
+  // No body. Both controllers read only params[:id]; a body would be ignored
+  // and would add a Content-Type header to a request that carries nothing.
+  return { path: `${DELETE_PATHS[payload.side]}/${payload.id}`, method: "DELETE" };
+}
+
+// A delete queues like a save, and under the SAME dedupeKey a save for that
+// day uses. Two consequences, both of them the ones wanted.
+//
+// It queues, because a delete is a write and the outbox exists so a write
+// made with no signal is still owed. Teddy taps delete at a court with no
+// connection; the alternative is an error message, his words still sitting
+// there next time, and nothing anywhere recording that he asked.
+//
+// And it shares the key, because the outbox keeps only the last queued write
+// per key. Edit today offline, then delete today: the queued edit is
+// replaced by the delete, which is the right answer both ways round. Sending
+// both would mean an upsert and a delete racing on one row, and if the queue
+// ever replayed them in the other order the entry would come back.
+export const deleteEntry = (payload: DeleteEntryPayload) =>
+  ({
+    type: t.DELETE_ENTRY,
+    payload,
+    dedupeKey:
+      payload.side === "athlete" ? athleteDedupeKey(payload.date) : coachDedupeKey(payload.date),
+    request: deleteRequest(payload),
+  }) as const;
+
+// Put by the saga once the entry is gone: the server said so, or the delete
+// is in the outbox and the app has honoured what he asked for locally. Not on
+// the public surface, the same as athleteEntrySaved: an app that could
+// dispatch this could remove an entry from state the server still has.
+export const entryDeleted = (info: { side: JournalSide; date: string }) =>
+  ({ type: t.ENTRY_DELETED, payload: info }) as const;
+
 export const athleteEntrySaved = (entry: AthleteEntry) =>
   ({ type: t.ATHLETE_ENTRY_SAVED, payload: entry }) as const;
 
@@ -213,6 +270,8 @@ export type JournalAction =
   | ReturnType<typeof saveAthleteEntry>
   | ReturnType<typeof saveCoachEntry>
   | ReturnType<typeof setShared>
+  | ReturnType<typeof deleteEntry>
+  | ReturnType<typeof entryDeleted>
   | ReturnType<typeof athleteEntrySaved>
   | ReturnType<typeof coachEntrySaved>
   | ReturnType<typeof fetchAthleteEntries>

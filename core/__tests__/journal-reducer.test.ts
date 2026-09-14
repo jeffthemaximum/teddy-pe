@@ -51,6 +51,70 @@ describe("the journal reducer", () => {
     expect(s.athlete["2026-09-17"]).toEqual(mine);
   });
 
+  // Two entries, one deleted. One on its own would prove nothing: an empty
+  // map looks identical whether the right row was removed or every row was.
+  describe("deleting an entry", () => {
+    const otherDay: AthleteEntry = { ...mine, id: 5, session_date: "2026-09-18" };
+
+    function twoDays() {
+      let s = reducer(undefined, actions.athleteEntrySaved(mine));
+      s = reducer(s, actions.athleteEntrySaved(otherDay));
+      return reducer(s, actions.coachEntrySaved(jeffs));
+    }
+
+    it("removes only that day, on only that side", () => {
+      const s = reducer(twoDays(), actions.entryDeleted({ side: "athlete", date: "2026-09-17" }));
+
+      expect(s.athlete["2026-09-17"]).toBeUndefined();
+      expect(s.athlete["2026-09-18"]).toEqual(otherDay);
+      // Same date, Dad's side. Teddy deleting his own must not touch it.
+      expect(s.coach["2026-09-17"]).toEqual(jeffs);
+    });
+
+    it("removes the coach's own day without touching Teddy's", () => {
+      const s = reducer(twoDays(), actions.entryDeleted({ side: "coach", date: "2026-09-17" }));
+
+      expect(s.coach["2026-09-17"]).toBeUndefined();
+      expect(s.athlete["2026-09-17"]).toEqual(mine);
+    });
+
+    it("marks the day as saving while the delete is in flight, and clears it after", () => {
+      const started = reducer(
+        twoDays(),
+        actions.deleteEntry({ side: "athlete", date: "2026-09-17", id: 4 }),
+      );
+      expect(selectors.selectIsSaving("2026-09-17")({ journal: started })).toBe(true);
+      // The entry is still there: nothing has been removed yet, because
+      // nothing has answered yet.
+      expect(started.athlete["2026-09-17"]).toEqual(mine);
+
+      const done = reducer(started, actions.entryDeleted({ side: "athlete", date: "2026-09-17" }));
+      expect(selectors.selectIsSaving("2026-09-17")({ journal: done })).toBe(false);
+    });
+
+    it("keeps the map's identity when the day was not there anyway", () => {
+      const before = twoDays();
+      const after = reducer(before, actions.entryDeleted({ side: "athlete", date: "2026-12-25" }));
+
+      // Same object, not merely an equal one: a fresh map on every
+      // unrelated delete rebuilds the memoized list selector and re-renders
+      // a screen showing a different day.
+      expect(after.athlete).toBe(before.athlete);
+    });
+
+    it("takes the deleted day out of the list a screen reads", () => {
+      const before = twoDays();
+      expect(selectors.selectAthleteEntries({ journal: before }).map((e) => e.session_date)).toEqual(
+        ["2026-09-17", "2026-09-18"],
+      );
+
+      const after = reducer(before, actions.entryDeleted({ side: "athlete", date: "2026-09-17" }));
+      expect(selectors.selectAthleteEntries({ journal: after }).map((e) => e.session_date)).toEqual(
+        ["2026-09-18"],
+      );
+    });
+  });
+
   it("files a coach entry under its own date, in its own map", () => {
     const s = reducer(undefined, actions.coachEntrySaved(jeffs));
     expect(s.coach["2026-09-17"]).toEqual(jeffs);

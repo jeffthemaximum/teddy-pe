@@ -191,6 +191,7 @@ const EXPECTED_TYPES = [
   "JournalSide",
   "SaveAthleteEntryPayload",
   "SaveCoachEntryPayload",
+  "DeleteEntryPayload",
   "CoachEntry",
   "AthleteEntry",
   "DrillRatingValue",
@@ -208,6 +209,22 @@ const EXPECTED_TYPES = [
   "Drill",
   "ProgressionPayload",
   "AppDispatch",
+].sort();
+
+// The two set checks above see the NAME `journalActions` and never once look
+// inside it, so a duck's own narrowing is invisible to them: an action added
+// to that object, or removed from it, changes nothing either assertion reads.
+// That is the whole of what index.ts's narrowing is, so it gets its own exact
+// set, written out by hand here rather than read back off the object it is
+// checking. `journalActions` is the one that has grown twice now (the two
+// reads, then the delete), which is why it is the one written down.
+const EXPECTED_JOURNAL_ACTIONS = [
+  "saveAthleteEntry",
+  "saveCoachEntry",
+  "setShared",
+  "fetchAthleteEntries",
+  "fetchCoachEntries",
+  "deleteEntry",
 ].sort();
 
 describe("the public surface", () => {
@@ -230,6 +247,15 @@ describe("the public surface", () => {
     // check alone could never catch an accidental TYPE export, and why the
     // parse-based check above exists.
     expect(Object.keys(core).sort()).toEqual(EXPECTED_VALUES);
+  });
+
+  it("narrows journalActions to exactly the actions an app dispatches", () => {
+    // Six names, counted by hand: three writes (two saves and the share
+    // toggle), two reads, and the delete. Anything saga-internal appearing
+    // here (athleteEntrySaved, entryDeleted) means an app could put a state
+    // the server never sent.
+    expect(Object.keys(core.journalActions)).toHaveLength(6);
+    expect(Object.keys(core.journalActions).sort()).toEqual(EXPECTED_JOURNAL_ACTIONS);
   });
 
   it("exports no default, so imports stay explicit and greppable", () => {

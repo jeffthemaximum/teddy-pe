@@ -90,6 +90,12 @@ export const journalActions = {
   // `athleteEntrySaved` does.
   fetchAthleteEntries: journalDuckActions.fetchAthleteEntries,
   fetchCoachEntries: journalDuckActions.fetchCoachEntries,
+  // The delete Jeff asked for. It is a thing a person taps, so it is on the
+  // surface; `entryDeleted` is not, for the same reason `athleteEntrySaved`
+  // is not. An app that could dispatch `entryDeleted` could take an entry
+  // out of state that the server still has, and the next fetch would put it
+  // straight back with no explanation.
+  deleteEntry: journalDuckActions.deleteEntry,
 };
 export { journalSelectors };
 export type { JournalState } from "./ducks/journal";
@@ -99,7 +105,16 @@ export type { JournalState } from "./ducks/journal";
 // the coach side; this is just its name for that), so an app now has a
 // real reason to name the type rather than only ever pass a bare string
 // literal through.
-export type { SaveAthleteEntryPayload, SaveCoachEntryPayload, JournalSide } from "./ducks/journal";
+// `DeleteEntryPayload` joins them because `journalActions.deleteEntry` takes
+// one: a screen has to name the side, the date and the id of the row it is
+// removing, and a mistyped object literal here would be a 404 against a
+// route addressed by id rather than a compile error.
+export type {
+  SaveAthleteEntryPayload,
+  SaveCoachEntryPayload,
+  DeleteEntryPayload,
+  JournalSide,
+} from "./ducks/journal";
 export type { CoachEntry, AthleteEntry, DrillRatingValue } from "./types";
 
 // The test-results duck's public surface, narrowed the same way authActions,

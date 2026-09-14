@@ -12,9 +12,11 @@ export const FETCH_ENTRIES_SKIPPED = "journal/FETCH_ENTRIES_SKIPPED";
 export const SAVE_QUEUED = "journal/SAVE_QUEUED";
 export const SAVE_FAILED = "journal/SAVE_FAILED";
 
-// Deliberately no DELETE_ENTRY / ENTRY_DELETED. `athlete_entries` and
-// `coach_entries` are `index create update` in routes.rb (`show` too for
-// athlete_entries) and neither controller has a `destroy` action; there is
-// no `deleted_at` column in db/schema.rb either. A delete action here would
-// call an endpoint that 404s. Soft delete is coming as its own task that
-// builds the Rails endpoint and this client together.
+// The delete, now that there is one. `athlete_entries` and `coach_entries`
+// both carry `destroy` in routes.rb, both controllers have the action, and
+// both tables have a `deleted_at` column: the row keeps every word and every
+// read path stops showing it. DELETE_ENTRY is what a screen dispatches;
+// ENTRY_DELETED is the saga's own, put once the server has answered or once
+// the write is safely in the outbox.
+export const DELETE_ENTRY = "journal/DELETE_ENTRY";
+export const ENTRY_DELETED = "journal/ENTRY_DELETED";

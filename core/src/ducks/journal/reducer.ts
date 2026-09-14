@@ -28,6 +28,17 @@ function clearSaving(saving: Record<string, boolean>, date: string): Record<stri
   return next;
 }
 
+// Drops one date from one side's map, leaving the map alone if it was not
+// holding that date. Same shape as clearSaving above, and same reason: an
+// untouched map keeps its identity, so a selector memoized on it does not
+// rebuild and a screen showing an unrelated day does not re-render.
+function without<T>(map: Record<string, T>, date: string): Record<string, T> {
+  if (!(date in map)) return map;
+  const next = { ...map };
+  delete next[date];
+  return next;
+}
+
 function setLoading(
   loading: JournalState["loading"],
   side: JournalSide,
@@ -102,6 +113,34 @@ export function reducer(
     case t.SET_SHARED: {
       const { date } = (action as Extract<JournalAction, { type: typeof t.SET_SHARED }>).payload;
       return { ...state, saving: { ...state.saving, [date]: true } };
+    }
+
+    case t.DELETE_ENTRY: {
+      // The same flag a save sets, because from the screen's side this is
+      // the same thing: a write is in flight for this day and the button
+      // that started it should not be tappable twice.
+      const { date } = (action as Extract<JournalAction, { type: typeof t.DELETE_ENTRY }>).payload;
+      return { ...state, saving: { ...state.saving, [date]: true } };
+    }
+
+    case t.ENTRY_DELETED: {
+      // The one place an entry leaves this slice. The fold rule above
+      // decides which of two copies of a row wins; this is not that, it is
+      // the row being gone, so there is nothing to compare against. A later
+      // fetch cannot bring it back either, because the server no longer
+      // sends it.
+      //
+      // Written as two branches rather than one computed `[side]` key: the
+      // two maps hold different types, and a computed key widens both to
+      // their union, which is how a coach entry would become assignable to
+      // the athlete's map.
+      const { side, date } = (
+        action as Extract<JournalAction, { type: typeof t.ENTRY_DELETED }>
+      ).payload;
+      const saving = clearSaving(state.saving, date);
+      return side === "athlete"
+        ? { ...state, athlete: without(state.athlete, date), saving }
+        : { ...state, coach: without(state.coach, date), saving };
     }
 
     case t.ATHLETE_ENTRY_SAVED: {

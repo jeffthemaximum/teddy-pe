@@ -68,6 +68,24 @@ export function unwrapEntry(side: JournalSide, body: unknown): AthleteEntry | Co
   return asEntry(side, read(body, ENTRY_KEY[side]));
 }
 
+// What a successful delete answers with. Transcribed from the two
+// controllers by hand:
+//
+//   render json: { deleted: { id: entry.id, session_date: entry.session_date } }
+//
+// Deliberately not an entry envelope, and this is the guard that relies on
+// that: a delete whose response came back shaped like `{athlete_entry: ...}`
+// would be folded straight back into the slice it was just removed from.
+// Both halves of the app read a delete through here, the live one and the
+// replayed one, so there is one place that knows what a delete answers with.
+export function isDeleteAcknowledgement(body: unknown): boolean {
+  if (typeof body !== "object" || body === null) return false;
+  const deleted = (body as { deleted?: unknown }).deleted;
+  if (typeof deleted !== "object" || deleted === null) return false;
+  const d = deleted as { id?: unknown; session_date?: unknown };
+  return typeof d.id === "number" && typeof d.session_date === "string";
+}
+
 // The list form of the same thing. A row that is not an entry is dropped
 // rather than allowed into state, the same rule the single unwrap applies,
 // so one bad row in a long list costs that row and not the screen.

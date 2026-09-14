@@ -4,7 +4,7 @@ import * as actions from "./actions";
 import type { JournalSide, SaveAthleteEntryPayload } from "./actions";
 import { athleteDedupeKey, dateFromDedupeKey, ATHLETE_PREFIX, COACH_PREFIX } from "./actions";
 import * as journalApi from "./api";
-import { asEntry, unwrapEntry } from "./api";
+import { asEntry, isDeleteAcknowledgement, unwrapEntry } from "./api";
 import { apiRequest, ApiError, isUnauthorized } from "../../services/apiClient";
 import { sessionExpired } from "../auth/actions";
 import { selectToken } from "../auth/selectors";
@@ -22,6 +22,10 @@ import type { AthleteEntry, CoachEntry, Week } from "../../types";
 // went into state as though it were the entry, the day's spinner never
 // stopped, and nothing said so.
 const UNREADABLE_SAVE = "That save came back in a shape this app could not read. Try again.";
+
+// The same thing for a delete, in the words that fit it: nothing was removed
+// here, so nobody should be told it was.
+const UNREADABLE_DELETE = "That did not delete. Try again.";
 
 // The one decision every save shares: offline or a timeout queues the write
 // so it is never lost, a dead token signs the app out rather than retrying
@@ -88,6 +92,61 @@ function* saveCoachEntry(action: ReturnType<typeof actions.saveCoachEntry>) {
     yield put(actions.coachEntrySaved(entry));
   } catch (e) {
     yield call(handleSaveFailure, e, date, action);
+  }
+}
+
+// Deleting an entry. Jeff's ruling on the server side is that nothing leaves
+// the database; on this side the entry does leave the slice, because the
+// person asked for it to be gone and every read path the server has will
+// agree with that from now on.
+//
+// Three outcomes, and the middle one is the decision worth naming.
+//
+// The server answered: the entry goes, on the acknowledgement's own shape
+// rather than on "the request did not throw". Both controllers answer
+// `{deleted: {id, session_date}}`; anything else came from something other
+// than this endpoint and is reported instead of silently removing his
+// writing.
+//
+// No connection: the delete is queued, exactly as a save would be, AND the
+// entry goes from the slice anyway. The write is still owed to the server
+// and the outbox is what owes it. Leaving the entry on screen until the
+// connection returns would be the wrong failure direction: he asked for it
+// gone, and showing a child the words he just took back, with no way to tell
+// whether the app heard him, is worse than a row that outlives the request
+// by an hour. If the replay is eventually refused for good, the server still
+// has the row and the next fetch puts it back, which is the honest outcome.
+//
+// A 404: already gone. That is the state he asked for, so it is a success,
+// not an error. It is what a second device, or a replayed delete that
+// actually landed, leaves behind.
+function* deleteEntry(action: ReturnType<typeof actions.deleteEntry>) {
+  const config: CoreConfig = yield getContext("config");
+  const token: string | null = yield select(selectToken);
+  const { side, date } = action.payload;
+  try {
+    const body: unknown = yield call(apiRequest, config, { ...action.request, token });
+    if (!isDeleteAcknowledgement(body)) {
+      yield put(actions.saveFailed({ date, message: UNREADABLE_DELETE }));
+      return;
+    }
+    yield put(actions.entryDeleted({ side, date }));
+  } catch (e) {
+    if (e instanceof ApiError && (e.code === "offline" || e.code === "timeout")) {
+      yield put(enqueue(action));
+      yield put(actions.entryDeleted({ side, date }));
+      return;
+    }
+    if (e instanceof ApiError && e.status === 404) {
+      yield put(actions.entryDeleted({ side, date }));
+      return;
+    }
+    if (e instanceof ApiError && e.status === 401) {
+      yield put(sessionExpired());
+      return;
+    }
+    const message = e instanceof ApiError ? e.message : "Something went wrong.";
+    yield put(actions.saveFailed({ date, message }));
   }
 }
 
@@ -242,15 +301,36 @@ function* reconcileReplay(action: {
   payload: { dedupeKey: string; response: unknown };
 }) {
   const { dedupeKey, response } = action.payload;
-  if (dedupeKey.startsWith(ATHLETE_PREFIX)) {
+  // Which half of the journal this key belongs to, or neither: a test
+  // result's queued write replays through this same action and is not this
+  // duck's business. `dateFromDedupeKey` reads the date back out of the same
+  // key format `athleteDedupeKey`/`coachDedupeKey` wrote.
+  const side: JournalSide | null = dedupeKey.startsWith(ATHLETE_PREFIX)
+    ? "athlete"
+    : dedupeKey.startsWith(COACH_PREFIX)
+      ? "coach"
+      : null;
+  const date = dateFromDedupeKey(dedupeKey);
+  if (side === null || date === null) return;
+
+  // A queued delete replays through this same action, under the same key a
+  // save uses, and answers with `{deleted: ...}` rather than an entry. This
+  // branch is why that shape matters: without it the response would fail
+  // `unwrapEntry` and be dropped as unreadable, and an entry that was
+  // re-fetched between the queueing and the replay (the app was closed and
+  // reopened) would sit on screen having already been deleted on the server.
+  if (isDeleteAcknowledgement(response)) {
+    yield put(actions.entryDeleted({ side, date }));
+    return;
+  }
+
+  if (side === "athlete") {
     const entry = unwrapEntry("athlete", response);
     if (entry) yield put(actions.athleteEntrySaved(entry));
     return;
   }
-  if (dedupeKey.startsWith(COACH_PREFIX)) {
-    const entry = unwrapEntry("coach", response);
-    if (entry) yield put(actions.coachEntrySaved(entry));
-  }
+  const entry = unwrapEntry("coach", response);
+  if (entry) yield put(actions.coachEntrySaved(entry));
 }
 
 // The other end of a replay, and the one that matters most to a 7-year-old.
@@ -324,6 +404,10 @@ export function* journalSaga() {
     takeEvery(t.SAVE_ATHLETE_ENTRY, saveAthleteEntry),
     takeEvery(t.SAVE_COACH_ENTRY, saveCoachEntry),
     takeEvery(t.SET_SHARED, setShared),
+    // takeEvery, not takeLatest: two deletes of two different days are two
+    // things that both have to happen, and cancelling the first would leave
+    // an entry the person watched disappear still sitting on the server.
+    takeEvery(t.DELETE_ENTRY, deleteEntry),
     // takeLatest for the reads, the same as every read duck: two fetches of
     // one list in flight together can only land in an order nobody chose.
     takeLatest(t.FETCH_ATHLETE_ENTRIES, fetchAthleteEntries),
@@ -341,6 +425,7 @@ export const journalWorkers = {
   saveAthleteEntry,
   saveCoachEntry,
   setShared,
+  deleteEntry,
   fetchAthleteEntries,
   fetchCoachEntries,
   reconcileReplay,

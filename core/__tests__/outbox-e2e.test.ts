@@ -611,4 +611,132 @@ describe("outbox end-to-end: a note typed offline reaches the API when the conne
     // And no entry was invented for the day it failed on.
     expect(journalSelectors.selectAthleteEntryFor("2026-09-17")(store.getState())).toBeNull();
   });
+
+  // The delete, through the real store and the real sagas, with only fetch
+  // mocked. The URL and the method asserted at the bottom are the whole
+  // reason this test exists: everything between the button and the wire gets
+  // to be wrong here, and the one thing a unit test mocking apiRequest can
+  // never check is what actually goes out.
+  it("queues a delete made with no signal, honours it on screen, and sends it to the id-addressed route when the connection returns", async () => {
+    const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation((input) =>
+      String(input).endsWith("/api/v1/auth/login")
+        ? respond(200, TEDDY_LOGIN)
+        : Promise.reject(new TypeError("Failed to fetch")),
+    );
+    await signInFor(store, TEDDY_LOGIN);
+
+    // Two entries already on record, and only one of them is deleted. One
+    // entry would make an empty journal look like a working delete.
+    const entry = (id: number, date: string, best: string) => ({
+      id,
+      session_date: date,
+      program_year_id: 1,
+      day_card_id: null,
+      felt: 4,
+      best,
+      hard: null,
+      note: "x",
+      shared: false,
+      updated_at: "2026-09-17T19:00:00Z",
+    });
+    store.dispatch({
+      type: "journal/ATHLETE_ENTRIES_FETCHED",
+      payload: [
+        entry(501, "2026-09-16", "The wall rally"),
+        entry(502, "2026-09-17", "The one he took back"),
+      ],
+    });
+
+    store.dispatch(journalActions.deleteEntry({ side: "athlete", date: "2026-09-17", id: 502 }));
+    await waitUntil(
+      () => outboxSelectors.selectQueue(store.getState()).length === 1,
+      "the offline delete to land in the outbox queue",
+    );
+
+    // He asked for it gone, so it is gone here, even though the server has
+    // not heard about it yet. The day beside it is untouched.
+    expect(journalSelectors.selectAthleteEntryFor("2026-09-17")(store.getState())).toBeNull();
+    expect(journalSelectors.selectAthleteEntryFor("2026-09-16")(store.getState())?.best).toBe(
+      "The wall rally",
+    );
+
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(() =>
+      respond(200, { deleted: { id: 502, session_date: "2026-09-17" } }),
+    );
+
+    store.dispatch(outboxActions.replay());
+    await waitUntil(
+      () => outboxSelectors.selectQueue(store.getState()).length === 0,
+      "the replay to send the delete and clear the queue",
+    );
+
+    // Transcribed from routes.rb and the controller, not from anything in
+    // this package: DELETE /api/v1/athlete_entries/:id, no body.
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(String(url)).toBe("https://api.test/api/v1/athlete_entries/502");
+    expect((init as RequestInit).method).toBe("DELETE");
+    expect((init as RequestInit).body).toBeUndefined();
+    expect(((init as RequestInit).headers as Record<string, string>).Authorization).toBe(
+      `Bearer ${TEDDY_LOGIN.jwt}`,
+    );
+
+    // Still gone, and nothing was reported as having failed.
+    expect(journalSelectors.selectAthleteEntryFor("2026-09-17")(store.getState())).toBeNull();
+    expect(journalSelectors.selectAthleteEntryFor("2026-09-16")(store.getState())).not.toBeNull();
+    expect(journalSelectors.selectJournalError(store.getState())).toBeNull();
+  });
+
+  // The dedupe rule, end to end. Offline he edits a day and then deletes it:
+  // one write goes out, and it is the delete.
+  it("replaces a pending edit of a day with the delete of that same day", async () => {
+    const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
+    const fetchMock = jest.spyOn(globalThis, "fetch").mockImplementation((input) =>
+      String(input).endsWith("/api/v1/auth/login")
+        ? respond(200, TEDDY_LOGIN)
+        : Promise.reject(new TypeError("Failed to fetch")),
+    );
+    await signInFor(store, TEDDY_LOGIN);
+
+    store.dispatch(
+      journalActions.saveAthleteEntry({
+        programYearId: 1,
+        date: "2026-09-17",
+        felt: 3,
+        best: "Something he then thought better of.",
+        hard: null,
+        note: "Something he then thought better of.",
+        shared: false,
+      }),
+    );
+    await waitUntil(
+      () => outboxSelectors.selectQueue(store.getState()).length === 1,
+      "the offline edit to queue",
+    );
+
+    store.dispatch(journalActions.deleteEntry({ side: "athlete", date: "2026-09-17", id: 502 }));
+    await waitUntil(
+      () =>
+        outboxSelectors.selectQueue(store.getState())[0]?.action.request.method === "DELETE",
+      "the delete to replace the queued edit",
+    );
+    expect(outboxSelectors.selectQueue(store.getState())).toHaveLength(1);
+
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(() =>
+      respond(200, { deleted: { id: 502, session_date: "2026-09-17" } }),
+    );
+    store.dispatch(outboxActions.replay());
+    await waitUntil(
+      () => outboxSelectors.selectQueue(store.getState()).length === 0,
+      "the replay to finish",
+    );
+
+    // One request, and it is the delete. The edit never reaches the server,
+    // which is right: he took the day back after typing it.
+    expect(fetchMock.mock.calls).toHaveLength(1);
+    expect(String(fetchMock.mock.calls[0]![0])).toBe("https://api.test/api/v1/athlete_entries/502");
+    expect((fetchMock.mock.calls[0]![1] as RequestInit).method).toBe("DELETE");
+  });
 });
