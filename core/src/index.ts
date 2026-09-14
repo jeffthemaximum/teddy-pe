@@ -41,6 +41,26 @@ export const outboxActions = {
 export { outboxSelectors };
 export type { OutboxState, QueueableAction, QueuedWrite } from "./ducks/outbox";
 
+// The journal's public surface is narrowed the same way authActions and
+// outboxActions are. `saveAthleteEntry`, `saveCoachEntry` and `setShared` are
+// the three things an app ever dispatches; `athleteEntrySaved`,
+// `coachEntrySaved`, `saveQueued`, `saveFailed` and the outbox reconciliation
+// worker are saga-internal, dispatched only from inside the saga (or, for
+// the reconciliation worker, from the outbox's own REPLAY_SUCCEEDED — see
+// ducks/journal/sagas.ts). An app that could dispatch `athleteEntrySaved`
+// directly could put a fabricated entry, `shared` included, into state the
+// server never sent — the same reasoning Ruling 10 applied to auth.
+import { actions as journalDuckActions, selectors as journalSelectors } from "./ducks/journal";
+
+export const journalActions = {
+  saveAthleteEntry: journalDuckActions.saveAthleteEntry,
+  saveCoachEntry: journalDuckActions.saveCoachEntry,
+  setShared: journalDuckActions.setShared,
+};
+export { journalSelectors };
+export type { JournalState } from "./ducks/journal";
+export type { CoachEntry, AthleteEntry, DrillRatingValue } from "./types";
+
 // The six read ducks. Each is already wired into the store by
 // rootReducer/rootSaga; an app dispatches `<duck>.actions.fetch(...)` and
 // reads through `<duck>.selectors` or the derived selectors below.

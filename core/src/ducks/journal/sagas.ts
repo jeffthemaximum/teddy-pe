@@ -1,0 +1,117 @@
+import { all, call, getContext, put, select, takeEvery } from "redux-saga/effects";
+import * as t from "./actionTypes";
+import * as actions from "./actions";
+import type { SaveAthleteEntryPayload } from "./actions";
+import { apiRequest, ApiError } from "../../services/apiClient";
+import { sessionExpired } from "../auth/actions";
+import { selectToken } from "../auth/selectors";
+import { enqueue } from "../outbox/actions";
+import * as outboxActionTypes from "../outbox/actionTypes";
+import type { QueueableAction } from "../outbox/types";
+import { selectAthleteEntryFor } from "./selectors";
+import type { CoreConfig } from "../../config";
+import type { AthleteEntry, CoachEntry } from "../../types";
+
+// The one decision every save shares: offline or a timeout queues the write
+// so it is never lost, a dead token signs the app out rather than retrying
+// forever against a session that cannot succeed, and anything else — a 422
+// most often — is a real, permanent rejection that would fail identically on
+// every retry, so it is reported rather than queued. An explicit three-way
+// branch, not a fallthrough: each direction is a decision, not a default.
+function* handleSaveFailure(e: unknown, date: string, queueable: QueueableAction) {
+  if (e instanceof ApiError && (e.code === "offline" || e.code === "timeout")) {
+    yield put(enqueue(queueable));
+    // Off the app's hands and into the outbox's: no longer "saving", and not
+    // failed either, so the day's saving flag clears without an error message
+    // that would tell Teddy or Jeff something went wrong when nothing has,
+    // yet.
+    yield put(actions.saveQueued({ date }));
+    return;
+  }
+  if (e instanceof ApiError && e.status === 401) {
+    yield put(sessionExpired());
+    return;
+  }
+  const message = e instanceof ApiError ? e.message : "Something went wrong.";
+  yield put(actions.saveFailed({ date, message }));
+}
+
+// `action` already carries `dedupeKey` and `request` (see actions.ts), built
+// at the moment it was created. Nothing here rebuilds the request or the
+// key: on failure the exact action received is the one handed to `enqueue`.
+function* saveAthleteEntry(action: ReturnType<typeof actions.saveAthleteEntry>) {
+  const config: CoreConfig = yield getContext("config");
+  const token: string | null = yield select(selectToken);
+  try {
+    const entry: AthleteEntry = yield call(apiRequest, config, { ...action.request, token });
+    yield put(actions.athleteEntrySaved(entry));
+  } catch (e) {
+    yield call(handleSaveFailure, e, action.payload.date, action);
+  }
+}
+
+function* saveCoachEntry(action: ReturnType<typeof actions.saveCoachEntry>) {
+  const config: CoreConfig = yield getContext("config");
+  const token: string | null = yield select(selectToken);
+  try {
+    const entry: CoachEntry = yield call(apiRequest, config, { ...action.request, token });
+    yield put(actions.coachEntrySaved(entry));
+  } catch (e) {
+    yield call(handleSaveFailure, e, action.payload.date, action);
+  }
+}
+
+// Not its own request path. `{ session_date, shared }` alone would satisfy
+// the API — AthleteEntry#assign_attributes only touches keys it is handed —
+// but not the outbox: two writes queued for the same day collapse to
+// whichever was queued last, so a bare `{shared}` queued after a fuller note
+// save would replace it in the queue and the note would never reach the
+// server at all. So this carries the note already on record for the date
+// forward alongside the new `shared`, through the same worker and the same
+// `dedupeKey` a note save uses, and never touches `shared` itself beyond
+// passing it on.
+function* setShared(action: ReturnType<typeof actions.setShared>) {
+  const { date, shared } = action.payload;
+  const existing: AthleteEntry | null = yield select(selectAthleteEntryFor(date));
+  const payload: SaveAthleteEntryPayload = { date, note: existing?.note ?? "", shared };
+  yield call(saveAthleteEntry, actions.saveAthleteEntry(payload));
+}
+
+// The other half of the outbox story: a write queued offline eventually
+// replays, and the response the server gave it — carrying the id and
+// updated_at the entry did not have when it was created offline — has to
+// reach this duck's state somehow. `outbox/REPLAY_SUCCEEDED` carries the
+// `dedupeKey` the write was queued under and the raw response body,
+// forwarded verbatim; this is the one place that means anything, because
+// `athlete:`/`coach:` is a prefix only this duck assigns. Any other
+// dedupeKey (a test result's, say) is not this duck's business and is left
+// alone.
+function* reconcileReplay(action: { type: string; payload: { dedupeKey: string; response: unknown } }) {
+  const { dedupeKey, response } = action.payload;
+  if (dedupeKey.startsWith("athlete:")) {
+    yield put(actions.athleteEntrySaved(response as AthleteEntry));
+    return;
+  }
+  if (dedupeKey.startsWith("coach:")) {
+    yield put(actions.coachEntrySaved(response as CoachEntry));
+  }
+}
+
+export function* journalSaga() {
+  yield all([
+    takeEvery(t.SAVE_ATHLETE_ENTRY, saveAthleteEntry),
+    takeEvery(t.SAVE_COACH_ENTRY, saveCoachEntry),
+    takeEvery(t.SET_SHARED, setShared),
+    takeEvery(outboxActionTypes.REPLAY_SUCCEEDED, reconcileReplay),
+  ]);
+}
+
+// The tests drive one worker at a time rather than the watcher, same
+// convention as every other duck: a watcher started through `runSaga` never
+// resolves because `takeEvery` runs forever.
+export const journalWorkers = {
+  saveAthleteEntry,
+  saveCoachEntry,
+  setShared,
+  reconcileReplay,
+};
