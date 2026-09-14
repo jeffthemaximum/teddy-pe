@@ -258,6 +258,17 @@ export interface TestDate {
   window: string;
   label: string;
   display: string;
+  // The range the window covers. Optional on purpose, and not because the
+  // server treats them as optional: TestDate validates both as present, so
+  // a row written after 14 September 2026 always has them. The gap is the
+  // deploy. Merging to `main` rebuilds the web app and does not deploy the
+  // API (CLAUDE.md), so there is a real window in which this front end runs
+  // against a server whose payload omits both keys entirely, which reads as
+  // undefined rather than as null. selectTestDayFor treats either as a
+  // window it cannot place, so Today shows no test section instead of
+  // breaking.
+  starts_on?: string | null;
+  ends_on?: string | null;
   position: number;
 }
 
