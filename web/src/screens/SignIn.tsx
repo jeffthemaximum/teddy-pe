@@ -8,7 +8,7 @@ import { ErrorNote } from "../components/ErrorNote";
 // in production: normal for the first sign in of a day, not an error. Seven
 // seconds of a dead-looking form reads as broken. Seven seconds of this
 // reads as slow, which is the truth.
-const WAKING_LABEL = "Waking up the server. This can take about ten seconds if it has been quiet a while.";
+const WAKING_LABEL = "Waking up the server. This can take about seven seconds if it has been quiet a while.";
 
 export function SignIn() {
   const dispatch = useAppDispatch();

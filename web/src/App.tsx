@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { BrowserRouter, NavLink } from "react-router-dom";
 import { authActions, authSelectors, useAppDispatch, useAppSelector } from "@teddy-pe/core";
 import { Loading } from "./components/Loading";
@@ -6,19 +5,18 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { SignIn } from "./screens/SignIn";
 import { AppRoutes, navItemsFor } from "./routes";
 
-// The session lives in storage, and the app already knows that on mount:
-// showing the sign in form for a moment and then replacing it with someone's
-// real name is how an app looks broken on every launch. So the shell asks
-// core to restore whatever is there before it renders anything that assumes
-// an answer, and shows a quiet, honest "checking" state until core says
-// which one it is.
+// The session lives in storage, and by the time this ever renders, restoring
+// it is already in flight: main.tsx dispatches restoreSession() on the store
+// before createRoot(...).render() is even called, not from a useEffect here.
+// A useEffect fires after first paint, so a dispatch from one would still let
+// a perfectly good stored session commit the sign-in form for one frame
+// before replacing it, which is exactly the flash this app is not supposed
+// to show. Dispatching before the first render means the reducer is already
+// past "anonymous" by the time this component's first render happens, so
+// there is nothing to flash. This component only reads the status main.tsx
+// already set in motion.
 export function App() {
-  const dispatch = useAppDispatch();
   const status = useAppSelector(authSelectors.selectAuthStatus);
-
-  useEffect(() => {
-    dispatch(authActions.restoreSession());
-  }, [dispatch]);
 
   if (status === "restoring") {
     return (

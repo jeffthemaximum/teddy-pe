@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { Provider } from "react-redux";
-import { createCoreStore, memoryStorage } from "@teddy-pe/core";
+import { createCoreStore, memoryStorage, authActions } from "@teddy-pe/core";
 import type { Role } from "@teddy-pe/core";
 import { App } from "../src/App";
 
@@ -13,6 +13,14 @@ const USERS: Record<Role, { id: number; email: string; name: string; role: Role 
 // Signed in the way a real launch does it: the session is in storage and the
 // app restores it. Dispatching a fake signed-in action would not work anyway,
 // because core deliberately keeps signInSucceeded off its public surface.
+//
+// restoreSession() is dispatched here, on the store, before render, the same
+// order main.tsx uses and for the same reason: App itself no longer dispatches
+// it from a useEffect, because a useEffect fires after first paint and that is
+// the flash the app is not supposed to show (see src/main.tsx and the no-flash
+// test in sign-in.test.tsx). A test that renders App has to set the store up
+// the same way main.tsx does, or it is testing a bootstrap sequence the real
+// app never runs.
 async function renderAs(role: Role) {
   const storage = memoryStorage();
   await storage.setItem(
@@ -20,6 +28,7 @@ async function renderAs(role: Role) {
     JSON.stringify({ jwt: "a.b.c", user: USERS[role] }),
   );
   const store = createCoreStore({ baseUrl: "https://api.test", storage });
+  store.dispatch(authActions.restoreSession());
   render(
     <Provider store={store}>
       <App />
@@ -61,6 +70,7 @@ describe("the shell", () => {
 
   it("shows no nav at all before anyone signs in", async () => {
     const store = createCoreStore({ baseUrl: "https://api.test", storage: memoryStorage() });
+    store.dispatch(authActions.restoreSession());
     render(<Provider store={store}><App /></Provider>);
     expect(await screen.findByRole("button", { name: /sign in/i })).toBeInTheDocument();
     expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
