@@ -16,8 +16,23 @@ namespace :legacy do
             "lists the ones that exist.")
   end
 
+  # The first line of every task, printed before anything is read or written
+  # rather than after. The missing-table check catches a connection with no
+  # legacy tables on it; it cannot catch LEGACY_DATABASE_URL pointing at a
+  # database that has both tables and is the wrong one, which on Neon means
+  # a branch or a restored snapshot and is a plausible typo. No gate can
+  # tell that apart from a genuinely empty table, so the answer is to say
+  # which database the numbers below describe and let the person reading
+  # decide. Host and database name only, never the password.
+  say_source = lambda do
+    Legacy::Record.connect!
+    puts "reading the old rows from: #{Legacy::Record.source_description}"
+  end
+
   desc "Read the old Neon tables and report what exists and what will not map. Writes nothing."
   task survey: :environment do
+    say_source.call
+    puts
     report = Legacy::Survey.new.run
 
     # A table that is not on this connection has to say so. Printing "0 rows"
@@ -78,6 +93,10 @@ namespace :legacy do
     abort("Set CONFIRM=yes once you have read the survey.") unless ENV["CONFIRM"] == "yes"
 
     coach = find_coach.call
+    say_source.call
+    puts "Everything below is about that database and nothing else. If it is not the live one,"
+    puts "stop now: set LEGACY_DATABASE_URL and run this again. Nothing has been written yet."
+    puts
 
     # First, and loudly. A migration that silently did nothing is the thing
     # this whole phase is guarding against: zeros with no explanation read
@@ -167,7 +186,14 @@ namespace :legacy do
 
   desc "Compare the old Neon rows against the migrated ones, field by field. COACH_EMAIL="
   task verify: :environment do
-    report = Legacy::Verifier.new(coach: find_coach.call).run
+    coach = find_coach.call
+    say_source.call
+    puts "Every count and every line below describes that database and nothing else. A clean read"
+    puts "here says the old rows in THAT database arrived, so check it is the live one before"
+    puts "anything is deleted."
+    puts
+
+    report = Legacy::Verifier.new(coach: coach).run
     counts = report[:counts]
 
     # Never a clean read. An absent table used to look exactly like an empty

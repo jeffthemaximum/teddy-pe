@@ -72,6 +72,7 @@ module Legacy
 
       {
         clean?: tables_missing.empty? && missing.empty? && conflicts.empty?,
+        source: Legacy::Record.source_description,
         tables_missing: tables_missing,
         counts: { legacy_diary: diary.size, migrated_diary: migrated_diary_count,
                   legacy_results: results.size, migrated_results: TestResult.count },

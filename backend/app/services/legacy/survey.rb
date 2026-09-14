@@ -17,6 +17,7 @@ module Legacy
       resolved = results.to_h { |row| [ row, Legacy::Mapping.resolve_result(window: row.test_window, test_id: row.test_id) ] }
 
       {
+        source: Legacy::Record.source_description,
         tables_missing: missing,
         diary_count: diary.size,
         result_count: results.size,

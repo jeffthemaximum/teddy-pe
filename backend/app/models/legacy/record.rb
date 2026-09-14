@@ -26,5 +26,29 @@ module Legacy
     end
 
     def readonly? = true
+
+    # Which database the old rows were actually read out of, in words a
+    # person can check at a glance.
+    #
+    # The missing-table check catches a connection with no legacy tables on
+    # it. It cannot catch the other way of being pointed at the wrong place:
+    # LEGACY_DATABASE_URL naming a database that HAS both tables and is not
+    # the live one. A Neon branch, a restored snapshot, a staging copy. Neon
+    # hands out branches freely enough that this is a plausible typo, and a
+    # near-empty branch produces no missing tables, no comparable rows, and a
+    # verifier that reads clean over rows it never saw.
+    #
+    # No gate can tell a real empty table from the wrong database, so this is
+    # not one. It is the first line of every task's output, so whoever types
+    # CONFIRM=yes can see what the numbers underneath describe.
+    #
+    # The host and the database name only. Never the password and never the
+    # whole URL: this goes into a terminal and from a terminal into a paste.
+    def self.source_description
+      config = connection_db_config.configuration_hash
+      where = config[:host].presence || "a local socket"
+      where = "#{where}:#{config[:port]}" if config[:port].present? && config[:host].present?
+      "#{config[:database]} on #{where}"
+    end
   end
 end

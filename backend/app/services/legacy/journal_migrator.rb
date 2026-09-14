@@ -28,15 +28,16 @@ module Legacy
       # A table that is not on this connection is not the same fact as a
       # table with no rows in it, and reporting both as zeros is how the only
       # copy of a year of Teddy's program gets deleted. Name it instead.
+      source = Legacy::Record.source_description
       missing = Legacy::Mapping.missing_tables(Legacy::DiaryEntry)
-      return empty_report.merge(tables_missing: missing) if missing.any?
+      return empty_report.merge(source: source, tables_missing: missing) if missing.any?
 
       migrated = 0
       Legacy::DiaryEntry.order(:session_date).each do |row|
         migrated += 1 if migrate(row)
       end
 
-      empty_report.merge(migrated: migrated, skipped: @skipped,
+      empty_report.merge(source: source, migrated: migrated, skipped: @skipped,
                          dropped_ratings: @dropped_ratings, failed: @failed,
                          conflicts: @conflicts, already_migrated: @already_migrated)
     end
@@ -44,7 +45,7 @@ module Legacy
     private
 
     def empty_report
-      { tables_missing: [], migrated: 0, already_migrated: 0,
+      { source: nil, tables_missing: [], migrated: 0, already_migrated: 0,
         skipped: [], dropped_ratings: [], conflicts: [], failed: [] }
     end
 

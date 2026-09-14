@@ -17,22 +17,23 @@ module Legacy
       Legacy::Record.connect!
       # See Legacy::JournalMigrator#run!. An absent table and an empty table
       # report identically unless one of them says so out loud.
+      source = Legacy::Record.source_description
       missing = Legacy::Mapping.missing_tables(Legacy::TestResultRow)
-      return empty_report.merge(tables_missing: missing) if missing.any?
+      return empty_report.merge(source: source, tables_missing: missing) if missing.any?
 
       migrated = 0
       Legacy::TestResultRow.order(:test_window, :test_id).each do |row|
         migrated += 1 if migrate(row)
       end
 
-      empty_report.merge(migrated: migrated, skipped: @skipped, conflicts: @conflicts,
+      empty_report.merge(source: source, migrated: migrated, skipped: @skipped, conflicts: @conflicts,
                          failed: @failed, already_migrated: @already_migrated)
     end
 
     private
 
     def empty_report
-      { tables_missing: [], migrated: 0, already_migrated: 0,
+      { source: nil, tables_missing: [], migrated: 0, already_migrated: 0,
         skipped: [], conflicts: [], failed: [] }
     end
 

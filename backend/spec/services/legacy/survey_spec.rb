@@ -113,6 +113,37 @@ RSpec.describe Legacy::Survey, :legacy do
     ])
   end
 
+  # The state the missing-table check cannot catch: LEGACY_DATABASE_URL
+  # pointing at a database that has both tables and is not the live one. A
+  # Neon branch, a restored snapshot, a staging copy. Neon's branching makes
+  # that a plausible typo rather than a thought experiment, and a near-empty
+  # branch gives zero comparable rows, no missing tables, and a clean read
+  # over rows nothing ever looked at.
+  #
+  # There is no gate that can tell those apart, so the answer is to say which
+  # database the numbers describe and let the person reading decide. The host
+  # and the database name, never the password: this output goes to a terminal
+  # and from there into a paste.
+  #
+  # The config here is built in the example rather than read back from the
+  # same call the code makes, so this cannot pass by agreeing with itself.
+  it "says which database it read, and never prints the password" do
+    config = ActiveRecord::DatabaseConfigurations::HashConfig.new(
+      "test", "legacy",
+      { adapter: "postgresql", host: "ep-snapshot-42.us-east-2.aws.neon.tech", port: 5432,
+        database: "teddy_restored_snapshot", username: "neon_owner",
+        password: "s3cret-do-not-print" }
+    )
+    allow(Legacy::Record).to receive(:connection_db_config).and_return(config)
+
+    report = described_class.new.run
+
+    expect(report[:source]).to include("teddy_restored_snapshot")
+    expect(report[:source]).to include("ep-snapshot-42.us-east-2.aws.neon.tech")
+    expect(report[:source]).not_to include("s3cret-do-not-print")
+    expect(report[:source]).not_to include("password")
+  end
+
   # The realistic path this guards: the old rows live in the Vercel Neon
   # database rather than the Rails one, LEGACY_DATABASE_URL is unset or set
   # on the wrong Fly app, and every task reports zeros that look exactly like
