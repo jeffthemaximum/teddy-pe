@@ -14,11 +14,12 @@ module Api
         # ExceptionWrapper assumes a real exception and raises on nil.
         status = exception ? ActionDispatch::ExceptionWrapper.new(request.env, exception).status_code : 404
         code = status == 404 ? "not_found" : (status < 500 ? "bad_request" : "server_error")
-        message = case code
-                  when "not_found"   then "Not found."
-                  when "bad_request" then "The request could not be understood."
-                  else                    "Something went wrong."
-                  end
+        message =
+          case code
+          when "not_found"   then "Not found."
+          when "bad_request" then "The request could not be understood."
+          else                    "Something went wrong."
+          end
         render_error(code, message, status)
       end
     end

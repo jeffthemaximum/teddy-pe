@@ -27,9 +27,18 @@ module Api
         @current_user = User.find_by(id: payload[:sub])
         return render_unauthorized unless @current_user
 
-        if payload[:pwd].present? && payload[:pwd] != JwtService.fingerprint(@current_user.password_digest)
-          return render_unauthorized
-        end
+        # Keep this guard last. It refuses by rendering rather than by
+        # returning, so anything written below it would still run on a token
+        # this rejected.
+        render_unauthorized if stale_fingerprint?(payload)
+      end
+
+      # A token minted before a password change carries the old digest's
+      # fingerprint, so it stops working instead of lasting its full 90 days.
+      # A token with no pwd claim has nothing to compare and is left alone.
+      def stale_fingerprint?(payload)
+        return false if payload[:pwd].blank?
+        payload[:pwd] != JwtService.fingerprint(@current_user.password_digest)
       end
 
       def bearer_token

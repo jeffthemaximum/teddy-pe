@@ -1,0 +1,24 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Unmaintained Dependency",
+      "warning_code": 122,
+      "fingerprint": "21ab0fe00fdd5899ffc405cff75aadb91b805ee996a614f7e27b08a287e9062d",
+      "check_name": "EOLRails",
+      "message": "Support for Rails 8.0.5.1 ends on 2026-11-07",
+      "file": "Gemfile.lock",
+      "line": 435,
+      "link": "https://brakemanscanner.org/docs/warning_types/unmaintained_dependency/",
+      "code": null,
+      "render_path": null,
+      "location": null,
+      "user_input": null,
+      "confidence": "Weak",
+      "cwe_id": [
+        1104
+      ],
+      "note": "True and unfixable in a code pass. Rails 8.0 stops getting security patches on 2026-11-07, two months into Teddy's year, on a public API holding a child's journal. The fix is an 8.1 upgrade: a bundle update, a lockfile change and a deploy Jeff runs, not an edit to this branch. Ignored here so the other 78 checks stay a gate instead of the whole job staying red. Read this next bit before trusting the ignore: brakeman's fingerprint is built from the warning code, the file and the confidence, and never from the message, so this entry silences EOLRails for every future Rails version too, including the day 8.1 reaches its own end of life. It does not lift itself. spec/rails_version_spec.rb is the alarm that does fire, on the date, in the suite. Delete this entry at the upgrade."
+    }
+  ],
+  "brakeman_version": "8.0.6"
+}

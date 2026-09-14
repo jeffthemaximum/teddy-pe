@@ -191,7 +191,7 @@ RSpec.describe "auth", type: :request do
       patch "/api/v1/me", params: {}, headers: { "Authorization" => "Bearer #{token}" }
       expect(response).to have_http_status(:bad_request)
       body = JSON.parse(response.body)
-      expect(body.keys).to eq(["error"])
+      expect(body.keys).to eq([ "error" ])
       expect(body["error"]["code"]).to eq("bad_request")
       expect(body["error"]["message"]).to be_present
     end
