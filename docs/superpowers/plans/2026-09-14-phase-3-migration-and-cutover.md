@@ -1174,8 +1174,19 @@ Create `docs/cutover.md`:
 ````markdown
 # Phase 3 cutover
 
-Run these in order. Steps 1 to 3 are safe at any time and change nothing.
-Step 4 onwards changes production.
+Run these in order.
+
+**Nothing here waits on Teddy's Baseline being recorded.** The result
+migrator refuses to overwrite anything the new system already holds, which
+makes the two independent in both directions. Record the Baseline whenever
+it suits, on `/tests`.
+
+**What does gate this runbook is a merge.** These rake tasks run on the Fly
+machine, and the Fly machine runs what is deployed from `main`. Until
+`feature/phase-3-migration` is merged, step 1 reports that the task does not
+exist.
+
+Step 1 is read-only and safe at any time. Step 2 onwards changes production.
 
 ## 1. See what is there
 
@@ -1194,29 +1205,19 @@ database from the Rails one. Set the old connection string and try again:
 fly secrets set LEGACY_DATABASE_URL="<the Vercel project's DATABASE_URL>" -a teddy-pe-api
 ```
 
-## 2. Clear the stray Baseline value
-
-A 20m sprint result of `10` was typed into the new site on 14 September while
-testing it. Open `/tests`, empty that box, and the row deletes itself. Left
-alone it becomes the year's baseline for the sprint and every comparison
-after it is measured against a number that was never a measurement.
-
-## 3. Record Teddy's Baseline, 15 to 17 September
-
-On the new site, signed in as the athlete or the coach. These are the year's
-comparison points and most cannot be measured again.
-
-## 4. Migrate the old rows
+## 2. Migrate the old rows
 
 ```bash
 fly ssh console -a teddy-pe-api -C "bin/rails legacy:migrate COACH_EMAIL=frey.maxim@gmail.com CONFIRM=yes"
 ```
 
-Safe to run after step 3: it never overwrites a result the new system already
-holds, so the Baseline numbers just recorded are not at risk. It reports what
-it wrote, what it skipped, and any result it left alone.
+The ordering against Teddy's Baseline does not matter in either direction.
+This never overwrites a result the new system already holds, so numbers
+recorded before it runs are safe, and numbers recorded after it simply land
+on empty rows. It reports what it wrote, what it skipped, and any result it
+left alone.
 
-## 5. Verify
+## 3. Verify
 
 ```bash
 fly ssh console -a teddy-pe-api -C "bin/rails legacy:verify"
@@ -1225,7 +1226,7 @@ fly ssh console -a teddy-pe-api -C "bin/rails legacy:verify"
 Compares both databases field by field. It must print "Every old row has a
 match that agrees." Nothing is deleted until it does.
 
-## 6. Export the program back into the repo
+## 4. Export the program back into the repo
 
 ```bash
 fly ssh console -a teddy-pe-api -C "bin/rails docs:export"
@@ -1234,7 +1235,7 @@ fly ssh console -a teddy-pe-api -C "bin/rails docs:export"
 This is what keeps `CLAUDE.md`'s rule true, that the repo is the complete
 memory of the project, once `tools/pull.py` is gone.
 
-## 7. Repoint the original Vercel project at the new app
+## 5. Repoint the original Vercel project at the new app
 
 In the Vercel dashboard, on the project that has been serving Teddy's page:
 
@@ -1248,7 +1249,7 @@ In the Vercel dashboard, on the project that has been serving Teddy's page:
 the single-page rewrite and the response headers, so nothing else needs
 setting by hand.
 
-## 8. Let the API admit the new URL
+## 6. Let the API admit the new URL
 
 ```bash
 fly secrets set WEB_ORIGIN="<the original project's URL>" -a teddy-pe-api
@@ -1263,18 +1264,18 @@ curl -s -o /dev/null -D - -X OPTIONS https://teddy-pe-api.fly.dev/api/v1/auth/lo
   -H "Access-Control-Request-Method: POST" | grep -i access-control-allow-origin
 ```
 
-## 9. Check the site before deleting anything
+## 7. Check the site before deleting anything
 
 Open the original URL signed out. It must show the sign-in screen and
 nothing else. Sign in, open This Week, the Year and the journal, and reload
 on each so the single-page rewrite is exercised.
 
-## 10. Delete the new project
+## 8. Delete the new project
 
 Delete `teddy-pe-mlfs` in Vercel, so there is one site rather than two
 quietly disagreeing.
 
-## 11. Then, and only then, Task 6 deletes the old pipeline.
+## 9. Then, and only then, Task 6 deletes the old pipeline.
 ````
 
 - [ ] **Step 2: Commit**
