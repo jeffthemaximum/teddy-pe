@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { drills, selectDrillsMatching, useAppDispatch, useAppSelector } from "@teddy-pe/core";
+import { drills, selectDrillBySlug, selectDrillsMatching, useAppDispatch, useAppSelector } from "@teddy-pe/core";
 import { Loading } from "../components/Loading";
 import { ErrorNote } from "../components/ErrorNote";
 import { DrillPanel } from "../components/DrillPanel";
@@ -28,6 +28,13 @@ export function Glossary() {
   // to drift apart, so this reads the one core already tested.
   const matches = useAppSelector(selectDrillsMatching(query));
 
+  // Same reasoning for the open drill: selectDrillBySlug is the one place
+  // "find the drill with this slug" is implemented. Called unconditionally
+  // (an empty string when nothing is open) so this stays a hook called in
+  // the same order on every render; no real drill has an empty slug, so it
+  // resolves to null exactly when openSlug is null.
+  const openDrill = useAppSelector(selectDrillBySlug(openSlug ?? ""));
+
   // Fires once, on mount, and never again: nothing this screen depends on
   // ever changes after that (no year id, no other id), so asking again
   // would only hammer a server that can take seven seconds to answer.
@@ -55,8 +62,6 @@ export function Glossary() {
     // screen can be asked to render before its own data arrives.
     return null;
   }
-
-  const openDrill = openSlug ? (data.drills.find((d) => d.slug === openSlug) ?? null) : null;
 
   if (openDrill) {
     return (
