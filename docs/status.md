@@ -5,8 +5,9 @@ Update this file whenever something is built, decided, or left open. It is the f
 ## Where things live
 
 - **This repo is the source of truth.** GitHub: `jeffthemaximum/teddy-pe`. Clone it anywhere and everything needed to continue is here.
-- **Live page (claude.ai):** https://claude.ai/code/artifact/a755f23c-b6e8-41dd-b5d4-16bb2a9730e6. Republished from `dist/artifact.html` after a merge to `main`.
-- **Vercel mirror:** serves `site/index.html` (zero-build static; see README).
+- **Live site:** https://teddy-pe-mlfs.vercel.app, the React app in `web/`, built from `main`. Behind a sign-in; there is no public page.
+- **API:** https://teddy-pe-api.fly.dev, the Rails app in `backend/`. Postgres on Fly holds the program, both journals and the test results.
+- **The old pipeline is gone.** `build.py`, `src/page.html`, `site/`, `dist/`, the five functions in `api/`, `public/`, the root `vercel.json`, `tools/` and `data/` were deleted on 14 September once the migration verified clean. There is no static mirror and no passphrase gate any more. Publishing `dist/artifact.html` to claude.ai has stopped, per decision 9 of `docs/rewrite-prompt.md`: the artifact was ungated and the program should not sit in the open.
 - **claude.ai Project "teddy pe":** holds a copy of the architecture and status for convenience. If it disagrees with this repo, the repo wins; update the Project copy from here.
 - **claude.ai memory:** two short memory files about Teddy and this curriculum exist for Jeff's account. They are a cache of `docs/context.md`, nothing more.
 
@@ -15,14 +16,15 @@ Update this file whenever something is built, decided, or left open. It is the f
 - Year view: 9 areas x 6 blocks (Cub, Fox, Coyote, Wolf, Puma, Cheetah), timeline with retests and Trials weeks, Cub patches (7 of 9 to rank up), tennis ball gates (green now, controlled-yellow gate active), 10-test battery plus height.
 - September view: Cub weeks 1 to 3 (Sep 14 to Oct 4): Baseline & Land, Stick It, Brake.
 - This Week: daily cards for Sep 14 to 20, plus the test sheet (15 rows, five test windows, stored in Neon and shared across devices).
-- Drill glossary: `data/drills.json`, 84 entries covering everything written so far. `build.py` links names and aliases into card prose and block titles at build time; tapping one opens a sheet with how to do it, what to watch for and the cue. Fourth tab lists all of them with a filter. The markdown export carries a glossary appendix for the week.
-- Coach's diary: form on This Week (session, how it went, energy, pain flag, note, challenge number, and a rating per drill from that day's card). One entry per session date, stored only in Neon and keyed by date on the server, so every device opens and edits the same entry. No local storage, so saving needs a connection. `tools/pull.py` pulls entries and results into `data/`. Entries produce proposed plan changes only.
-- Test results and the Progress panel: `api/results.js` stores one row per test window and test id; the sheet on This Week reads and writes it; the Year tab charts each test as a card with its latest value, change since baseline in the direction that counts as progress, and a sparkline. Height reports a cm/year pace and flags the growth-load protocol.
-- Passphrase gate on the whole Vercel site: `api/page.js` serves the page only to a signed-in visitor, `api/login.js` exchanges the passphrase for a 90 day signed cookie, and `public/` (robots.txt only) is the sole publicly served directory.
+- Drill glossary: `backend/content/program_years/2026-27/drills.yml`, 84 entries covering everything written so far. The seeder links names and aliases into card prose and block titles; tapping one opens a sheet with how to do it, what to watch for and the cue. A tab lists all of them with a filter.
+- Coach's diary: form on This Week (session, how it went, energy, pain flag, note, challenge number, and a rating per drill from that day's card). One entry per session date, keyed on the server, so every device opens and edits the same entry. Saves go through the offline queue in `core/`. `bin/rails docs:export` writes entries and results back into `docs/`. Entries produce proposed plan changes only.
+- Teddy's own journal, with a share toggle per day. Unshared entries stay out of the API's responses and out of the export. Both journals soft delete.
+- Test results and the Progress panel: one row per test window and test id; the sheet on This Week reads and writes it; the Year tab charts each test as a card with its latest value, change since baseline in the direction that counts as progress, and a sparkline. Height reports a cm/year pace and flags the growth-load protocol.
+- Sign-in on the whole site, three accounts, Pundit deciding what each may see. The web bundle ships no program vocabulary at all, and a test in `web/` builds the app for real and reads the built output to prove it.
 
 ## Branches
 
-- **`main` now carries both systems.** Jeff merged the rewrite on 14 September as a squash, `c6a94d6`, PR #7, and GitHub deleted the branch behind it. The old pipeline is still there and still serving: `build.py`, `src/page.html`, `site/`, `dist/`, the four functions in `api/` and the root `vercel.json` are all untouched, so the Vercel project that has always served Teddy's page keeps serving it. The rewrite sits beside it in `backend/`, `core/` and `web/`. Nothing is removed until Phase 3 cuts over, which is the safer order: there is no window where the program is unavailable.
+- **`main` carried both systems from 14 September until the cutover.** Jeff merged the rewrite that morning as a squash, `c6a94d6`, PR #7, and GitHub deleted the branch behind it. Keeping the old pipeline serving beside the new one was the safer order: there was no window where the program was unavailable. `feature/phase-3-cutover` removes it, and the repo is now just `backend/`, `core/`, `web/` and `docs/`.
 - `feature/ball-sports-and-mindset` and `feature/drill-glossary-and-coach-diary`: merged and stale. Tidying them is Jeff's call, not part of the rewrite.
 - **The rewrite is Phase 1 and Phase 2 complete, on `main`.** Rails 8 API, the `core/` package, the React web app. The API lives in `backend/` and runs at `https://teddy-pe-api.fly.dev`. The Phase 1 whole-branch review is at `.superpowers/sdd/2026-09-13-phase-1-rails-api/final-review.md` and Jeff's ten fixes off it are in. Phase 3 (migration and cutover) and Phase 4 (React Native) are not started.
 
@@ -41,9 +43,7 @@ If the program itself needs changing while the rewrite is in flight (a new month
 
 ## Open
 
-- **Jeff to do:** set the Vercel project's output directory to `public` (or let `vercel.json` do it), confirm `DATABASE_URL` and `DIARY_PASSPHRASE` are set, and redeploy. The site then asks for the passphrase before showing anything.
-- Whether to keep publishing `dist/artifact.html` to claude.ai, which is ungated and now shows a diary that cannot save.
-- Whether the missing offline queue matters in practice at a field with no signal.
+- **Jeff to do, and this gates the merge:** repoint the old Vercel project at `web/` by hand before `feature/phase-3-cutover` lands. That branch deletes the root `vercel.json` and everything the old project builds, so merging it first would take the served page down.
 - One-hand vs two-hand backhand, to settle in the Fox block with his coach.
 - Youth basketball size (27.5 in) and a mat for keeper dive progressions before the Fox block.
 - Whether the November move changes any facility access (assumed: none).
@@ -52,7 +52,7 @@ If the program itself needs changing while the rewrite is in flight (a new month
 
 ## Next
 
-- **Sep 15 to 17: record the baseline.** Open This Week, pick Baseline in the test sheet, type the numbers. They save to the database as you go and the Year tab starts charting immediately. This happens on the current site, off `main`. The rewrite does not touch it, and Phase 3 migrates these rows across with a count and a spot check before anything is dropped.
+- **Sep 15 to 17: record the baseline.** Open This Week, pick Baseline in the test sheet, type the numbers. They save as you go and the Year tab starts charting immediately. This now happens on the new site, https://teddy-pe-mlfs.vercel.app.
 
 - **Phase 3 is built and has been through its final fix round.** The survey, both migrators, the verifier and the three rake tasks that read the old Neon tables and copy them into Rails. `backend/` stands at 301 examples. A whole-branch review returned "not safe to run against production data" and the seven findings are closed:
 
@@ -87,4 +87,4 @@ If the program itself needs changing while the rewrite is in flight (a new month
 
 - **The password minimum is 6, down from 12.** Jeff's call, so that all three accounts could be reset to a 7 character password he chose. `backend/app/models/user.rb`, one number, with the reason written beside it. The rule had no test at all, which is why moving it looked free; `backend/spec/models/user_spec.rb` now asserts it from both sides. The login throttle (10 attempts in 3 minutes) is unchanged and is what actually holds a guessing run. On `feature/password-minimum-6`. **The reset itself is still owed and cannot run until this is deployed**, because a `rails runner` on Fly runs the deployed code: merge, `fly deploy -a teddy-pe-api`, then reset. Everyone signs out when it lands. See `docs/history/2026-09-14-password-minimum.md`.
 
-- October view (Cub weeks 4 to 8: Upside Down, Skip & Bound, Turn, Reactor, Cub Trials) and Week 2 daily cards. Pull the diary first, then write `data/plans/2026-10.json`, add glossary entries for the drills October introduces (wall handstand, A-skip, laces pass, med ball hip throw, inside hook turn, reaction starts, low bounds, pull-backs), point `data/current.json` at it, run `python3 build.py`.
+- October view (Cub weeks 4 to 8: Upside Down, Skip & Bound, Turn, Reactor, Cub Trials) and Week 2 daily cards. Export the journals first, then write `backend/content/program_years/2026-27/plans/2026-10.yml`, add entries to `drills.yml` for the drills October introduces (wall handstand, A-skip, laces pass, med ball hip throw, inside hook turn, reaction starts, low bounds, pull-backs), and run `cd backend && bin/rails content:seed`.

@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Coach's diary API for Teddy's Training Year. The site itself is static; this exists only so diary entries sync across devices.",
-  "engines": { "node": ">=20" },
-  "dependencies": {
-    "@neondatabase/serverless": "^1.0.0"
-  }
+  "description": "Teddy's Training Year. A Rails API in backend/, the shared Redux package in core/, the React web app in web/, and the project's memory in docs/.",
+  "engines": { "node": ">=20" }
 }

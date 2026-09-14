@@ -20,7 +20,21 @@ This repo is the complete memory of the project. Any claude.ai Project doc or me
 
 ## Generating plans
 
-Plans are JSON in `data/plans/`. Match the shape of `data/plans/2026-09.json` exactly. Then `python3 build.py`. The page template in `src/page.html` reads `DATA` injected at build; do not hand-edit `site/` or `dist/`.
+Plans are YAML in `backend/content/program_years/<year>/plans/`. Match the shape of `2026-09.yml` exactly. Then seed them:
+
+```bash
+cd backend && bin/rails content:seed
+```
+
+The seeder is idempotent and reports a count per table, plus anything it pruned, so a YAML edit that removes rows says so rather than doing it quietly. Deploying runs it as the release command, so a merge to `main` seeds production on its own.
+
+Before planning a month, pull the program back into the repo as readable prose:
+
+```bash
+cd backend && bin/rails docs:export
+```
+
+That writes `docs/journal/<year>/<month>.md`, `docs/results/<year>.md` and the plans. It is what keeps this repo the complete memory of the project. Unshared athlete entries are left out, the same as they are from the API.
 
 ## Writing style
 

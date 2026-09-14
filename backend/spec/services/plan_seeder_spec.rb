@@ -48,7 +48,9 @@ RSpec.describe "seeding the month plan" do
     expect(block.body_tokens.any? { |t| t["style"] == "quote" }).to be(true)
   end
 
-  # The regression target is the report build.py prints today.
+  # The regression target is the report build.py printed before it was deleted:
+  # 63 drills used across week 1 and the same four bare blocks. Recorded here
+  # because the thing that produced these numbers is gone and cannot be re-run.
   it "matches the drill linking the old build produced" do
     used = week1.day_cards.flat_map(&:drill_slugs).uniq
     expect(used.size).to eq(63)
