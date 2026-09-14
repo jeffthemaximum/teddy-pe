@@ -43,3 +43,45 @@ export function selectDefaultWindow(dates: TestDate[], today: Date): string | nu
   }
   return best.window;
 }
+
+export interface TestDay {
+  testDate: TestDate;
+  dayNumber: number;
+  dayCount: number;
+}
+
+// Whole days since the epoch, from the date's own parts. Not `new Date(iso)`,
+// which parses a bare "2026-09-15" as midnight UTC and then reports it in
+// the viewer's zone, so a coach west of Greenwich would be told the window
+// opened a day later than it did. Date.UTC on the parts has no zone in it at
+// all, which is the right amount of timezone for a calendar date.
+function utcDays(iso: string): number {
+  const [year, month, day] = iso.split("-").map(Number);
+  return Date.UTC(year!, month! - 1, day!) / 86_400_000;
+}
+
+// Which test window, if any, `isoDate` falls inside, and where in it.
+// `dayNumber` is 1-based because "day 2 of 3" is what a person standing on a
+// court with a stopwatch reads.
+//
+// A window missing either date is one this cannot place, and it is skipped
+// rather than guessed at. That is not defensive padding: merging to `main`
+// rebuilds the web app and does not deploy the API, so this front end runs
+// against a payload with neither field until somebody deploys Fly. See the
+// comment on TestDate in types.ts.
+export function selectTestDayFor(dates: TestDate[], isoDate: string): TestDay | null {
+  for (const testDate of dates) {
+    const { starts_on: startsOn, ends_on: endsOn } = testDate;
+    if (!startsOn || !endsOn) continue;
+    // ISO dates are zero-padded and fixed width, so comparing them as
+    // strings orders them correctly and costs no parsing.
+    if (isoDate < startsOn || isoDate > endsOn) continue;
+    const start = utcDays(startsOn);
+    return {
+      testDate,
+      dayNumber: utcDays(isoDate) - start + 1,
+      dayCount: utcDays(endsOn) - start + 1,
+    };
+  }
+  return null;
+}
