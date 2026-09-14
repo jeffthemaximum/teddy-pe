@@ -227,6 +227,45 @@ const EXPECTED_JOURNAL_ACTIONS = [
   "deleteEntry",
 ].sort();
 
+// authActions is narrowed to the three things an app ever dispatches.
+// Widened back to signInSucceeded or meSucceeded, an app could put itself
+// in a signed-in state holding a token, an athlete or a program year the
+// server never issued.
+const EXPECTED_AUTH_ACTIONS = ["signIn", "signOut", "restoreSession"].sort();
+
+// outboxActions is narrowed to the one thing an app ever dispatches.
+// Widened back to enqueue, replaySucceeded, replayFailed or queueRestored,
+// an app could push a fake write onto the queue, or forge a server answer
+// for a write that was never actually sent.
+const EXPECTED_OUTBOX_ACTIONS = ["replay"];
+
+// testResultsActions is narrowed to the two things an app ever dispatches
+// (an empty rawValue is how clearing a box is spelled, so there is no
+// separate clear action to guard). Widened back to resultSaved, an app
+// could put a height or a time on the board that no server ever recorded.
+const EXPECTED_TEST_RESULTS_ACTIONS = ["fetchResults", "saveResult"].sort();
+
+// The six read ducks below all come from the same createFetchDuck, so they
+// share one shape and one risk: widened back to `succeeded`, an app hands
+// the reducer data to fold straight into state with no server involved.
+// Each comment says what that fold would fake for that duck.
+
+// programYears.actions: an invented list of years, ids and dates.
+const EXPECTED_PROGRAM_YEARS_ACTIONS = ["fetch"];
+// programYear.actions: invented blocks, areas, patches or test dates for
+// the one year on screen.
+const EXPECTED_PROGRAM_YEAR_ACTIONS = ["fetch"];
+// plan.actions: an invented month's worth of weeks and day cards.
+const EXPECTED_PLAN_ACTIONS = ["fetch"];
+// week.actions: an invented week, including the budget Teddy's own effort
+// count gets checked against.
+const EXPECTED_WEEK_ACTIONS = ["fetch"];
+// drills.actions: an invented drill, cue or alias in the glossary Teddy and
+// Jeff both search mid-session.
+const EXPECTED_DRILLS_ACTIONS = ["fetch"];
+// progression.actions: an invented rank, height or cross-year record.
+const EXPECTED_PROGRESSION_ACTIONS = ["fetch"];
+
 describe("the public surface", () => {
   const parsed = exportedNamesOf(INDEX_PATH);
 
@@ -256,6 +295,51 @@ describe("the public surface", () => {
     // the server never sent.
     expect(Object.keys(core.journalActions)).toHaveLength(6);
     expect(Object.keys(core.journalActions).sort()).toEqual(EXPECTED_JOURNAL_ACTIONS);
+  });
+
+  it("narrows authActions to exactly the actions an app dispatches", () => {
+    expect(Object.keys(core.authActions)).toHaveLength(3);
+    expect(Object.keys(core.authActions).sort()).toEqual(EXPECTED_AUTH_ACTIONS);
+  });
+
+  it("narrows outboxActions to exactly the actions an app dispatches", () => {
+    expect(Object.keys(core.outboxActions)).toHaveLength(1);
+    expect(Object.keys(core.outboxActions).sort()).toEqual(EXPECTED_OUTBOX_ACTIONS);
+  });
+
+  it("narrows testResultsActions to exactly the actions an app dispatches", () => {
+    expect(Object.keys(core.testResultsActions)).toHaveLength(2);
+    expect(Object.keys(core.testResultsActions).sort()).toEqual(EXPECTED_TEST_RESULTS_ACTIONS);
+  });
+
+  it("narrows programYears.actions to exactly the actions an app dispatches", () => {
+    expect(Object.keys(core.programYears.actions)).toHaveLength(1);
+    expect(Object.keys(core.programYears.actions).sort()).toEqual(EXPECTED_PROGRAM_YEARS_ACTIONS);
+  });
+
+  it("narrows programYear.actions to exactly the actions an app dispatches", () => {
+    expect(Object.keys(core.programYear.actions)).toHaveLength(1);
+    expect(Object.keys(core.programYear.actions).sort()).toEqual(EXPECTED_PROGRAM_YEAR_ACTIONS);
+  });
+
+  it("narrows plan.actions to exactly the actions an app dispatches", () => {
+    expect(Object.keys(core.plan.actions)).toHaveLength(1);
+    expect(Object.keys(core.plan.actions).sort()).toEqual(EXPECTED_PLAN_ACTIONS);
+  });
+
+  it("narrows week.actions to exactly the actions an app dispatches", () => {
+    expect(Object.keys(core.week.actions)).toHaveLength(1);
+    expect(Object.keys(core.week.actions).sort()).toEqual(EXPECTED_WEEK_ACTIONS);
+  });
+
+  it("narrows drills.actions to exactly the actions an app dispatches", () => {
+    expect(Object.keys(core.drills.actions)).toHaveLength(1);
+    expect(Object.keys(core.drills.actions).sort()).toEqual(EXPECTED_DRILLS_ACTIONS);
+  });
+
+  it("narrows progression.actions to exactly the actions an app dispatches", () => {
+    expect(Object.keys(core.progression.actions)).toHaveLength(1);
+    expect(Object.keys(core.progression.actions).sort()).toEqual(EXPECTED_PROGRESSION_ACTIONS);
   });
 
   it("exports no default, so imports stay explicit and greppable", () => {
