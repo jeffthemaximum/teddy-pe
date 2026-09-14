@@ -76,3 +76,59 @@ button:disabled {
 .error {
   color: #a02020;
 }
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.app-header__name {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.app-header button,
+.error-boundary button {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--border);
+}
+
+.app-nav {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+
+.app-nav a {
+  display: block;
+  padding: 0.9rem 1.1rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 600;
+  min-height: 44px;
+  min-width: 44px;
+  text-align: center;
+}
+
+.app-nav a.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.error-boundary {
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: #fff;
+}
