@@ -54,14 +54,18 @@ If the program itself needs changing while the rewrite is in flight (a new month
 
 - **Sep 15 to 17: record the baseline.** Open This Week, pick Baseline in the test sheet, type the numbers. They save as you go and the Year tab starts charting immediately. This now happens on the new site, https://teddy-pe-mlfs.vercel.app.
 
-- **Phase 3 is built and has been through its final fix round.** The survey, both migrators, the verifier and the three rake tasks that read the old Neon tables and copy them into Rails. `backend/` stands at 301 examples. A whole-branch review returned "not safe to run against production data" and the seven findings are closed:
+- **Phase 3 is done. The migration ran against production on 14 September and the old pipeline is deleted.** The survey found the legacy tables were not on the Rails connection at all, which is exactly the Critical the final review caught: without that fix `legacy:verify` would have printed "Safe to delete the old pipeline" against a database that never held the rows. `LEGACY_DATABASE_URL` then pointed at database `neondb` on the same Neon host and the survey found one diary entry and one test result, with nothing unmapped. Both migrated and `legacy:verify` read clean, field by field. That the whole year came to two rows was not known until the survey ran, which is why the survey exists and why it writes nothing.
+
+  The deletion is `feature/phase-3-cutover`. The legacy tables `diary_entry` and `test_result` in `neondb` were left alone and stay as a backstop. See `docs/history/2026-09-14-phase-3-cutover.md`.
+
+  The fix round that got it there: `backend/` stands at 305 examples. A whole-branch review returned "not safe to run against production data" and the seven findings are closed:
 
   - A legacy table that is not on the connection used to read as clean, so `legacy:verify` would have printed "Safe to delete the old pipeline" while nothing had been compared to anything. That is what an unset `LEGACY_DATABASE_URL` looks like, one step before the only copy is deleted. Every task now names the table and `legacy:verify` exits 1.
   - The journal migrator wrote over entries the new site already held, a `nil` over a note Jeff typed included, and over drill ratings. It now declines and reports which fields disagree, the way the result migrator already did.
   - The verifier looked entries up by date alone while the unique index is (user, program year, date), so a run with the wrong `COACH_EMAIL` left two complete sets and it picked one. `legacy:verify` now takes `COACH_EMAIL=` too.
   - The verifier compared no drill ratings at all, and `DIARY_FIELDS` and the migrator's carried list were two hand-written lists with nothing asserting they agree. Both closed.
 
-  See `docs/decisions.md` for the rulings and `.superpowers/sdd/2026-09-14-phase-3-migration-and-cutover/` for the briefs and reports. The cutover runbook is Task 5 of `docs/superpowers/plans/2026-09-14-phase-3-migration-and-cutover.md`. Nothing has been run against production and nothing has been deleted. Jeff merges.
+  See `docs/decisions.md` for the rulings and `.superpowers/sdd/2026-09-14-phase-3-migration-and-cutover/` for the briefs and reports. The cutover runbook is Task 5 of `docs/superpowers/plans/2026-09-14-phase-3-migration-and-cutover.md`. Jeff merges, and not before the Vercel project is repointed at `web/`.
 
 - **Phase 2a is built: `core/`, the package both apps import.** Ten ducks, 176 tests, on the same branch. It holds every piece of state logic the web app and the native app share, so neither writes its own. Its whole-branch review found three Criticals, all fixed: every journal save would have returned 400 for a missing `program_year_id`, the journal stored the API's envelope instead of the entry, and a write queued offline by Teddy would have replayed under Jeff's token on the shared iPad and was readable by him while it waited. See `docs/decisions.md` for the four rulings and `docs/history/2026-09-14-core-package.md` for the account.
 

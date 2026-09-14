@@ -377,3 +377,13 @@ A whole-branch review of the legacy migration returned "not safe to run against 
 - **No client-side rule to match.** Neither `web/` nor `core/` validates length, so the server is the only place the number lives and there is no second copy to drift.
 - **The reset waits for the deploy.** A `rails runner` on the Fly machine runs the deployed code, so resetting to a 7-character password before this ships raises `RecordInvalid`. Merge, deploy, then reset, in that order.
 - **Everyone signs out.** The JWT carries a fingerprint of the password digest (`api_controller.rb`), so every token on every device dies at the reset and all three sign in again. That is the design working, not a side effect to route around.
+
+## 2026-09-14 (Phase 3, cutover): what the migration actually found
+
+**The legacy tables were not on the Rails connection.** The first survey against production reported both `diary_entry` and `test_result` missing. That is the Critical the final review caught, arriving in real life a few hours after it was fixed: with the old behaviour, an absent table read as an empty one, and `legacy:verify` would have printed "Safe to delete the old pipeline" against a database that had never held a single row. The next step after that message is permanent deletion. The gate did its job and said which tables and where to point.
+
+**`LEGACY_DATABASE_URL` points at `neondb` on the same Neon host.** The old Vercel functions wrote to a second database sitting on the same Neon host the Rails app already uses. Worth writing down because the two connection strings look nearly identical and differ in one path segment, so an eye that skims them reads them as the same string.
+
+**The whole year came to two rows: one diary entry and one test result.** Nothing unmapped, no conflicts, both migrated, `legacy:verify` clean field by field including drill ratings. The volume was not known until the survey ran. That is the argument for the survey existing and for it writing nothing: the plan was written against a year of records and the honest answer was two, and nobody could have known which without looking first. A migration that had gone straight to writing would have been just as correct here and would have taught nothing about the case where the answer is not two.
+
+**The old rows stay.** `diary_entry` and `test_result` in `neondb` were not dropped and are not on anyone's list to drop. Deleting repository files is reversible through git history; dropping the only copy of a row is not. They cost nothing sitting there and they are the backstop if the migrated values are ever doubted.
