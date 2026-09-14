@@ -209,6 +209,33 @@ describe("the journal reducer", () => {
     expect(after.athlete["2026-09-17"]!.shared).toBe(true);
   });
 
+  // A stamp that is a string but does not parse ("not-a-date") passes
+  // isEntry (api.ts checks only that updated_at is typeof "string") and then
+  // reaches this fold. Treated as absent: it can never be shown to be newer
+  // than anything, so it never wins.
+  it("never lets a copy with an updated_at that does not parse replace a copy already held", () => {
+    const held = reducer(undefined, actions.athleteEntrySaved(mine));
+    // Lexically, "not-a-date" sorts after every real ISO stamp, which is
+    // exactly the bug: a garbage string used to win on `>` alone.
+    const withGarbage = reducer(
+      held,
+      actions.athleteEntriesFetched([
+        { ...mine, note: "should not survive", updated_at: "not-a-date" },
+      ]),
+    );
+    expect(withGarbage.athlete["2026-09-17"]).toEqual(mine);
+  });
+
+  it("never files a copy with an updated_at that does not parse at all, even as the first one on record for that date", () => {
+    // Absent all the way: a stamp this app cannot order against anything is
+    // not one it keeps on the strength of being first, either.
+    const s = reducer(
+      undefined,
+      actions.athleteEntriesFetched([{ ...mine, updated_at: "not-a-date" }]),
+    );
+    expect(s.athlete["2026-09-17"]).toBeUndefined();
+  });
+
   it("clears only the failing side's spinner, and says what went wrong", () => {
     const loading = reducer(undefined, actions.fetchCoachEntries());
     const failed = reducer(

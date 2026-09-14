@@ -60,6 +60,16 @@ function fold<T extends { session_date: string; updated_at: string }>(
   map: Record<string, T>,
   entry: T,
 ): Record<string, T> {
+  // A stamp that does not parse is treated as absent, the same way a
+  // missing one already is before this function ever sees it: isEntry
+  // (api.ts) checks only that `updated_at` is a string, not that the string
+  // means anything, so "not-a-date" reaches here. Without this guard it
+  // sorts lexically after every real ISO stamp ("not-a-date" > "2026-09-17T
+  // ...") and silently replaces a good entry with garbage. Absent means it
+  // never wins and never even becomes the first copy on record for a date
+  // that has none yet: an entry this app cannot order against anything is
+  // not one it can trust enough to keep either.
+  if (Number.isNaN(Date.parse(entry.updated_at))) return map;
   const held = map[entry.session_date];
   if (held && held.updated_at > entry.updated_at) return map;
   return { ...map, [entry.session_date]: entry };
