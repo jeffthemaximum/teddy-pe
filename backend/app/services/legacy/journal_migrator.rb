@@ -11,6 +11,7 @@ module Legacy
       @coach = coach
       @skipped = []
       @dropped_ratings = []
+      @failed = []
     end
 
     def run!
@@ -22,12 +23,12 @@ module Legacy
         migrated += 1 if migrate(row)
       end
 
-      { migrated: migrated, skipped: @skipped, dropped_ratings: @dropped_ratings }
+      { migrated: migrated, skipped: @skipped, dropped_ratings: @dropped_ratings, failed: @failed }
     end
 
     private
 
-    def empty_report = { migrated: 0, skipped: [], dropped_ratings: [] }
+    def empty_report = { migrated: 0, skipped: [], dropped_ratings: [], failed: [] }
 
     def migrate(row)
       year = year_for(row.session_date)
@@ -36,15 +37,26 @@ module Legacy
         return false
       end
 
-      entry = CoachEntry.upsert_for(
-        user: @coach, program_year: year, session_date: row.session_date,
-        attrs: carried(row), ratings: known_ratings(row),
-      )
-      # created_at is a fact about when Jeff wrote it, and upsert_for has no
-      # way to be told. Set it afterwards, without touching updated_at, which
-      # honestly describes when this row was last written.
-      entry.update_column(:created_at, row.created_at) if row.created_at.present?
-      true
+      begin
+        entry = CoachEntry.upsert_for(
+          user: @coach, program_year: year, session_date: row.session_date,
+          attrs: carried(row), ratings: known_ratings(row),
+        )
+        # created_at is a fact about when Jeff wrote it, and upsert_for has no
+        # way to be told. Set it afterwards, without touching updated_at, which
+        # honestly describes when this row was last written.
+        entry.update_column(:created_at, row.created_at) if row.created_at.present?
+        true
+      rescue StandardError => e
+        # A legacy row can carry a value a validation added after it was
+        # written would now reject (overall/energy out of 1..5, a rating
+        # outside not_yet/getting/owns). One bad row is not a reason to
+        # lose every row after it: record it and keep going. Rescuing
+        # StandardError, not Exception, so a real bug in this migrator
+        # still surfaces here rather than vanishing silently.
+        @failed << { session_date: row.session_date, error: e.message }
+        false
+      end
     end
 
     # dow, plan_month, week and device are deliberately not here. They are

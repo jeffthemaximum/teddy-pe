@@ -104,6 +104,44 @@ RSpec.describe Legacy::JournalMigrator, :legacy do
     expect(DrillRating.count).to eq(1)
   end
 
+  # api/diary.js validated overall/energy at write time, not at every point
+  # since, so a row written before a validation existed can carry a value
+  # CoachEntry now rejects. One bad row must not cost every row after it:
+  # this is the difference between "the bad row was handled" (the first
+  # expectation) and "the bad row did not stop the run" (the second, which
+  # is what the fix is actually about). The bad row is dated earlier so
+  # run!'s session_date ordering puts it first.
+  it "reports a row CoachEntry rejects instead of losing every row after it" do
+    year
+    insert_diary(date: "2026-09-15", overall: 9)
+    insert_diary(date: "2026-09-16", note: "Still good.")
+
+    report = described_class.new(coach: coach).run!
+
+    failed = report[:failed]
+    expect(failed.size).to eq(1)
+    expect(failed.first[:session_date]).to eq(Date.new(2026, 9, 15))
+    expect(failed.first[:error]).to be_a(String).and be_present
+
+    good_entry = CoachEntry.find_by(session_date: Date.new(2026, 9, 16))
+    expect(good_entry).to be_present
+    expect(good_entry.note).to eq("Still good.")
+  end
+
+  it "reports a rating value the schema does not permit instead of raising" do
+    year
+    create(:drill, slug: "wall-rally")
+    insert_diary(date: "2026-09-16", ratings: { "wall-rally" => "amazing" })
+
+    report = described_class.new(coach: coach).run!
+
+    expect(report[:failed].size).to eq(1)
+    expect(report[:failed].first[:session_date]).to eq(Date.new(2026, 9, 16))
+    expect(report[:failed].first[:error]).to be_a(String).and be_present
+    expect(CoachEntry.count).to eq(0)
+    expect(DrillRating.count).to eq(0)
+  end
+
   it "links the day card when the date has one" do
     year
     card = create(:day_card, date: "2026-09-16", program_year: year)
