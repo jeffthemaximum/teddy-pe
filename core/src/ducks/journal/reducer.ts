@@ -1,21 +1,75 @@
 import * as t from "./actionTypes";
-import type { JournalAction } from "./actions";
+import type { JournalAction, JournalSide } from "./actions";
 import type { AthleteEntry, CoachEntry } from "../../types";
 
 export interface JournalState {
   coach: Record<string, CoachEntry>;
   athlete: Record<string, AthleteEntry>;
   saving: Record<string, boolean>;
+  // One flag per side, not one for the journal as a whole: the two lists
+  // come from two endpoints with two policies, and a coach screen loading
+  // both must be able to show one arriving without the other.
+  loading: Record<JournalSide, boolean>;
   error: string | null;
 }
 
-const initialState: JournalState = { coach: {}, athlete: {}, saving: {}, error: null };
+const initialState: JournalState = {
+  coach: {},
+  athlete: {},
+  saving: {},
+  loading: { athlete: false, coach: false },
+  error: null,
+};
 
 function clearSaving(saving: Record<string, boolean>, date: string): Record<string, boolean> {
   if (!(date in saving)) return saving;
   const next = { ...saving };
   delete next[date];
   return next;
+}
+
+function setLoading(
+  loading: JournalState["loading"],
+  side: JournalSide,
+  value: boolean,
+): JournalState["loading"] {
+  if (loading[side] === value) return loading;
+  return { ...loading, [side]: value };
+}
+
+// THE ONE RULE FOR WHERE A JOURNAL ENTRY LIVES.
+//
+// An entry reaches this app three ways: a save response, an index fetch, and
+// inline on the week payload's day cards. Those are three copies of one row,
+// and the package has already been bitten three times by one thing living in
+// two places, so there is exactly one home for an entry: this slice, keyed by
+// `session_date`. The week payload's copy is not read by screens; the journal
+// saga folds it in here on `week/SUCCEEDED` and screens read
+// `selectAthleteEntryFor(date)`. Nothing else compares, merges or prefers.
+//
+// Which copy wins when two arrive is decided here and only here: the one the
+// server stamped later. `updated_at` is an ISO 8601 UTC string from the same
+// serializer on every path, so a lexical compare orders them correctly. Ties
+// go to the copy arriving now, so a save response always lands even when it
+// is the same second as the row already held.
+//
+// This is what keeps a slow week fetch from undoing a save that finished
+// while it was in flight: that payload was built before the save, so it
+// carries the older timestamp and is refused.
+function fold<T extends { session_date: string; updated_at: string }>(
+  map: Record<string, T>,
+  entry: T,
+): Record<string, T> {
+  const held = map[entry.session_date];
+  if (held && held.updated_at > entry.updated_at) return map;
+  return { ...map, [entry.session_date]: entry };
+}
+
+function foldAll<T extends { session_date: string; updated_at: string }>(
+  map: Record<string, T>,
+  entries: T[],
+): Record<string, T> {
+  return entries.reduce(fold, map);
 }
 
 export function reducer(
@@ -41,15 +95,18 @@ export function reducer(
     }
 
     case t.ATHLETE_ENTRY_SAVED: {
-      // Filed under its own `session_date`, replacing whatever was there. The
-      // API upserts on (user, program_year, date), so two saves of one day
-      // are one entry, never two. `shared` is kept exactly as the API sent
-      // it back: this reducer never computes it.
+      // Folded under its own `session_date`, by the rule above. The API
+      // upserts on (user, program_year, date), so two saves of one day are
+      // one entry, never two. `shared` is kept exactly as the API sent it
+      // back: this reducer never computes it.
+      //
+      // `saving` clears whether or not the fold kept this copy. The day is
+      // not still saving either way; the request came back.
       const entry = (action as Extract<JournalAction, { type: typeof t.ATHLETE_ENTRY_SAVED }>)
         .payload;
       return {
         ...state,
-        athlete: { ...state.athlete, [entry.session_date]: entry },
+        athlete: fold(state.athlete, entry),
         saving: clearSaving(state.saving, entry.session_date),
       };
     }
@@ -59,9 +116,53 @@ export function reducer(
         .payload;
       return {
         ...state,
-        coach: { ...state.coach, [entry.session_date]: entry },
+        coach: fold(state.coach, entry),
         saving: clearSaving(state.saving, entry.session_date),
       };
+    }
+
+    case t.FETCH_ATHLETE_ENTRIES:
+      return { ...state, loading: setLoading(state.loading, "athlete", true), error: null };
+
+    case t.FETCH_COACH_ENTRIES:
+      return { ...state, loading: setLoading(state.loading, "coach", true), error: null };
+
+    case t.ATHLETE_ENTRIES_FETCHED: {
+      // The same fold, so a list arriving after a save cannot roll that save
+      // back. This is also the action the week payload's inline entries come
+      // in through (see sagas.ts), which is why the rule has one home.
+      const entries = (
+        action as Extract<JournalAction, { type: typeof t.ATHLETE_ENTRIES_FETCHED }>
+      ).payload;
+      return {
+        ...state,
+        athlete: foldAll(state.athlete, entries),
+        loading: setLoading(state.loading, "athlete", false),
+      };
+    }
+
+    case t.COACH_ENTRIES_FETCHED: {
+      const entries = (action as Extract<JournalAction, { type: typeof t.COACH_ENTRIES_FETCHED }>)
+        .payload;
+      return {
+        ...state,
+        coach: foldAll(state.coach, entries),
+        loading: setLoading(state.loading, "coach", false),
+      };
+    }
+
+    case t.FETCH_ENTRIES_FAILED: {
+      const { side, message } = (
+        action as Extract<JournalAction, { type: typeof t.FETCH_ENTRIES_FAILED }>
+      ).payload;
+      return { ...state, loading: setLoading(state.loading, side, false), error: message };
+    }
+
+    case t.FETCH_ENTRIES_SKIPPED: {
+      // Nothing went out, so nothing failed. Only the flag goes back.
+      const { side } = (action as Extract<JournalAction, { type: typeof t.FETCH_ENTRIES_SKIPPED }>)
+        .payload;
+      return { ...state, loading: setLoading(state.loading, side, false) };
     }
 
     case t.SAVE_QUEUED: {

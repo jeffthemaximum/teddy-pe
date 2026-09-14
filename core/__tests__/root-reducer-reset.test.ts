@@ -56,6 +56,7 @@ function populate(store: ReturnType<typeof buildStore>) {
   // other does.
   store.dispatch(
     journalActions.saveCoachEntry({
+      programYearId: 1,
       date: "2026-09-18",
       note: null,
       overall: null,
