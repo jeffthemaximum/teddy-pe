@@ -135,6 +135,25 @@ describe("apiRequest", () => {
     expect(result).toBeUndefined();
   });
 
+  it("still throws on an error status with an empty body, rather than resolving", async () => {
+    // The empty-body branch above only skips parsing when response.ok is
+    // true. A 500 with nothing in it (a crashed server, no envelope to
+    // unwrap) must still surface as a failure with its real status, not be
+    // treated the same as a 204's "nothing to parse, nothing wrong."
+    jest
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(() => respondWithText(500, ""));
+
+    const err = await apiRequest<never>(config, {
+      path: "/api/v1/journal",
+      method: "POST",
+      body: {},
+    }).catch((e) => e);
+
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err.status).toBe(500);
+  });
+
   it("gives up after the configured timeout and says so", async () => {
     jest.useFakeTimers();
     jest.spyOn(globalThis, "fetch").mockImplementation(

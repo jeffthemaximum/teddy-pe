@@ -71,6 +71,9 @@ export async function apiRequest<T>(
   // broken. response.json() rejects on both, which is exactly the bug: a
   // successful, empty delete looked identical to a sleeping proxy handing
   // back garbage.
+  // A mocked Response in a test must implement .text(), not .json(): a
+  // fixture with only .json() fails here with "text is not a function",
+  // which reads as a bug in this client rather than in the fixture.
   let text: string;
   try {
     text = await response.text();
