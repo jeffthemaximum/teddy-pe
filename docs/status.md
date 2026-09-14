@@ -24,7 +24,7 @@ Update this file whenever something is built, decided, or left open. It is the f
 
 - `main`: everything below the rewrite. Nine areas, the glossary, the diary, test results and the progress chart. This is what Vercel serves and it stays untouched until Jeff merges the rewrite.
 - `feature/ball-sports-and-mindset` and `feature/drill-glossary-and-coach-diary`: merged and stale. Tidying them is Jeff's call, not part of the rewrite.
-- **`feature/rails-react-rewrite`: the rewrite in flight.** Rails 8 API, React web app, React Native app, replacing `build.py`, the single HTML page, the four Vercel functions and the shared passphrase. Spec and the Phase 1 plan are written; no code yet. Works in a git worktree at `.claude/worktrees/feature+rails-react-rewrite`.
+- **`feature/rails-react-rewrite`: the rewrite in flight.** Rails 8 API, React web app, React Native app, replacing `build.py`, the single HTML page, the four Vercel functions and the shared passphrase. Works in a git worktree at `.claude/worktrees/feature+rails-react-rewrite`. **Phase 1 is built, deployed and reviewed.** The API lives in `backend/` and runs at `https://teddy-pe-api.fly.dev`. The whole branch was reviewed as one thing at `.superpowers/sdd/2026-09-13-phase-1-rails-api/final-review.md`, and Jeff's ten fixes off that review are done and reported alongside it. Phases 2 to 4 are not started.
 
 ## The rewrite
 
@@ -54,6 +54,6 @@ If the program itself needs changing while the rewrite is in flight (a new month
 
 - **Sep 15 to 17: record the baseline.** Open This Week, pick Baseline in the test sheet, type the numbers. They save to the database as you go and the Year tab starts charting immediately. This happens on the current site, off `main`. The rewrite does not touch it, and Phase 3 migrates these rows across with a count and a spot check before anything is dropped.
 
-- **The rewrite: Jeff reviews the Phase 1 plan, then Phase 1 gets built.** The gate report he gets at the end of it is listed at the bottom of the plan: branch diff, full test output, the `hie` table for his correction, measured cold start, verified monthly cost against prices published that day, and what an unauthenticated visitor can see.
+- **The rewrite: Jeff reviews Phase 1 and merges, or sends it back.** The API is built, live and reviewed, and the ten fixes he picked off the review are in. The suite is 218 examples, 0 failures, and all three CI jobs are green, which two of them were not when the review was written. Still his to decide at the gate: the `hie` numbers on the 21 September day cards, which satisfy every rule in `CLAUDE.md` but were chosen by Claude and are corrections rather than approvals; and the Rails 8.1 upgrade, which needs a `bundle update` and a deploy and is due before 2026-11-07. The suite fails on that date if it has not happened.
 
 - October view (Cub weeks 4 to 8: Upside Down, Skip & Bound, Turn, Reactor, Cub Trials) and Week 2 daily cards. Pull the diary first, then write `data/plans/2026-10.json`, add glossary entries for the drills October introduces (wall handstand, A-skip, laces pass, med ball hip throw, inside hook turn, reaction starts, low bounds, pull-backs), point `data/current.json` at it, run `python3 build.py`.

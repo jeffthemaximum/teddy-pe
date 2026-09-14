@@ -154,3 +154,27 @@ A record of the planning conversation, the pushbacks, and what Jeff decided. New
 - The `hie` table, for Jeff's correction at the Phase 1 gate.
 - Actual hosting cost and measured cold start, to be verified at the Phase 1 gate against prices published then rather than quoted from the brief.
 - What an unauthenticated visitor can see once the bundle is public, to be demonstrated at the Phase 2 gate. Privacy moves entirely to the API, since a decoupled SPA has a readable bundle by definition.
+
+## 2026-09-13 (late): the whole-branch review, and the ten fixes off it
+
+**What Jeff asked.** Phase 1 was reviewed as one thing rather than task by task. He picked ten findings off the review and ruled on the shape where the shape mattered. Full account in `docs/history/2026-09-13-final-review-fixes.md`.
+
+**Decisions made this session.**
+
+- **Every looping example in `content_spec.rb` counts what it reached** and asserts that count against a total taken from the content. Two of them had been passing while checking nothing, the thirteenth and fourteenth on this project, in the file that encodes the rules of the program. A tally does not make an assertion stronger; it makes the absence of one loud.
+- **The week 8 Trials rule is written both ways round.** "Week 8 is Trials" has no subject until a block is eight weeks long in the files, which is why it sat green and empty. "No other week is Trials" has every authored week as its subject and turns into the positive form by itself when week 8 lands.
+- **The seeder prunes, and only inside the year being seeded.** Month plans, weeks, day cards, day blocks, area cells and ball gates. Never blocks, areas, patches, test dates, drills, battery tests or battery measures: each has a row of Jeff's or Teddy's pointing at it, and `BatteryMeasure` declares `dependent: :destroy` on its test results, so pruning one measure would delete Teddy's numbers on the strength of a YAML edit. Deleting one of those is a migration Jeff writes and looks at, not a side effect of a deploy.
+- **A day card that Teddy journalled about can still be removed from the YAML.** `DayCard` declares `dependent: :nullify` on both journals, so the entry keeps every word and lets go of its `day_card_id`. Nothing reads an entry by that column: the API addresses entries by (user, year, session date), so the entry still reads back on its own day and relinks on the next write to it.
+- **Rails 8.0's end of life is recorded as a dated test rather than only as a brakeman ignore.** The ignore cannot expire on its own, because brakeman fingerprints a warning from its code, file and confidence and never from its message, so it would have silenced the same warning for Rails 8.1 too. `spec/rails_version_spec.rb` holds the maintenance dates and fails on 2026-11-07 if the app is still on 8.0.
+- **Ten login attempts every three minutes, by address**, counted by attempt rather than by failure, expiring on its own. A throttle that does not let go locks Jeff out of his own son's program over one bad afternoon. The test environment moved to `memory_store` so the suite actually exercises it.
+- **`updated_at` rides on every journal and test-result payload.** Phase 2's offline queue gets the option of noticing it is about to overwrite something newer. Nothing has to use it yet.
+
+**Found while fixing, and not in the review.**
+
+- **`/healthz` was not checking the database at all.** It is the OkComputer engine root, and the root runs the check named "default" and no other. The database check was registered as "database", so it sat on `/healthz/database`. With the database completely unreachable, `/healthz` answered 200 "Application is running". That is the path Fly polls every 30 seconds and the path the release command gates on. `fly.toml`'s comment claiming the health check asks the database a question was false until this session.
+- **The Year tab and the Progression tab could disagree about Teddy's growth pace**, which is the trigger for halving jumping and sprinting for 8 to 12 weeks. They sorted the same rows differently and agreed only because the 2026-27 test windows happen to run in the same order as their positions.
+
+**Open.**
+
+- The Rails 8.1 upgrade. Needs `bundle update rails` and a deploy, both Jeff's. Due before 2026-11-07 and the suite will say so.
+- Most of the review's 22 minor findings, and five of its twelve important ones. Named at the end of the history file. The ones worth a decision: nothing can delete a journal entry, `test_results#index` returns every athlete's rows, and there is no `after_action :verify_authorized`.
