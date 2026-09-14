@@ -59,6 +59,27 @@ describe("the outbox saga", () => {
     expect(notes).toEqual(["first", "second"]);
   });
 
+  it("carries the write's dedupeKey and the server's response through on success", async () => {
+    // The outbox's own reducer only needs the queue id to drop a landed
+    // write, but the duck that enqueued it does not know that id: it knows
+    // its own dedupeKey. Without both, a duck has no way to learn a
+    // server-assigned id or updated_at for an entry created offline.
+    jest.spyOn(client, "apiRequest").mockResolvedValue({ id: 501, updated_at: "2026-09-17T18:05:00Z" });
+    const h = harness([
+      { id: "1", action: write("day:2026-09-17", "first"), queuedAt: "2026-09-17T18:00:00Z", attempts: 0 },
+    ]);
+
+    await h.run(outboxWorkers.replay);
+
+    expect(h.dispatched).toContainEqual(
+      actions.replaySucceeded({
+        id: "1",
+        dedupeKey: "day:2026-09-17",
+        response: { id: 501, updated_at: "2026-09-17T18:05:00Z" },
+      }),
+    );
+  });
+
   it("stops at the first offline failure instead of failing the whole queue", async () => {
     // Three queued writes against a connection still down is three timeouts
     // at fifteen seconds each and the same outcome as stopping at one.
@@ -128,6 +149,34 @@ describe("the outbox saga", () => {
     // Same reasoning as the session key: never wedge every launch forever.
     const storage = memoryStorage();
     await storage.setItem(QUEUE_KEY, "{not json");
+    const h = harness([], storage);
+
+    await h.run(outboxWorkers.restore);
+
+    expect(h.dispatched).toContainEqual(actions.queueRestored([]));
+    expect(await storage.getItem(QUEUE_KEY)).toBeNull();
+  });
+
+  it("survives a stored value that is valid JSON but not the shape of a queue", async () => {
+    // Parseable is not the same as usable. A plain object here would land in
+    // state.outbox.queue and the next ENQUEUE, REPLAY_SUCCEEDED or
+    // REPLAY_FAILED would call .findIndex/.filter/.map on it and throw,
+    // wedging the outbox exactly as permanently as unparseable JSON does.
+    const storage = memoryStorage();
+    await storage.setItem(QUEUE_KEY, JSON.stringify({ foo: "bar" }));
+    const h = harness([], storage);
+
+    await h.run(outboxWorkers.restore);
+
+    expect(h.dispatched).toContainEqual(actions.queueRestored([]));
+    expect(await storage.getItem(QUEUE_KEY)).toBeNull();
+  });
+
+  it("survives a stored queue whose entries are malformed", async () => {
+    // The shape a partial or interrupted write actually produces: an array,
+    // but one whose entries are missing what a QueuedWrite needs.
+    const storage = memoryStorage();
+    await storage.setItem(QUEUE_KEY, JSON.stringify([{ foo: "bar" }]));
     const h = harness([], storage);
 
     await h.run(outboxWorkers.restore);

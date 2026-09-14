@@ -11,8 +11,16 @@ export const enqueue = (action: QueueableAction) =>
 // payload: the saga reads the current queue itself.
 export const replay = () => ({ type: t.REPLAY }) as const;
 
-export const replaySucceeded = (id: string) =>
-  ({ type: t.REPLAY_SUCCEEDED, payload: id }) as const;
+// Carries the queue id (so the outbox itself can remove the write), the
+// write's own `dedupeKey` (so whatever duck enqueued it can recognize which
+// of its own local records this was, since the queue id is the outbox's own
+// bookkeeping and never reaches the duck otherwise), and the raw response
+// body apiRequest resolved with. The outbox does not look inside `response`;
+// it is forwarded verbatim, the same way `request` was, so a duck can
+// reconcile a server-assigned id or updated_at on an entry that was created
+// offline without a second round trip to re-fetch it.
+export const replaySucceeded = (info: { id: string; dedupeKey: string; response: unknown }) =>
+  ({ type: t.REPLAY_SUCCEEDED, payload: info }) as const;
 
 export const replayFailed = (info: { id: string; permanent: boolean }) =>
   ({ type: t.REPLAY_FAILED, payload: info }) as const;

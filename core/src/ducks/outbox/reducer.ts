@@ -55,7 +55,10 @@ export function reducer(
       return { ...state, replaying: true };
 
     case t.REPLAY_SUCCEEDED: {
-      const id = (action as Extract<OutboxAction, { type: typeof t.REPLAY_SUCCEEDED }>).payload;
+      // `dedupeKey` and `response` on this payload are for whichever duck
+      // enqueued the write to read; the outbox itself only needs `id` to
+      // take the write off its own queue.
+      const { id } = (action as Extract<OutboxAction, { type: typeof t.REPLAY_SUCCEEDED }>).payload;
       const queue = state.queue.filter((w) => w.id !== id);
       return { ...state, queue, replaying: queue.length > 0 ? state.replaying : false };
     }

@@ -70,14 +70,33 @@ describe("the outbox reducer", () => {
 
   it("keeps writes for different days separately", () => {
     const a = reducer(undefined, actions.enqueue(testWrite("day:2026-09-17", "x")));
-    const b = reducer(a, actions.enqueue(testWrite("day:2026-09-18", "x")));
+    const b = reducer(a, actions.enqueue(testWrite("day:2026-09-18", "y")));
     expect(b.queue).toHaveLength(2);
+    // Length alone would also pass a coincidental duplication bug. Naming
+    // which two entries survived, and in which order, is what rules that out.
+    expect(b.queue.map((w) => w.action.dedupeKey)).toEqual(["day:2026-09-17", "day:2026-09-18"]);
+    expect(b.queue.map((w) => (w.action.payload as { note: string }).note)).toEqual(["x", "y"]);
   });
 
   it("takes a write off the queue when it lands", () => {
     const queued = reducer(undefined, actions.enqueue(testWrite("day:2026-09-17", "x")));
-    const done = reducer(queued, actions.replaySucceeded(queued.queue[0]!.id));
+    const write = queued.queue[0]!;
+    const done = reducer(
+      queued,
+      actions.replaySucceeded({ id: write.id, dedupeKey: write.action.dedupeKey, response: {} }),
+    );
     expect(done.queue).toHaveLength(0);
+  });
+
+  it("clears replaying when the replay loop stops at a failure", () => {
+    // A UI reading this flag to show a syncing spinner needs it to come back
+    // down when the loop actually stops, not just to go up when it starts.
+    const queued = reducer(undefined, actions.enqueue(testWrite("day:2026-09-17", "x")));
+    const id = queued.queue[0]!.id;
+    const started = reducer(queued, actions.replay());
+    expect(started.replaying).toBe(true);
+    const stopped = reducer(started, actions.replayFailed({ id, permanent: false }));
+    expect(stopped.replaying).toBe(false);
   });
 
   it("counts attempts, and drops a write the server permanently rejected", () => {

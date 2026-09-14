@@ -16,6 +16,27 @@ function* persist() {
   yield call([config.storage, "setItem"], QUEUE_KEY, JSON.stringify(queue));
 }
 
+// Valid JSON is not enough: `JSON.stringify({foo:"bar"})` parses cleanly and
+// is still not a queue. Restoring it as one puts a plain object where every
+// other worker expects an array, and the next ENQUEUE, REPLAY_SUCCEEDED or
+// REPLAY_FAILED throws calling .findIndex/.filter/.map on it, wedging the
+// outbox exactly as permanently as a stored value that never parsed at all.
+// So shape is checked too, entry by entry, not just "is this an array".
+function isQueue(value: unknown): value is QueuedWrite[] {
+  return Array.isArray(value) && value.every(isQueuedWrite);
+}
+
+function isQueuedWrite(value: unknown): value is QueuedWrite {
+  if (typeof value !== "object" || value === null) return false;
+  const w = value as Partial<QueuedWrite>;
+  return (
+    typeof w.id === "string" &&
+    typeof w.action === "object" &&
+    w.action !== null &&
+    typeof w.attempts === "number"
+  );
+}
+
 function* restore() {
   const config: CoreConfig = yield getContext("config");
   const raw: string | null = yield call([config.storage, "getItem"], QUEUE_KEY);
@@ -24,8 +45,13 @@ function* restore() {
     return;
   }
   try {
-    const queue = JSON.parse(raw) as QueuedWrite[];
-    yield put(actions.queueRestored(queue));
+    const parsed: unknown = JSON.parse(raw);
+    if (!isQueue(parsed)) {
+      // Parsed fine, but it isn't a queue (or an entry in it is missing what
+      // every entry needs). Treated the same as unparseable JSON below.
+      throw new Error("stored outbox queue is not the shape of a queue");
+    }
+    yield put(actions.queueRestored(parsed));
   } catch {
     // Whatever is in there cannot be replayed. Clear it now rather than let
     // every future launch fail to parse it the same way forever: the same
@@ -42,8 +68,10 @@ function* replay() {
 
   for (const write of queue) {
     try {
-      yield call(apiRequest, config, { ...write.action.request, token });
-      yield put(actions.replaySucceeded(write.id));
+      const response: unknown = yield call(apiRequest, config, { ...write.action.request, token });
+      yield put(
+        actions.replaySucceeded({ id: write.id, dedupeKey: write.action.dedupeKey, response }),
+      );
     } catch (e) {
       if (isUnauthorized(e)) {
         // The token is dead, not the write. Leave it queued for the next
