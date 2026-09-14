@@ -91,7 +91,7 @@ export function Glossary() {
     return (
       <div className="glossary">
         <p className="glossary__empty">That link does not point to a drill on this list anymore.</p>
-        <button type="button" onClick={() => navigate("/glossary")}>
+        <button type="button" className="back-link" onClick={() => navigate("/glossary")}>
           Back to the list
         </button>
       </div>

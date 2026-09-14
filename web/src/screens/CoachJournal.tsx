@@ -362,7 +362,7 @@ export function CoachJournal() {
             <>
               <p>{DELETE_QUESTION}</p>
               <p>{DELETE_DETAIL}</p>
-              <button type="button" onClick={() => setConfirmingDelete(false)}>
+              <button type="button" className="keep" onClick={() => setConfirmingDelete(false)}>
                 {DELETE_CANCEL}
               </button>
               <button type="button" onClick={handleDelete} disabled={saving}>

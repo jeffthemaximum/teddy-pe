@@ -117,7 +117,12 @@ export function Year() {
               {blocks.map((block) => (
                 <li key={block.key}>
                   <strong>{block.name}</strong>
-                  {block.current && <span> Current block</span>}
+                  {block.current && (
+                    <>
+                      {" "}
+                      <span className="year__now">Current block</span>
+                    </>
+                  )}
                   <span className="year__block-dates">
                     {" "}
                     {block.starts_on} to {block.ends_on}
@@ -142,29 +147,31 @@ export function Year() {
 
           <section aria-labelledby="year-areas-heading">
             <h2 id="year-areas-heading">Coverage by section</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">Area</th>
-                  {blocks.map((block) => (
-                    <th scope="col" key={block.key}>
-                      {block.name}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {areas.map((area) => (
-                  <tr key={area.slug}>
-                    <th scope="row">{area.name}</th>
-                    {blocks.map((block) => {
-                      const cell = area.cells.find((c) => c.block_key === block.key);
-                      return <td key={block.key}>{cell?.body ?? ""}</td>;
-                    })}
+            <div className="scroll-x" tabIndex={0} role="group" aria-labelledby="year-areas-heading">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Area</th>
+                    {blocks.map((block) => (
+                      <th scope="col" key={block.key}>
+                        {block.name}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {areas.map((area) => (
+                    <tr key={area.slug}>
+                      <th scope="row">{area.name}</th>
+                      {blocks.map((block) => {
+                        const cell = area.cells.find((c) => c.block_key === block.key);
+                        return <td key={block.key}>{cell?.body ?? ""}</td>;
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
 
           <section aria-labelledby="year-patches-heading">
@@ -189,7 +196,12 @@ export function Year() {
                     {gate.from_ball} to {gate.to_ball}.
                   </span>
                   <span> Status: {gate.status}.</span>
-                  {gate.status === "active" && <span> Working on this now.</span>}
+                  {gate.status === "active" && (
+                    <>
+                      {" "}
+                      <span className="year__gate-now">Working on this now.</span>
+                    </>
+                  )}
                   <p>{gate.requirement}</p>
                 </li>
               ))}

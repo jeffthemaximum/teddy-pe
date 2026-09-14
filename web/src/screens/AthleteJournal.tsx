@@ -267,7 +267,7 @@ export function AthleteJournal() {
               <p>{DELETE_DETAIL}</p>
               {/* Keep it first, so the safe answer is the one under the
                   thumb that just tapped. */}
-              <button type="button" onClick={() => setConfirmingDelete(false)}>
+              <button type="button" className="keep" onClick={() => setConfirmingDelete(false)}>
                 {DELETE_CANCEL}
               </button>
               <button type="button" onClick={handleDelete} disabled={saving}>

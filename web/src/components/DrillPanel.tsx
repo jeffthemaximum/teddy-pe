@@ -13,7 +13,7 @@ export function DrillPanel({ drill, onClose }: { drill: Drill; onClose: () => vo
 
   return (
     <section aria-labelledby="drill-panel-heading" className="drill-panel">
-      <button type="button" onClick={onClose}>
+      <button type="button" className="back-link" onClick={onClose}>
         Back to the list
       </button>
 
