@@ -10,7 +10,7 @@ A quick view for his phone while he is out with Teddy: the day's activities, the
 
 The write-forms came out of the screens that already owned them (`CoachJournal`, `AthleteJournal`, `Tests`) and became components both the tab and Today render, rather than a second, hand-copied form living only on Today. `test_dates` gained real `starts_on` and `ends_on` columns, backed by a new selector in `core/`, `selectTestDayFor`, that answers "is today inside a window, and which day of it" from the two dates and today's ISO string, nothing else.
 
-Suites at the end: `backend/` 319 examples, `core/` 271 tests, `web/` 327 tests, all three clean and typechecking clean.
+Suites at the end of the twelve tasks: `backend/` 319 examples, `core/` 271 tests, `web/` 327 tests. After the fix wave below: 319, 272 and 340, all three clean and typechecking clean.
 
 ## The five choices he made
 
@@ -32,3 +32,14 @@ Save was offered to him as something that could become a no-op once autosave exi
 ## The deploy note
 
 Merging to `main` rebuilds the web app on Vercel by itself, but it does not deploy the Rails API. `test_dates.starts_on` and `.ends_on` only reach production when the seeder runs, and the seeder runs on a Fly deploy, not on a merge. So there is a real window after this lands where Today is live and correct and shows no test section at all, because the server it is talking to has not sent the two new fields yet. That is what Today is built to do when a test date is missing either one: no section, not a crash. `cd backend && fly deploy -a teddy-pe-api` is what closes the window, and it is Jeff's to run, from a checkout of `main`, after the merge.
+
+## The final review, and what it found
+
+The whole-branch review came back "not safe to merge" with two Criticals, and named the pattern behind both: every defect sat where the old screen owned something the extracted component does not.
+
+**A save response was wiping the field being typed into.** Both note forms reset from the store in an effect keyed on the stored entry. Save responses fold a new entry object into the slice, so the reset fired on a save the form itself had started. Before this branch a save only happened on a button press and the window was a fraction of a second. Autosave made it routine: tap a rating, keep writing, and the answer to that tap blanked the sentence. The athlete screen this replaced had an explicit guard with a comment saying exactly why, and the extraction dropped it. No test caught it because `web/vitest.setup.ts` stubs `fetch` to never resolve, so no suite had ever seen a save response reach the store. The four new tests dispatch the saved-entry action straight in.
+
+**An autosave after un-sharing re-sent `shared: true`.** The reducer did not record the tap, so `shared` went on reading the old value for as long as the request was out, and both the sentence telling Teddy who can see the day and every autosave of that day read it from there. Offline it was deterministic: the outbox's supersedes rule let the later save replace the un-share in place, so the un-share never reached the server at all. The fix is an optimistic case in the journal reducer, which reverses a ruling made when the toggle was built. `updated_at` is left alone, so the server still gets the last word.
+
+Five more findings, all fixed in the same wave: the measure display order had no test in either caller while two fixture comments claimed it did; `status.md` said Today showed the week's theme and it did not (the spec had asked for it, so the theme is rendered rather than the line corrected); Today had no message for a test window whose battery has no measures seeded; the spec over-listed the readers of the generated `display` column; and `context.md` still put the test sheet and the coach's diary on This Week.
+

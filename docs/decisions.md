@@ -433,3 +433,14 @@ Thursday is Wall Day, low intent by design, and its dad note already said high-i
 - **Both journals autosave, and Save stays as the retry.** A session written up on a phone that locks was a session lost. Save force-sends whether or not anything changed, which is the one thing autosave cannot do: a write the outbox gave up on does not go again until a field is touched.
 - **An entry row now comes into being on the first tap rather than on Save.** Scoring energy and walking away leaves a real row, and the delete control appears with it. That is the trade for not losing a session.
 - **Delete is not on Today.** It stays on the tab screens. Today is tapped one-handed between drills and an irreversible act does not belong there.
+
+## 2026-09-14 (Today view, final review): two rules the autosave work had to settle
+
+**What this is.** The whole-branch review of `feature/today-view` found two Criticals, both sitting on the same seam: a thing the old screen owned that the extracted component did not. Fixed in one wave, with the rest of that review's findings. Account in `docs/history/2026-09-14-today-view.md`.
+
+**Rulings.**
+
+- **A form never overwrites a field somebody is typing in.** Both note forms reset every field from the store whenever the stored entry changed identity. Every save response folds a new entry object into the slice, so under autosave a radio tap's own answer, landing a second later, blanked the sentence typed since. The fold is now per field: the store's value is taken only where what is on screen still matches what was last sent. A date change and a delete still replace the form whole, because neither is news about the day on screen. Per field rather than all or nothing, because every save carries the whole entry and blanks on screen become blanks on the server.
+- **The share toggle takes effect the instant he taps it.** This reverses a ruling from the journal work: `SET_SHARED` used to set only the saving flag, on the reasoning that the API owns `shared` and the client only displays it. Autosave turned that into the loss of the one control Teddy has over who reads his words. Between the tap and the answer, every autosave of that day carried the old value back, and offline it was not even a race: both writes queue under one key, the outbox lets the later save replace the un-share in place, and the un-share never leaves the device while the screen goes on saying "Dad can see this too". The reducer now writes the intent onto the held entry and leaves `updated_at` alone, so the server's own answer still carries a later stamp and wins either way.
+- **The measure order on the test sheet is a tested contract, not a habit.** `TestSheet` deliberately does not sort, so both callers hand it measures already in position order. Deleting `byPosition` from Today left all 327 web tests green. Both suites now assert the rendered row order against the shuffled fixture that was already there for it.
+
