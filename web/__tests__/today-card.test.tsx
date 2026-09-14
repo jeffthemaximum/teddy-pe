@@ -41,6 +41,22 @@ describe("TodayCard", () => {
     expect(screen.queryByText("Cartwheel.")).toBeNull();
   });
 
+  // The week's theme, which the card is handed rather than reaching for: it
+  // belongs to the week, not to the day, and this component is meant to be
+  // liftable into the Phase 4 native app with nothing but props.
+  it("shows the week's theme when it is given one", () => {
+    render(<TodayCard day={DAY} theme="Baseline & Land" onSelectDrill={() => {}} />);
+    expect(screen.getByText(/Baseline & Land/)).toBeInTheDocument();
+  });
+
+  it("says nothing about a theme when it has none", () => {
+    // A month payload carries no week around it, so a card can legitimately
+    // be rendered without one. An empty line where the theme goes would read
+    // as a week with no theme, which is a different thing.
+    const { container } = render(<TodayCard day={DAY} onSelectDrill={() => {}} />);
+    expect(container.querySelector(".today-card__theme")).toBeNull();
+  });
+
   it("lists every block whether open or not", () => {
     render(<TodayCard day={DAY} onSelectDrill={() => {}} />);
     expect(screen.getAllByRole("button")).toHaveLength(3);

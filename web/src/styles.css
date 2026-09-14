@@ -636,6 +636,15 @@ legend {
   color: var(--ink-soft);
 }
 
+/* The week's theme, under the day's role and quieter than it. Same colour as
+   the date above the card, because the two are the same kind of thing: the
+   frame the session sits in rather than the session. */
+.today-card__theme {
+  margin: 0 0 0.75rem;
+  color: var(--ink-faint);
+  font-size: 0.9rem;
+}
+
 .today-card__blocks {
   list-style: none;
   margin: 0;

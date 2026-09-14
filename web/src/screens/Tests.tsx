@@ -10,7 +10,7 @@ import {
 import { Loading } from "../components/Loading";
 import { ErrorNote } from "../components/ErrorNote";
 import { WaitingForYearId } from "../components/WaitingForYearId";
-import { TestSheet } from "../components/TestSheet";
+import { NO_MEASURES_LABEL, TestSheet } from "../components/TestSheet";
 import { byPosition } from "../lib/scheduling";
 
 // He opens this standing on a court with a stopwatch in his other hand.
@@ -123,7 +123,7 @@ export function Tests() {
       )}
 
       {measures.length === 0 ? (
-        <p className="tests__empty">No measures have been set up yet.</p>
+        <p className="tests__empty">{NO_MEASURES_LABEL}</p>
       ) : (
         <TestSheet programYearId={programYearId} window={activeWindow} measures={measures} />
       )}

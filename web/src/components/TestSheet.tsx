@@ -32,6 +32,12 @@ function isQueuedFor(queue: QueuedWrite[], window: string, testId: string): bool
 // everything else itself, so a caller needs to know only which window it
 // wants: the Tests tab passes whichever one the picker is on, and Today
 // passes the one today falls inside.
+// What a caller says in place of this component when the battery has no
+// measures on it yet. It lives here rather than in either screen because
+// both screens show it, and two copies of one sentence is how they come to
+// disagree about what an empty sheet means.
+export const NO_MEASURES_LABEL = "No measures have been set up yet.";
+
 export function TestSheet({
   programYearId,
   window,

@@ -18,8 +18,9 @@ import { WEEK } from "./fixtures/week";
 // fixture already in order would pass against a component that never
 // sorts, which is the defect this project keeps finding. TestSheet itself
 // deliberately does not sort (see its own comment), so Today is the one
-// responsible for handing it measures already in order; a shuffled fixture
-// is what would catch Today forgetting to.
+// responsible for handing it measures already in order. What reads the trap
+// is "lists the measures in the order the battery runs them" below; it is
+// the only example in this file that fails if Today drops its byPosition().
 const MEASURES: ProgramYearDetail["battery"]["measures"] = [
   {
     id: 3,
@@ -118,6 +119,15 @@ function yearWithUndatedWindows(): ProgramYearDetail {
     ...year,
     test_dates: year.test_dates.map(({ starts_on, ends_on, ...rest }) => rest),
   };
+}
+
+// A year whose battery has no measures on it: a test window seeded before
+// the tests under it were. Today still matches the window and still writes
+// the heading, so without a message this is a "Baseline test, day 2 of 3"
+// over an empty list with nothing saying why.
+function yearWithNoMeasures(): ProgramYearDetail {
+  const year = yearFixture();
+  return { ...year, battery: { ...year.battery, measures: [] } };
 }
 
 // A week whose seven cards cover 14 to 20 September but whose Thursday has
@@ -233,6 +243,23 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+// The measures as they actually render, top to bottom. Read off the list's
+// own children rather than by label, because the question here is order and
+// getByLabelText answers a different one.
+function measureLabels(): string[] {
+  const list = screen.queryByRole("list", { name: "Measures" });
+  if (!list) return [];
+  return Array.from(list.querySelectorAll("li > label")).map((el) => el.textContent ?? "");
+}
+
+// Position order, which is the order the battery runs them in and not the
+// order MEASURES above lists them.
+const MEASURES_IN_ORDER = [
+  "10-yard sprint (sec)",
+  "Broad jump (in)",
+  "Balance hold, left (sec)",
+];
+
 describe("Today", () => {
   describe("the card", () => {
     it("shows today's card and no other day", async () => {
@@ -248,6 +275,16 @@ describe("Today", () => {
       // and minutes both apply); the dad-note case gets its own example
       // below on a week built just for it, rather than mutating this one.
       expect(await screen.findByText(/60 to 90 min/)).toBeInTheDocument();
+    });
+
+    it("shows the week's theme, under the day's own role and minutes", async () => {
+      renderToday({ role: "coach" });
+
+      const role = await screen.findByText(/wall day/i);
+      const theme = screen.getByText(/Baseline & Land/);
+      // Under, not over. The role and the minutes are what he opened this
+      // standing on a court to read; the theme is the frame around them.
+      expect(role.compareDocumentPosition(theme) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
     it("shows Dad's note on a day that has one", async () => {
@@ -390,8 +427,33 @@ describe("Today", () => {
     it("shows the sheet on a test day, and says which day of it", async () => {
       vi.setSystemTime(new Date("2026-09-16T10:00:00"));
       renderToday({ role: "coach" });
-      expect(await screen.findByText(/Baseline/)).toBeInTheDocument();
+      // Asserted on the heading rather than on the word, because the week's
+      // theme is on this screen too and this fixture's theme is "Baseline &
+      // Land". The heading is what the sheet's presence is actually said by.
+      expect(
+        await screen.findByRole("heading", { name: /Baseline test/ }),
+      ).toBeInTheDocument();
       expect(screen.getByText(/day 2 of 3/i)).toBeInTheDocument();
+    });
+
+    it("lists the measures in the order the battery runs them", async () => {
+      vi.setSystemTime(new Date("2026-09-16T10:00:00"));
+      renderToday({ role: "coach" });
+      await screen.findByText(/day 2 of 3/i);
+
+      expect(measureLabels()).toEqual(MEASURES_IN_ORDER);
+    });
+
+    // The same sentence Tests.tsx has for the same situation, from the one
+    // place it is written down. A heading over an empty list says nothing
+    // about why it is empty.
+    it("says so when the battery has no measures seeded", async () => {
+      vi.setSystemTime(new Date("2026-09-16T10:00:00"));
+      renderToday({ role: "coach", programYear: yearWithNoMeasures() });
+
+      expect(await screen.findByText(/day 2 of 3/i)).toBeInTheDocument();
+      expect(screen.getByText(/no measures have been set up yet/i)).toBeInTheDocument();
+      expect(measureLabels()).toEqual([]);
     });
 
     it("shows no sheet the day after the window closes", async () => {
@@ -400,7 +462,7 @@ describe("Today", () => {
       // The 18th is Friday, WEEK's Skate Day, not the Thursday used
       // elsewhere in this file.
       await screen.findByText(/skate day/i);
-      expect(screen.queryByText(/Baseline/)).toBeNull();
+      expect(screen.queryByRole("heading", { name: /Baseline test/ })).toBeNull();
     });
 
     // The deploy window: Vercel is ahead of Fly and the payload omits the
@@ -410,7 +472,7 @@ describe("Today", () => {
       renderToday({ role: "coach", programYear: yearWithUndatedWindows() });
       // The 16th is Wednesday, WEEK's Fast Day.
       await screen.findByText(/fast day/i);
-      expect(screen.queryByText(/Baseline/)).toBeNull();
+      expect(screen.queryByRole("heading", { name: /Baseline test/ })).toBeNull();
       expect(screen.queryByText(/still blank/i)).toBeNull();
     });
 
@@ -418,7 +480,7 @@ describe("Today", () => {
       vi.setSystemTime(new Date("2026-09-16T10:00:00"));
       renderToday({ role: "viewer" });
       await screen.findByText(/fast day/i);
-      expect(screen.queryByText(/Baseline/)).toBeNull();
+      expect(screen.queryByRole("heading", { name: /Baseline test/ })).toBeNull();
       expect(screen.queryByText(/still blank/i)).toBeNull();
     });
   });

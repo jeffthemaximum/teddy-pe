@@ -7,7 +7,10 @@ import { Tests } from "../src/screens/Tests";
 
 // Three measures, deliberately out of position order (position 3 listed
 // first): a fixture already in order passes against a component that never
-// sorts, which is the defect this project keeps finding.
+// sorts, which is the defect this project keeps finding. What reads the trap
+// is "lists the measures in the order the battery runs them" below; without
+// that example the shuffle proves nothing, because every other assertion in
+// this file finds its row by label.
 const MEASURES: ProgramYearDetail["battery"]["measures"] = [
   {
     id: 3,
@@ -192,6 +195,23 @@ function windowSelect(): HTMLSelectElement {
   return screen.getByLabelText(/test date/i) as HTMLSelectElement;
 }
 
+// The measures as they actually render, top to bottom. Read off the list's
+// own children rather than by label, because the question here is order and
+// getByLabelText answers a different one.
+function measureLabels(): string[] {
+  const list = screen.queryByRole("list", { name: "Measures" });
+  if (!list) return [];
+  return Array.from(list.querySelectorAll("li > label")).map((el) => el.textContent ?? "");
+}
+
+// Position order, which is the order the battery runs them in and not the
+// order MEASURES above lists them.
+const MEASURES_IN_ORDER = [
+  "10-yard sprint (sec)",
+  "Broad jump (in)",
+  "Balance hold, left (sec)",
+];
+
 function measureInput(label: RegExp): HTMLInputElement {
   return screen.getByLabelText(label) as HTMLInputElement;
 }
@@ -306,6 +326,19 @@ describe("the test sheet", () => {
     expect(screen.getByLabelText(/10-yard sprint \(sec\)/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/broad jump \(in\)/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/balance hold, left \(sec\)/i)).toBeInTheDocument();
+  });
+
+  // TestSheet deliberately does not sort (see its own comment): the caller
+  // hands it measures already in order. This is the assertion that says so
+  // for this screen, and the only one here that can fail if Tests.tsx drops
+  // its byPosition().
+  it("lists the measures in the order the battery runs them", async () => {
+    const { store } = renderTests(42);
+    loadYear(store);
+    loadResults(store);
+    await settle();
+
+    expect(measureLabels()).toEqual(MEASURES_IN_ORDER);
   });
 
   it("gives the box a keyboard that can type a range, not a numbers-only pad", async () => {

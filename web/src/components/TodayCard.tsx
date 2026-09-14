@@ -18,9 +18,15 @@ import { Tokens } from "./Tokens";
 // unportable to the Phase 4 native app.
 export function TodayCard({
   day,
+  theme,
   onSelectDrill,
 }: {
   day: DayCardPayload;
+  // The week's theme, handed in rather than reached for: it belongs to the
+  // week around this day, not to the day, and this component is meant to
+  // lift into the Phase 4 native app on props alone. Optional because a
+  // month payload carries no week to take one from.
+  theme?: string;
   onSelectDrill: (slug: string) => void;
 }) {
   // Undefined, not just empty, is a real shape here: the month payload
@@ -51,6 +57,12 @@ export function TodayCard({
       <p className="today-card__role">
         {day.role} &middot; {day.minutes} min
       </p>
+
+      {/* Under the role and the minutes, and quieter than both. Standing on a
+          court he is reading what today is and how long it runs; the theme is
+          the frame those sit in, which is worth having on the page and not
+          worth having first. */}
+      {theme && <p className="today-card__theme">This week: {theme}</p>}
 
       {day.summary_lines.length > 0 && (
         <ul aria-label="Today's summary" className="today-card__summary">

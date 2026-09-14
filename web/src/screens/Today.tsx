@@ -19,7 +19,7 @@ import { WaitingForYearId } from "../components/WaitingForYearId";
 import { TodayCard } from "../components/TodayCard";
 import { CoachNoteForm } from "../components/CoachNoteForm";
 import { AthleteNoteForm } from "../components/AthleteNoteForm";
-import { TestSheet } from "../components/TestSheet";
+import { NO_MEASURES_LABEL, TestSheet } from "../components/TestSheet";
 import { byPosition, formatFullDate, todayISODate } from "../lib/scheduling";
 
 // He opens this standing on a court, sometimes before the server has woken
@@ -145,7 +145,12 @@ export function Today() {
       <p className="today__date">{formatFullDate(today)}</p>
 
       {dayCard ? (
-        <TodayCard key={dayCard.id} day={dayCard} onSelectDrill={openDrill} />
+        <TodayCard
+          key={dayCard.id}
+          day={dayCard}
+          theme={weekData.theme}
+          onSelectDrill={openDrill}
+        />
       ) : weekLoading ? (
         // The early returns above only catch a week that has never loaded.
         // A tab left open across a week boundary (or a program-year switch)
@@ -171,11 +176,22 @@ export function Today() {
           <h2>
             {testDay.testDate.label} test, day {testDay.dayNumber} of {testDay.dayCount}
           </h2>
-          <TestSheet
-            programYearId={currentId}
-            window={testDay.testDate.window}
-            measures={byPosition(yearData.battery.measures)}
-          />
+          {/* The battery can be empty on a day the window is not: the test
+              dates and the tests under them are separate rows, and one can
+              be seeded before the other. The heading above is already
+              written by then, so without this an unseeded battery is a
+              "Baseline test, day 2 of 3" over nothing at all. Tests.tsx
+              covers the same case; the sentence is shared so the two
+              screens cannot come to say different things about it. */}
+          {yearData.battery.measures.length === 0 ? (
+            <p className="tests__empty">{NO_MEASURES_LABEL}</p>
+          ) : (
+            <TestSheet
+              programYearId={currentId}
+              window={testDay.testDate.window}
+              measures={byPosition(yearData.battery.measures)}
+            />
+          )}
         </section>
       )}
     </div>
