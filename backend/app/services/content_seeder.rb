@@ -201,7 +201,18 @@ class ContentSeeder
     tokenizer = BodyTokenizer.new(Drill.terms)
     roles = year.day_roles.index_by(&:dow)
 
-    plans = Dir[@dir.join("plans/*.yml")].sort.map do |path|
+    paths = Dir[@dir.join("plans/*.yml")].sort
+    # Every other prune in this class is fed by a key inside program.yml, so a
+    # missing or misspelled one already raises MissingContent before it gets
+    # near prune. This is the one glob that reads the filesystem directly, and
+    # an empty or missing plans/ folder is not "the year has no months," it is
+    # a deploy that shipped without its content. Refuse rather than treat
+    # zero files as instructions to empty every month plan the year has.
+    if paths.empty?
+      raise MissingContent, "no plan files at #{@dir.join('plans')}, refusing to prune #{year_label}'s month plans"
+    end
+
+    plans = paths.map do |path|
       doc = YAML.load_file(path, permitted_classes: [ Date ])
       seed_month_plan(doc, blocks, roles, tokenizer)
     end

@@ -158,16 +158,51 @@ RSpec.describe ContentSeeder do
       expect(DayBlock.where(day_card_id: card_ids)).to be_empty
     end
 
-    it "removes a month plan whose file is gone" do
+    it "removes a month plan whose file is gone, when another month still stands" do
+      october_path = @root.join("2026-27/plans/2026-10.yml")
+      october = plan_doc
+      october["month_plan"]["month"] = "2026-10"
+      october["month_plan"]["label"] = "October"
+      File.write(october_path, october.to_yaml)
       seed_copy
-      expect(MonthPlan.count).to eq(1)
+      expect(MonthPlan.count).to eq(2)
 
       File.delete(plan_path)
       seed_copy
 
-      expect(MonthPlan.count).to eq(0)
-      expect(Week.count).to eq(0)
-      expect(DayCard.count).to eq(0)
+      expect(MonthPlan.count).to eq(1)
+      expect(MonthPlan.sole.month).to eq("2026-10")
+    end
+
+    # A plans/ directory that matched nothing is not a real removal, it is a
+    # deploy that shipped without its content. This is the one glob in the
+    # seeder that is not driven off program.yml, so an empty or missing
+    # plans/ folder cannot raise MissingContent the way a bad key does. Refuse
+    # instead of quietly emptying every month plan the year has.
+    it "refuses to prune every month plan when the plans directory has none, and changes nothing" do
+      seed_copy
+      before = { month_plans: MonthPlan.count, weeks: Week.count,
+                 day_cards: DayCard.count, day_blocks: DayBlock.count }
+      expect(before[:month_plans]).to eq(1)
+
+      File.delete(plan_path)
+
+      expect { seed_copy }.to raise_error(ContentSeeder::MissingContent, /plan/i)
+
+      expect({ month_plans: MonthPlan.count, weeks: Week.count,
+               day_cards: DayCard.count, day_blocks: DayBlock.count }).to eq(before)
+    end
+
+    it "refuses to prune when the plans directory itself does not exist" do
+      seed_copy
+      before = { month_plans: MonthPlan.count, weeks: Week.count, day_cards: DayCard.count }
+
+      FileUtils.rm_rf(@root.join("2026-27/plans"))
+
+      expect { seed_copy }.to raise_error(ContentSeeder::MissingContent, /plan/i)
+
+      expect({ month_plans: MonthPlan.count, weeks: Week.count,
+               day_cards: DayCard.count }).to eq(before)
     end
 
     # The one that matters. A week can only be removed from the YAML if doing
