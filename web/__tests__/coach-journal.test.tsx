@@ -375,10 +375,16 @@ describe("the coach's journal", () => {
     await user.type(screen.getByLabelText(/challenge number/i), "2");
     await user.click(screen.getByRole("button", { name: /save/i }));
 
-    // Autosave fires its own save on every field he leaves, so more than
-    // one SAVE_COACH_ENTRY goes out here. Every save carries the whole
-    // entry, so the last one, the one Save itself sent, is the complete
-    // picture.
+    // Autosave fires its own save on every field he leaves and every radio
+    // he taps, so more than one SAVE_COACH_ENTRY goes out before Save is
+    // ever clicked, and the earliest of those already sets `saving` true.
+    // commit() has no guard on that flag, so the Save click itself never
+    // reaches the submit handler: the button is already disabled by the
+    // time it lands. What that click does do is blur the challenge number
+    // field he was last in, and that field's own text changed, so its blur
+    // fires the actual last save, carrying everything merged in by then.
+    // Every save carries the whole entry, so the last one is the complete
+    // picture regardless of which control sent it.
     const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
     expect(saves.length).toBeGreaterThan(0);
     expect(saves.at(-1)?.payload).toEqual({
@@ -407,8 +413,11 @@ describe("the coach's journal", () => {
     await user.type(screen.getByLabelText(/what did you see/i), "Walked home happy. Will score later.");
     await user.click(screen.getByRole("button", { name: /save/i }));
 
-    // Autosave means the blur on the note field saves once on its own, and
-    // Save then sends again. The last save is still the whole, current form.
+    // Clicking Save blurs the note field he was still in, and that field's
+    // own text changed, so its blur fires the one save that actually goes
+    // out here. Save's own submit handler never runs: that same blur sets
+    // `saving` true before the click reaches the button, so it lands
+    // disabled. One save, not two, and it is the whole form as it stood.
     const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
     expect(saves.length).toBeGreaterThan(0);
     const payload = saves.at(-1)?.payload as { overall: unknown; energy: unknown; note: unknown };
@@ -456,8 +465,11 @@ describe("the coach's journal", () => {
     // Balance Beam Walk is left untouched on purpose.
     await user.click(screen.getByRole("button", { name: /save/i }));
 
-    // Each tap already saved on its own; the last save, from Save itself,
-    // is asserted here because it is the one guaranteed to carry both.
+    // Each tap already saves on its own, and the second carries both
+    // ratings because set() merges into whatever the first tap already put
+    // in state. Save's own click never fires: the first tap already set
+    // `saving` true, disabling the button before this click lands, so the
+    // second tap's own save is genuinely the last one, not Save's.
     const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
     const payload = saves.at(-1)?.payload as { ratings: Record<string, unknown> };
     expect(payload.ratings).toEqual({
@@ -865,8 +877,10 @@ describe("the coach's journal", () => {
       await user.type(screen.getByLabelText(/challenge number/i), "7");
       await user.click(screen.getByRole("button", { name: /save/i }));
 
-      // Blurring the field to click Save already saved it once; the last
-      // save is the one to check, not the first.
+      // Clicking Save blurs the challenge field he was still in, and that
+      // field's own text changed, so its blur fires the one save that goes
+      // out here. Save's own submit never runs: that blur sets `saving`
+      // true before the click reaches the button, so it lands disabled.
       const saves = dispatched.filter((a) => a.type === "journal/SAVE_COACH_ENTRY");
       expect((saves.at(-1)?.payload as { challenge_num: unknown }).challenge_num).toBe("7");
     });
