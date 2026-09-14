@@ -335,3 +335,19 @@ The web app is up at `https://teddy-pe-mlfs.vercel.app`, built from `main`, serv
 **A decision inside that.** `WEB_ORIGIN` names the production origin only. Vercel gives each preview deployment its own hostname, so previews will not be able to reach the API, and that is the intended answer rather than a gap to close: every preview URL is public and unguessable only by obscurity, and the list of origins allowed to call an API holding a child's journal should be one entry long.
 
 **A note on what a test can be asked to prove.** `web/__tests__/hosting-config.test.ts` cannot show the rewrite works. That rule lives in the host and only a request to the deployed site answers it. The test holds the config to the shape that was verified against the real host, which is a smaller claim honestly stated, and it names the `cleanUrls` interaction in a comment so the combination cannot come back quietly.
+
+## 2026-09-14 (Phase 2c): the Notes page asks about the day, not the glossary
+
+**What Jeff asked.** On `https://teddy-pe-mlfs.vercel.app/notes`, "Rate each drill" listed every drill in the glossary. Show only the drills that were actually done that day.
+
+**Where the link already was.** Every day card carries `drill_slugs`, filled by `backend/app/services/week_payload.rb` from what the tokenizer found in that day's blocks, and core already has `selectDayByDate`. Nothing needed building on the server or in `core/`. `CoachJournal` simply had no day cards, because it had never needed them.
+
+**Decisions made building it.**
+
+- **The current week only.** `weeks/current` is the one week endpoint there is (`routes.rb`), so filtering any date in the year meant a second fetch of the month plan, and a week that straddles a month boundary would need a third lookup: Oct 1 to 4 live in the September plan, not the October one. Jeff writes the entry after the session, so the date is almost always inside the week already on screen. A date outside it gets the full list and one line saying why.
+- **Four states, told apart, rather than one silent fallback.** The week still on its way, the week unreachable, a date outside the week, and a card with no drills on it are four different facts about why the list is not narrowed, and each says which it is. A single "here is everything" would be right on the screen and wrong in his hands.
+- **It waits rather than flashing.** A cold Fly machine answers in around seven seconds. Listing all 84 for that long and then collapsing to eight is worse than saying "Finding this day's drills", and the note field stays live meanwhile so he can type while it loads.
+- **A drill he has already rated stays on screen even when the card has dropped it.** `handleSubmit` sends `form.ratings` whole, so a rating made before a plan edit goes on being saved on every save. Hiding it would have made the form quietly write something it never showed. Shown at the end of the day's own list, it can be changed or cleared.
+- **Card order, not glossary order.** The list reads down the session the way it ran, because that is the order he is remembering it in.
+- **The week is fetched here, not lifted into a parent.** It is the same duck This Week fills, so arriving from that tab costs nothing, and the screen keeps asking for what it needs the way every other screen in this app does.
+- **The tests that predated the filter now seed a week.** Eleven of them rendered this form with no day cards in the store, which is a real state and no longer the one those tests are about. They load the week fixture now and exercise the path production takes.
