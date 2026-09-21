@@ -453,3 +453,56 @@ Thursday is Wall Day, low intent by design, and its dad note already said high-i
 **`fly deploy` ships the current directory, not `main`.** The build context is whatever is on disk, and the plan YAML is inside it. A deploy from the worktree at `.claude/worktrees/feature+rails-react-rewrite`, which sits on `docs/tennis-subtarget-decision`, would have put the rope back on Tuesday. That is now written next to the command in both files.
 
 **No auto-deploy on merge was added.** It would prevent a repeat and it is not a docs decision: it points a GitHub Action at a production database holding Teddy's journal, and it is Jeff's call. The content changes a few times a month, which is the argument for leaving the deploy as something someone runs on purpose.
+
+## 2026-09-21: weeks 2 and 3 were sketches, and one challenge broke the effort budget
+
+**What happened.** Jeff opened Today on Monday 21 September and the card was four
+bullets. Week 1 was written in full on 14 September, 7 to 11 timed blocks and a
+dad note per day. Weeks 2 and 3 carried a name, a role, minutes, an `hie` number
+and summary lines, and nothing else. The app was right to show what it showed:
+`TodayCard` and `DayCard` both render blocks only when a day has blocks, which is
+what Game Day needs. Both weeks are now written in full, 21 full cards for the
+month.
+
+**Rulings.**
+
+- **Every day of the month gets a full card, and a test says so.**
+  `plan_seeder_spec.rb` used to assert the opposite, that week 2 had no full
+  cards, which pinned the sketch in place as if it were the intent. It now walks
+  all three weeks and asserts blocks, summary lines and a dad note on each of the
+  21 days. The shape a later week is written in is exactly what goes unnoticed
+  until the Monday it is opened.
+- **The Challenge of the Week may not cost high-intent efforts on a Monday.**
+  Week 2's challenge was Broad Jump & Stick, attempted Monday and Friday. A
+  maximal broad jump is a high-intent effort by the architecture's own
+  definition, and Monday is a zero-effort day after gymnastics. The challenge is
+  now Statue Stick: 10 single-leg sticks, 3 second statue, count the clean ones.
+  It costs nothing, it is the week's second sub-target, and it keeps the Monday
+  and Friday attempts the rules ask for.
+- **The broad jump keeps its place, on the day built for it.** It is Wednesday's
+  own challenge block, best of 3, which is the week-1 pattern where Wednesday ran
+  Beat Dad's Broad Jump beside that week's challenge. Nothing was lost by moving
+  it, and the three jumps were already inside Wednesday's 20.
+- **Week 3's challenge says "Run on green", not "Sprint on green".** Same
+  collision, one word rather than a new challenge: Monday's attempt is at jog
+  speed and scores the stop, Wednesday runs the sprint version at 8 × 10m, and
+  Friday's second attempt is at three-quarter speed. The word that had to go was
+  the one that made a zero-effort Monday illegal.
+- **The `hie` numbers were not touched.** Week 2 spends 39 of 40 and week 3 spends
+  39 of 40, the totals the sketches declared. They are still Claude's numbers and
+  not Jeff's, which is the open item the Phase 1 gate left. A second test now
+  holds the rules around them: every week inside its budget, zero on Monday and
+  Sunday, 5 or fewer on Friday. The budget rule had nothing asserting it before.
+- **Sunday of week 2 does cartwheel step 2, not bunny hops.** The sketch's summary
+  line had him repeating step 1 in a week whose own sub-target is step 2 both
+  sides. A weekly review that practises last week's version of the New Thing is
+  a review of the wrong week.
+- **Blocks name their drills.** Five bodies were reworded so the tokenizer links
+  them: "10 single-leg landings" became "10 single-leg sticks", "between cones"
+  became "through cone gates", "then single leg" became "then single-leg
+  balance". The seeder's bare-block report is back to the four kinds week 1 also
+  leaves bare (Test: Height, Play, Home program, Review). This matters twice
+  over: it is what makes a drill tappable on the card, and it is what the Notes
+  page builds its rating chips from, so a bare week is a week Jeff cannot rate.
+- **No new glossary entries.** Everything both weeks ask for was already among
+  the 84 in `drills.yml`. October is the month that needs new ones.

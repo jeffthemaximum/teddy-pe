@@ -14,10 +14,32 @@ RSpec.describe "seeding the month plan" do
     expect(plan.weeks.flat_map(&:day_cards).count).to eq(21)
   end
 
-  it "gives week 1 full cards and the later weeks summaries" do
-    expect(week1.day_cards.select(&:full_card?).count).to eq(7)
-    expect(plan.weeks.find_by!(number: 2).day_cards.none?(&:full_card?)).to be(true)
-    expect(plan.weeks.find_by!(number: 2).day_cards.all? { |d| d.summary_lines.any? }).to be(true)
+  # Weeks 2 and 3 were sketches until 21 September: summary lines, no blocks
+  # and no dad note, which is a card the app renders as four bullets and the
+  # journal can collect no drill ratings from. Asserted across every week
+  # rather than week 1 alone, because the shape a later week is written in is
+  # exactly what goes unnoticed until the Monday it is opened.
+  it "gives every day of the month a full card" do
+    plan.weeks.each do |week|
+      cards = week.day_cards
+      expect(cards.select(&:full_card?).count).to eq(7), "week #{week.number}"
+      expect(cards.all? { |d| d.summary_lines.any? }).to be(true), "week #{week.number}"
+      expect(cards.all? { |d| d.dad_note.present? }).to be(true), "week #{week.number}"
+    end
+  end
+
+  # The load rules in CLAUDE.md that a hand-written card can break quietly:
+  # the weekly budget, the zero-effort days either side of Saturday, and
+  # Friday's cap before it.
+  it "keeps every week inside the high-intent effort rules" do
+    plan.weeks.each do |week|
+      by_dow = week.day_cards.index_by(&:dow)
+
+      expect(week.high_intent_efforts).to be <= week.budget, "week #{week.number}"
+      expect(by_dow.fetch("sun").hie).to eq(0), "week #{week.number}"
+      expect(by_dow.fetch("mon").hie).to eq(0), "week #{week.number}"
+      expect(by_dow.fetch("fri").hie).to be <= 5, "week #{week.number}"
+    end
   end
 
   it "puts every day on the role its weekday owns" do
