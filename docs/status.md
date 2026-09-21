@@ -14,14 +14,14 @@ Update this file whenever something is built, decided, or left open. It is the f
 ## Built
 
 - Year view: 9 areas x 6 blocks (Cub, Fox, Coyote, Wolf, Puma, Cheetah), timeline with retests and Trials weeks, Cub patches (7 of 9 to rank up), tennis ball gates (green now, controlled-yellow gate active), 10-test battery plus height.
-- September view: Cub weeks 1 to 3 (Sep 14 to Oct 4): Baseline & Land, Stick It, Brake.
-- This Week: daily cards for Sep 14 to 20, plus the test sheet (15 rows, five test windows, stored in Neon and shared across devices).
+- September view: Cub weeks 1 to 3 (Sep 14 to Oct 4): Baseline & Land, Stick It, Brake. All 21 days are full cards, 139 day blocks, a dad note on every one. Weeks 2 and 3 were summary-line sketches until 21 September; see `docs/history/2026-09-21-weeks-2-and-3-cards.md`.
+- This Week: daily cards for Sep 14 to Oct 4, plus the test sheet (15 rows, five test windows, stored in Neon and shared across devices).
 - Drill glossary: `backend/content/program_years/2026-27/drills.yml`, 84 entries covering everything written so far. The seeder links names and aliases into card prose and block titles; tapping one opens a sheet with how to do it, what to watch for and the cue. A tab lists all of them with a filter.
 - Coach's diary: form on This Week (session, how it went, energy, pain flag, note, challenge number, and a rating per drill from that day's card). One entry per session date, keyed on the server, so every device opens and edits the same entry. Saves go through the offline queue in `core/`. `bin/rails docs:export` writes entries and results back into `docs/`. Entries produce proposed plan changes only.
 - Teddy's own journal, with a share toggle per day. Unshared entries stay out of the API's responses and out of the export. Both journals soft delete.
 - Test results and the Progress panel: one row per test window and test id; the sheet on This Week reads and writes it; the Year tab charts each test as a card with its latest value, change since baseline in the direction that counts as progress, and a sparkline. Height reports a cm/year pace and flags the growth-load protocol.
 - Sign-in on the whole site, three accounts, Pundit deciding what each may see. The web bundle ships no program vocabulary at all, and a test in `web/` builds the app for real and reads the built output to prove it.
-- Today: the app's home, `/today`, first in the nav and where sign-in, `/` and a refused route all land. One screen holding the day's card (role, minutes, theme, dad note, an accordion of blocks with one open at a time), the signed-in person's own journal entry (autosaving as he writes, Save staying as the retry for a write the offline queue gave up on), and the test sheet when today falls inside a test window. Delete is not on Today; it stays on the tab screens. Each of the three accounts sees only what the API answers for them. The suites stand at `backend/` 319, `core/` 272, `web/` 340, all clean and typechecking clean. See `docs/decisions.md` and `docs/history/2026-09-14-today-view.md`.
+- Today: the app's home, `/today`, first in the nav and where sign-in, `/` and a refused route all land. One screen holding the day's card (role, minutes, theme, dad note, an accordion of blocks with one open at a time), the signed-in person's own journal entry (autosaving as he writes, Save staying as the retry for a write the offline queue gave up on), and the test sheet when today falls inside a test window. Delete is not on Today; it stays on the tab screens. Each of the three accounts sees only what the API answers for them. The suites stand at `backend/` 320, `core/` 272, `web/` 340, all clean and typechecking clean. See `docs/decisions.md` and `docs/history/2026-09-14-today-view.md`.
 
 ## Branches
 
@@ -52,6 +52,47 @@ If the program itself needs changing while the rewrite is in flight (a new month
 - Pre-existing 20px horizontal overflow on the Year tab at phone width, from a timeline marker. Not caused by the glossary or diary work and left alone.
 
 ## Next
+
+- **Weeks 2 and 3 are written and need a deploy.** `feature/week-2-and-3-cards`
+  fills in the 14 day cards for Sep 21 to Oct 4 that existed only as summary
+  lines, which is why Today showed four bullets and no session on the morning of
+  the 21st. Backend at 320 examples, clean. The cards reach Teddy's phone only on
+  a deploy, because they ship inside the image and the release command seeds
+  them:
+
+  ```bash
+  cd backend && fly deploy -a teddy-pe-api
+  ```
+
+  Run it from a checkout of `main` after merging. Two things to look at before
+  merging: the Challenge of the Week for week 2 changed from Broad Jump & Stick
+  to Statue Stick, because a maximal broad jump on a Monday breaks the zero-effort
+  rule, and week 3's challenge now says "Run on green" rather than "Sprint on
+  green" for the same reason. Both are in `docs/decisions.md` under 2026-09-21.
+
+- **The production export has run and the baseline is in the repo.**
+  `docs/results/2026-27.md` holds 14 of the 15 baseline rows and
+  `docs/journal/2026-27/2026-09.md` holds Jeff's four session entries with their
+  drill ratings, both from the Fly database on 21 September. The Fly machine has
+  to be started before `fly ssh console` will answer it, which is what made the
+  first three attempts fail silently.
+
+- **Height was not recorded at the baseline.** Fourteen of fifteen rows are in;
+  the height cell is empty. `CLAUDE.md` and the architecture both say height is
+  recorded at every test date, and it is the anchor for the tall-frame growth
+  protocol: without a first number, the cm/year pace has nothing to measure from
+  and the Dec 7 to 11 retest becomes the baseline by default. Measure him shoes
+  off against a wall and type it into the Baseline column on the Tests tab.
+
+- **Test 8 is now a constrained wall rally, and its baseline is owed.** The 100 in
+  the Baseline column was Teddy alone at the wall, unconstrained, and capped
+  rather than reached, against a protocol that said cooperative rally with Dad.
+  Test 8 now reads: green ball, behind a line 6m back, every ball above a line on
+  the wall at net height, best of 3. **Thursday 24 September carries the
+  re-measure** as an eight-minute test block on the card; the number replaces the
+  100 in the Baseline column on the Tests tab. Weeks 2 and 3 keep their 15-ball
+  and 15-to-20-ball rally sub-targets, which are rallies with Dad and measure
+  something else. See `docs/decisions.md` for 21 September.
 
 - **Today needs an API deploy before the test sheet appears on it.** The
   test windows' `starts_on` and `ends_on` reach production only when the

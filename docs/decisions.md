@@ -453,3 +453,136 @@ Thursday is Wall Day, low intent by design, and its dad note already said high-i
 **`fly deploy` ships the current directory, not `main`.** The build context is whatever is on disk, and the plan YAML is inside it. A deploy from the worktree at `.claude/worktrees/feature+rails-react-rewrite`, which sits on `docs/tennis-subtarget-decision`, would have put the rope back on Tuesday. That is now written next to the command in both files.
 
 **No auto-deploy on merge was added.** It would prevent a repeat and it is not a docs decision: it points a GitHub Action at a production database holding Teddy's journal, and it is Jeff's call. The content changes a few times a month, which is the argument for leaving the deploy as something someone runs on purpose.
+
+## 2026-09-21: weeks 2 and 3 were sketches, and one challenge broke the effort budget
+
+**What happened.** Jeff opened Today on Monday 21 September and the card was four
+bullets. Week 1 was written in full on 14 September, 7 to 11 timed blocks and a
+dad note per day. Weeks 2 and 3 carried a name, a role, minutes, an `hie` number
+and summary lines, and nothing else. The app was right to show what it showed:
+`TodayCard` and `DayCard` both render blocks only when a day has blocks, which is
+what Game Day needs. Both weeks are now written in full, 21 full cards for the
+month.
+
+**Rulings.**
+
+- **Every day of the month gets a full card, and a test says so.**
+  `plan_seeder_spec.rb` used to assert the opposite, that week 2 had no full
+  cards, which pinned the sketch in place as if it were the intent. It now walks
+  all three weeks and asserts blocks, summary lines and a dad note on each of the
+  21 days. The shape a later week is written in is exactly what goes unnoticed
+  until the Monday it is opened.
+- **The Challenge of the Week may not cost high-intent efforts on a Monday.**
+  Week 2's challenge was Broad Jump & Stick, attempted Monday and Friday. A
+  maximal broad jump is a high-intent effort by the architecture's own
+  definition, and Monday is a zero-effort day after gymnastics. The challenge is
+  now Statue Stick: 10 single-leg sticks, 3 second statue, count the clean ones.
+  It costs nothing, it is the week's second sub-target, and it keeps the Monday
+  and Friday attempts the rules ask for.
+- **The broad jump keeps its place, on the day built for it.** It is Wednesday's
+  own challenge block, best of 3, which is the week-1 pattern where Wednesday ran
+  Beat Dad's Broad Jump beside that week's challenge. Nothing was lost by moving
+  it, and the three jumps were already inside Wednesday's 20.
+- **Week 3's challenge says "Run on green", not "Sprint on green".** Same
+  collision, one word rather than a new challenge: Monday's attempt is at jog
+  speed and scores the stop, Wednesday runs the sprint version at 8 × 10m, and
+  Friday's second attempt is at three-quarter speed. The word that had to go was
+  the one that made a zero-effort Monday illegal.
+- **The `hie` numbers were not touched.** Week 2 spends 39 of 40 and week 3 spends
+  39 of 40, the totals the sketches declared. They are still Claude's numbers and
+  not Jeff's, which is the open item the Phase 1 gate left. A second test now
+  holds the rules around them: every week inside its budget, zero on Monday and
+  Sunday, 5 or fewer on Friday. The budget rule had nothing asserting it before.
+- **Sunday of week 2 does cartwheel step 2, not bunny hops.** The sketch's summary
+  line had him repeating step 1 in a week whose own sub-target is step 2 both
+  sides. A weekly review that practises last week's version of the New Thing is
+  a review of the wrong week.
+- **Blocks name their drills.** Five bodies were reworded so the tokenizer links
+  them: "10 single-leg landings" became "10 single-leg sticks", "between cones"
+  became "through cone gates", "then single leg" became "then single-leg
+  balance". The seeder's bare-block report is back to the four kinds week 1 also
+  leaves bare (Test: Height, Play, Home program, Review). This matters twice
+  over: it is what makes a drill tappable on the card, and it is what the Notes
+  page builds its rating chips from, so a bare week is a week Jeff cannot rate.
+- **No new glossary entries.** Everything both weeks ask for was already among
+  the 84 in `drills.yml`. October is the month that needs new ones.
+
+## 2026-09-21: exporting from production before deploying rewrites the plans backwards
+
+**What happened.** `bin/rails docs:export` was run against the Fly database an
+hour after weeks 2 and 3 were written and committed. It pulled the baseline and
+the four session entries into the repo, which is what it was run for. It also
+rewrote `docs/plans/2026-27/2026-09.md` from production's `day_cards`, and
+production had not been deployed, so the prose for weeks 2 and 3 went back to the
+four-bullet sketch: 75 lines in, 120 lines out. The file was restored from the
+commit and the results and journal were kept.
+
+**Rulings.**
+
+- **The plan YAML is the source of truth for the plans doc, and the database is
+  the source of truth for the journal and the results.** The exporter writes all
+  three from the database, which is right for two of them and a round trip for
+  the third. Exporting from a database that has not been seeded with the current
+  YAML therefore moves the repo's memory backwards, quietly, in the one file
+  nobody re-reads after writing it.
+- **The order is deploy, then export.** Running it the other way is safe only when
+  no content has changed since the last deploy, which is exactly the case nobody
+  checks. `docs/history/2026-09-14-deploy-gap.md` recorded the same shape of
+  problem from the other end: a merge that had not been deployed. This is that
+  gap seen from the export side.
+- **Nothing in the code was changed for it.** A guard in the exporter, comparing
+  the seeded content against the YAML on disk and refusing the plans half when
+  they disagree, would close it. That is a change to a tool Jeff runs, and it is
+  his call, so it is written down rather than done.
+
+## 2026-09-21: the Fly machine has to be started before ssh will answer
+
+**What happened.** Three attempts to export against production failed with no
+file written and no visible cause. The machine was `stopped`. `fly ssh console`
+does not start a machine, because only HTTP traffic through the proxy triggers
+auto-start, so the command returned nothing, `DATABASE_URL` was set to the empty
+string, and Rails died on an empty connection URL before the exporter ran. The
+empty string is the trap: `ENV.fetch("DATABASE_URL", <default>)` finds the key
+and returns the empty value rather than falling back to the development default,
+so the failure surfaced as a connection error rather than as a missing variable.
+
+**Ruling.** `fly machine start <id> -a teddy-pe-api` comes first, and any command
+that reads the URL into a variable checks that it is non-empty before using it.
+Recorded because the failure mode is silent and the machine is stopped most of the
+time.
+
+## 2026-09-21: test 8 becomes a constrained wall rally
+
+**What happened.** The baseline recorded 100 for the tennis rally count. Test 8
+was written as a cooperative rally with Dad; the 100 was Teddy alone at the wall,
+and Jeff's note for 17 September says it was capped rather than reached: "he
+could have gone basically forever."
+
+Two faults, not one. The row holds a number taken under a different protocol than
+the one beside it, so a December retest run as written would compare a rally with
+Dad against a solo wall count and chart the gap as a collapse for a boy who had
+improved. And the measure has no headroom, so a test he saturates on the first of
+five dates reports nothing for the rest of the year.
+
+**Rulings.**
+
+- **Test 8 is now a solo wall rally with a constraint.** Green ball, standing
+  behind a line 6m from the wall, every ball landing above a line on the wall at
+  net height, consecutive count, best of 3. The constraint is what restores the
+  headroom, and it measures depth and height control rather than only contact.
+- **It stays solo, because Jeff's running is limited through fall 2026.** A
+  cooperative rally is the better tennis measure and it needs Dad moving at the
+  net. The architecture already forbids fall drills that need him to sprint, and
+  a battery item he cannot administer in October is a battery item that does not
+  get administered. Worth revisiting in the Wolf block when he is running again.
+- **The baseline is owed again and is on Thursday 24 September.** The card gained
+  a `Test: Wall rally` block on the tennis-heaviest day of week 2, eight minutes,
+  taken warm after the drop feeds. Not backdated into the Sep 15-17 window: the
+  window is a recorded fact and the other fourteen rows were taken inside it.
+  The number goes in the Baseline column and replaces the unconstrained 100.
+- **Week 1's card was not rewritten.** It describes what was actually done on 17
+  September, which is the point of the export. A past card edited to match a later
+  decision is a record of nothing.
+- **Weeks 2 and 3 keep their 15-ball and 15-to-20-ball sub-targets.** Those are
+  rallies with Dad over a net, which the 100 says nothing about. The two numbers
+  measure different things and both belong in the program.

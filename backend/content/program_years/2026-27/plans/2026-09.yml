@@ -398,8 +398,8 @@ weeks:
   - 'Tennis: 15-ball rally'
   - 'Basketball: crossover eyes up ×20, bounce pass target'
   - 'Soccer: 10 wall passes in a row each foot; keeper scoop'
-  challenge: Broad Jump & Stick. Longest jump you also stick. Monday number, Friday
-    number.
+  challenge: Statue Stick. 10 single-leg sticks, hold the statue 3 seconds. Count
+    the clean ones. Monday number, Friday number.
   days:
   - dow: mon
     date: '2026-09-21'
@@ -411,8 +411,54 @@ weeks:
     - Stick landings from 30cm ×10
     - Cartwheel step 2 ×8 each side
     - 'Basketball: crossovers eyes up, figure 8, 200 dribbles'
-    - 'Challenge: Broad Jump & Stick (Mon)'
+    - 'Challenge: Statue Stick (Mon)'
+    dad_note: 'Gymnastics has already loaded him, so nothing today is jumped for distance.
+      The box goes to 30cm only if all ten from the curb were quiet; if the knees cave
+      inward, lower it and stay there. On the cartwheel, both hands land on the line
+      before either foot leaves it. The basketball block is 200 dribbles of volume,
+      and the thing to correct is his eyes dropping, never a lost ball.'
     hie: 0
+    blocks:
+    - minutes: '8'
+      name: Wake Up
+      body: 'Animal walk medley: bear, crab, monkey, flamingo, 10m each. Then 10 skips
+        and arm circles.'
+      tag:
+    - minutes: '14'
+      name: New Thing
+      body: 'Cartwheel step 2: <q>hand, hand, foot, foot</q>. Chalk a line. Lunge in,
+        reach one hand then the other onto the line, kick one foot over then the other,
+        land on the line. 8 each side. Then 10 donkey kicks against the wall, hips
+        over the shoulders.'
+      tag:
+    - minutes: '14'
+      name: Stick It
+      body: 'Stick landing from a 30cm box. Land in cat position, freeze 3 seconds,
+        Dad scores each one 1 to 3 for quiet. 10 reps, and the target this week is
+        10 of 10. Then single-leg stick ×5 each leg, statue held 3 seconds. <q>Land
+        like a cat, then be a statue.</q>'
+      tag:
+    - minutes: '20'
+      name: 'Basketball: Handle'
+      body: 'Stationary handling, eyes up on Dad''s fingers. Crossovers ×20 with the
+        eyes up, pound dribble 25 each hand, figure 8 through the legs 10 each way,
+        then again. About 200 dribbles. Finish with 15 bounce passes to a chalk square
+        at 3m. <q>Eyes up, ball low.</q>'
+      tag:
+    - minutes: '7'
+      name: Challenge
+      body: '<b>Statue Stick.</b> 10 single-leg sticks, 3 second statue on each. Count
+        the clean ones: no wobble, no second foot down. Write the number on the chart.
+        Again Friday.'
+      tag: challenge
+    - minutes: '4'
+      name: Champion's Log
+      body: 'One line: best thing today. Teddy writes it himself.'
+      tag:
+    - minutes: '10'
+      name: Play
+      body: Skateboard cruise or bike. Nothing timed.
+      tag:
   - dow: tue
     date: '2026-09-22'
     name: Rings & Rope
@@ -425,7 +471,52 @@ weeks:
     - 'Soccer: wall passes streak each foot, toe taps, sole rolls'
     - Med ball chest pass ×10
     - Jump rope 2×2 min
+    dad_note: 'Swim is later, so this is the hanging day and the med ball is the only
+      maximal effort in it: 10 throws with full intent, then stop. The wall pass streak
+      is the target he is chasing this week, 10 in a row each foot, and the left will
+      take three times as long. Count out loud with him so the number is his. Spot
+      the rings at the hips and never pull.'
     hie: 6
+    blocks:
+    - minutes: '10'
+      name: Wake Up
+      body: Skips, big and small arm circles, inchworms ×5, bear crawl 2×10m.
+      tag:
+    - minutes: '18'
+      name: Rings
+      body: 'Riverside traveling rings. Hang and swing ×5, then reach for the next
+        ring with Dad spotting the hips. Goal: 5 passes, up from 3 last week. If he
+        gets 5, turn around and come back.'
+      tag:
+    - minutes: '12'
+      name: Strong
+      body: 2 dead hangs to the edge of the grip. Hanging knee tucks ×8. Hollow hold
+        2×20s. Crab walk 2×10m.
+      tag:
+    - minutes: '20'
+      name: 'Soccer: Touch & Pass'
+      body: 'At a wall. Inside-foot pass and receive, counting the streak: how many
+        in a row without a miss, right foot then left. Goal is 10 each. Then toe taps
+        30s, tick-tocks 30s, sole rolls 30s, twice through. About 300 touches. <q>Soft
+        foot, look up after the touch.</q>'
+      tag:
+    - minutes: '6'
+      name: Power
+      body: Med ball chest pass into a wall ×10. Step into it, catch and reset. This
+        is the only maximal effort on the card.
+      tag:
+    - minutes: '8'
+      name: Coordination
+      body: 'Jump rope, 2 rounds of 2 minutes. <q>Tiny hops, wrists not arms.</q>'
+      tag:
+    - minutes: '10'
+      name: Play
+      body: Basketball court. HORSE, Dad shoots from one spot.
+      tag:
+    - minutes: '4'
+      name: Shake Out
+      body: 'Walk a lap, calves on the wall. Champion''s Log line.'
+      tag:
   - dow: wed
     date: '2026-09-23'
     name: Starts & Sticks
@@ -438,7 +529,55 @@ weeks:
     - Single-leg stick ×5 each
     - 'Soccer: dribble through gates, both feet, then chase game'
     - Soccer play
+    dad_note: 'The week''s load spike, by design. High-intent efforts: 6 starts over
+      10m, 6 broad jumps, 3 challenge jumps and about 5 bursts in the chase game, so
+      20. The statue sticks are small on purpose and cost nothing. Full walk-back rest
+      between starts, and if the third one looks slower than the second the set is
+      over. The soccer gates are technical volume and do not count.'
     hie: 20
+    blocks:
+    - minutes: '14'
+      name: Wake Up
+      body: A-march 2×15m, skips 2×15m, gallops each lead 2×15m, high knees 2×10m.
+        Then 3 build-up runs over 20m at 60, 70, 80%.
+      tag:
+    - minutes: '14'
+      name: Starts
+      body: '6 starts over 10m from the athletic stance, going on Dad''s clap. Walk
+        back between each, about 90 seconds. <q>First three steps low and long.</q>'
+      tag:
+    - minutes: '12'
+      name: Power
+      body: Broad jump and stick ×6. Arm swing, jump, land in cat position and hold
+        it. A jump he cannot stick does not count, so read him the mark only after
+        the landing holds.
+      tag:
+    - minutes: '8'
+      name: Stick It
+      body: Single-leg stick ×5 each leg forward, then ×5 each leg sideways, 3 second
+        statue every time. Small hops on purpose.
+      tag:
+    - minutes: '18'
+      name: 'Soccer: Touch'
+      body: Dribble through 6 cone gates, right foot only, then left foot only, then
+        both. Small touches, head up between the gates. Then first touch off the wall
+        ×20 each foot.
+      tag:
+    - minutes: '6'
+      name: Challenge
+      body: '<b>Broad Jump and Stick.</b> The longest jump he also sticks. Best of
+        3, measured to the back heel. This is the jump the whole week has been landing
+        for.'
+      tag: challenge
+    - minutes: '25'
+      name: Play
+      body: 'Soccer field. Chase game with Dad stationary and a ball to roll, then
+        free kicking at a goal.'
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: 'Walk a lap, calves on the wall. Champion''s Log line.'
+      tag:
   - dow: thu
     date: '2026-09-24'
     name: Rally to 15
@@ -449,9 +588,67 @@ weeks:
     - Cartwheel step 2 both sides
     - Step-and-throw target 15 R / 10 L
     - 'Tennis: drop feeds FH/BH ×20, rally target 15'
+    - 'Test: wall rally, new protocol'
     - 'Basketball: jump stop + pivot both feet, bounce pass target, form shooting
       1m'
+    dad_note: 'Tennis is the point of this day. Twenty drop feeds each wing, and if
+      the finish starts dropping below the shoulder, end the set at 10 rather than
+      pushing to 20. The rally target is 15 with Dad, cooperative, green ball: count
+      out loud together. Then the wall rally is measured again under the new protocol,
+      back 6m and above the line, because the baseline 100 was unconstrained and he
+      never reached his own ceiling. Type it into the Baseline column on the Tests
+      tab. High-intent efforts are the jump stops off a jog and the play block, about
+      8.'
     hie: 8
+    blocks:
+    - minutes: '10'
+      name: Wake Up
+      body: Animal medley, skips, then 10 shadow forehands and 10 shadow backhands
+        with a full unit turn.
+      tag:
+    - minutes: '14'
+      name: New Thing
+      body: 'Cartwheel step 2 both sides, 8 each. Compare with Monday: are both hands
+        landing before either foot leaves? Then 10 donkey kicks and one wall handstand
+        walk-up.'
+      tag:
+    - minutes: '12'
+      name: Throw
+      body: Step-and-throw at a chalk square on the tennis wall. Opposite foot steps
+        forward. 15 throws with the right arm, 10 with the left. Score the hits, both
+        arms.
+      tag:
+    - minutes: '28'
+      name: Tennis
+      body: 'Drop-feed forehands ×20 and backhands ×20: unit turn, contact in front,
+        finish over the shoulder. Then rally with Dad, green ball, target 15 in a row.
+        Between every point, the reset: breathe, bounce, look at the strings.'
+      tag:
+    - minutes: '8'
+      name: 'Test: Wall rally'
+      body: 'Chalk a line on the wall at net height and a line on the ground 6m back.
+        Consecutive wall rally with the green ball, standing behind the line, every
+        ball landing above the wall line. Best of 3. This replaces the unconstrained
+        100 from the baseline week, so the number goes in the Baseline column.'
+      tag: test
+    - minutes: '22'
+      name: 'Basketball: Footwork & Shoot'
+      body: Jump stop off a jog, then pivot on each foot, 5 each. Triple-threat stance
+        out of every stop. Bounce passes to a chalk square at 3m ×20. Then form shooting
+        from 1m, holding the finish, 30 makes.
+      tag:
+    - minutes: '6'
+      name: Strong
+      body: 2 dead hangs, hollow hold 2×20s.
+      tag:
+    - minutes: '10'
+      name: Play
+      body: Basketball. Dribble tag with Dad stationary and a ball to roll, then HORSE.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Champion's Log line.
+      tag:
   - dow: fri
     date: '2026-09-25'
     name: Skate & Statue
@@ -463,8 +660,53 @@ weeks:
     - Sideways single-leg sticks
     - 'Keeper: scoop, W-catch, shuffle to the ball'
     - Jump rope
-    - 'Challenge: Broad Jump & Stick (Fri)'
+    - 'Challenge: Statue Stick (Fri)'
+    dad_note: 'Saturday is roughly 5 hours of organized sport, so today is balance
+      and skill and 5 high-intent efforts at most. Keeper work stays catching only:
+      body behind the ball on the scoop, thumbs together on the W-catch. Diving starts
+      from kneeling in the Fox block once the safe-fall habit is in. Early bed, big
+      dinner, water bottle ready.'
     hie: 5
+    blocks:
+    - minutes: '10'
+      name: Wake Up
+      body: Animal medley, skips, arm circles.
+      tag:
+    - minutes: '30'
+      name: Skate park
+      body: 'Free skate. One safe-fall set first: bend the knees, roll onto the side
+        and forearm, never straight arms. 5 from kneeling on the grass.'
+      tag:
+    - minutes: '12'
+      name: Stick It
+      body: Sideways single-leg stick ×5 each direction on each leg, 3 second statue
+        every time. Then single-leg balance with eyes closed, 20s each.
+      tag:
+    - minutes: '20'
+      name: 'Soccer: Keeper'
+      body: 'On grass. Set position: knees bent, hands in front, weight forward. Dad
+        hand-feeds 20 rolling balls for the scoop, body behind the ball every time,
+        then 20 at chest height for the W-catch. Then shuffle two steps to the ball
+        before each catch, 10 each way. <q>Hands first, then hug it.</q>'
+      tag:
+    - minutes: '8'
+      name: Coordination
+      body: Jump rope, 2 rounds of 2 minutes.
+      tag:
+    - minutes: '7'
+      name: Challenge
+      body: '<b>Statue Stick, round 2.</b> 10 single-leg sticks, 3 second statue. Beat
+        Monday''s number.'
+      tag: challenge
+    - minutes: '20'
+      name: Play
+      body: Soccer field kickaround and passing games. No sprint races today.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: 'Calves, hamstrings. Champion''s Log: <q>what was your best thing this
+        week?</q>'
+      tag:
   - dow: sat
     date: '2026-09-26'
     name: Game Day
@@ -474,7 +716,20 @@ weeks:
     summary_lines:
     - Home program off
     - Evening shake-out
+    dad_note: Highest-load day of the week. Watch for heel or knee complaints Sunday
+      morning. If there are any, Sunday's card becomes stretching only and you tell
+      me.
     hie: 0
+    blocks:
+    - minutes: "—"
+      name: Home program
+      body: Off. Add nothing.
+      tag:
+    - minutes: '5'
+      name: Evening shake-out
+      body: 'Walk, calves against the wall, 3 slow breaths. Champion''s Log line: one
+        thing from each sport.'
+      tag:
   - dow: sun
     date: '2026-09-27'
     name: Quick Card
@@ -483,10 +738,35 @@ weeks:
     intensity: 1
     summary_lines:
     - Shadow swings ×20
-    - Bunny hops
+    - Cartwheel step 2, both sides
     - 'Soccer: 15 min wall touch'
     - 'Patch check: Power & Landing'
+    dad_note: 'Tennis takes two hours, so this card is short on purpose. The patch
+      check is the point: read him the box landing score and the two Statue Stick numbers,
+      then ask whether he thinks Power & Landing is earned. He decides, you record
+      it.'
     hie: 0
+    blocks:
+    - minutes: '5'
+      name: Before tennis
+      body: 'Skips, 10 shadow forehands, 10 shadow backhands. Remind him of the reset:
+        breathe, bounce, strings.'
+      tag:
+    - minutes: '8'
+      name: After tennis
+      body: Cartwheel step 2 both sides, 8 each. Compare with Monday.
+      tag:
+    - minutes: '15'
+      name: 'Soccer: Touch'
+      body: At a wall. Inside-foot pass and receive, both feet, then toe taps and sole
+        rolls. About 300 touches.
+      tag:
+    - minutes: '10'
+      name: Review
+      body: 'Patch check: Power & Landing. Read the week''s numbers out loud: box landings
+        out of 10, Statue Stick Monday and Friday, and the broad jump he stuck on Wednesday.
+        Ask him what next week should be called.'
+      tag:
 - number: 3
   position_in_block: 3
   theme: Brake
@@ -499,7 +779,7 @@ weeks:
   - Step-and-throw 10 of 10, both arms
   - 'Basketball: jump stop off a jog, both feet, 5 of 5'
   - 'Soccer: first touch then pass in one rhythm; keeper set position on Dad''s cue'
-  challenge: Red Light. Sprint on "green", stop in 3 steps on "red". Score the quiet
+  challenge: Red Light. Run on "green", stop in 3 steps on "red". Score the quiet
     stops out of 10.
   days:
   - dow: mon
@@ -513,7 +793,49 @@ weeks:
     - Jog-to-3-step-stop ×6
     - 'Basketball: dribble-jog to jump stop, both feet; figure 8'
     - 'Challenge: Red Light (Mon)'
+    dad_note: 'Everything today runs at jog speed, and the score is the stop rather
+      than the start. Three steps, quiet, chest up, no fourth step and no skid. Gymnastics
+      has already loaded him, so if he starts racing the green light, slow the whole
+      game down. Cartwheel step 3 is the lunge entry: hands reach the line before the
+      hips come over.'
     hie: 0
+    blocks:
+    - minutes: '8'
+      name: Wake Up
+      body: Animal medley, skips, arm circles.
+      tag:
+    - minutes: '15'
+      name: New Thing
+      body: 'Cartwheel step 3: the lunge entry. Stand tall, step into a long lunge,
+        reach both hands onto the line, kick over, land on the line. 10 each side.
+        <q>Straight arms, eyes on your hands.</q>'
+      tag:
+    - minutes: '12'
+      name: Brake
+      body: 'Jog to a 3-step stop ×6. Dad calls <q>red</q>, Teddy gets three steps
+        to be completely still. Quiet feet, chest up, knees soft. A fourth step is
+        a miss.'
+      tag:
+    - minutes: '20'
+      name: 'Basketball: Handle & Footwork'
+      body: Dribble-jog to a jump stop, landing on both feet at once, then pivot each
+        way, 5 each. Then figure 8 through the legs 10 each way, crossovers ×20 with
+        the eyes up, pound dribble 25 each hand. About 200 dribbles.
+      tag:
+    - minutes: '7'
+      name: Challenge
+      body: '<b>Red Light.</b> Run on green, stop in 3 steps on red. 10 calls, count
+        the quiet stops. Jog speed today, because the number is about the stop. Again
+        Friday.'
+      tag: challenge
+    - minutes: '4'
+      name: Champion's Log
+      body: 'One line: best thing today.'
+      tag:
+    - minutes: '10'
+      name: Play
+      body: Skateboard cruise or bike. Nothing timed.
+      tag:
   - dow: tue
     date: '2026-09-29'
     name: Rings & Balance
@@ -526,7 +848,49 @@ weeks:
     - Bear + crab walks
     - 'Soccer: touch-then-pass rhythm at the wall, both feet'
     - Single-leg balance 30s each
+    dad_note: 'Rings again, and the goal is last week''s 5 passes with a turn and a
+      trip back. They are the only maximal efforts on the card, about 6. The soccer
+      block is one rhythm: the ball comes out of his feet on the first touch and leaves
+      on the second, so stop him whenever it becomes touch, settle, look, pass. Record
+      both balance legs; a big gap is worth knowing about.'
     hie: 6
+    blocks:
+    - minutes: '10'
+      name: Wake Up
+      body: Skips, arm circles, inchworms ×5.
+      tag:
+    - minutes: '18'
+      name: Rings
+      body: 'Riverside traveling rings. Goal is 5 passes out, then turn around and
+        come back. Dad spots the hips and never pulls.'
+      tag:
+    - minutes: '14'
+      name: Strong
+      body: Hanging knee tucks ×8, 2 dead hangs, hollow hold 2×20s. Bear walk 2×15m,
+        crab walk 2×10m.
+      tag:
+    - minutes: '20'
+      name: 'Soccer: Touch'
+      body: At a wall. Touch then pass in one rhythm, 20 each foot. Then toe taps,
+        tick-tocks and sole rolls, twice through. About 300 touches.
+      tag:
+    - minutes: '8'
+      name: Balance
+      body: Single-leg balance 30s each leg, then eyes closed for as long as it holds.
+        Record both legs.
+      tag:
+    - minutes: '6'
+      name: Coordination
+      body: Jump rope, 2 rounds of 2 minutes.
+      tag:
+    - minutes: '8'
+      name: Play
+      body: Basketball court. HORSE.
+      tag:
+    - minutes: '4'
+      name: Shake Out
+      body: Champion's Log line.
+      tag:
   - dow: wed
     date: '2026-09-30'
     name: Red Light Green Light
@@ -540,7 +904,46 @@ weeks:
     - 'Soccer: dribble at speed and stop the ball dead on ''red'''
     - Broad jump ×3
     - Soccer game
+    dad_note: 'High-intent efforts: 8 red-light sprints over 10m, 3 broad jumps and
+      about 9 bursts in the soccer game, so 20. The stop is the thing being trained,
+      so a run that ends in a skid or a fourth step does not count and he repeats that
+      one at 80%. Full rest between sprints. The split step work is technical and costs
+      nothing.'
     hie: 20
+    blocks:
+    - minutes: '14'
+      name: Wake Up
+      body: A-march, skips, gallops each lead, high knees. Then 3 build-up runs over
+        20m at 60, 70, 80%.
+      tag:
+    - minutes: '16'
+      name: Brake
+      body: 'Red Light sprints. 8 × 10m, and Dad calls <q>red</q> somewhere inside
+        each run. Three steps to be still. Walk back between each. Quiet feet, chest
+        up. A skid does not count.'
+      tag:
+    - minutes: '12'
+      name: Tennis footwork
+      body: Split step into a shuffle. Dad claps, Teddy hops and lands ready, shuffles
+        to where Dad points, then recovers to the middle. 10 of 10 is the target.
+      tag:
+    - minutes: '8'
+      name: Power
+      body: Broad jump ×3, sticking every landing.
+      tag:
+    - minutes: '18'
+      name: 'Soccer: Touch at speed'
+      body: 'Dribble at speed through cone gates, and on <q>red</q> stop the ball dead
+        under the sole and freeze with it. 10 calls each foot.'
+      tag:
+    - minutes: '27'
+      name: Play
+      body: Soccer game with Dad in goal, or free kicking at a goal.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: 'Walk a lap, calves on the wall. Champion''s Log line.'
+      tag:
   - dow: thu
     date: '2026-10-01'
     name: Split & Shuffle
@@ -552,7 +955,51 @@ weeks:
     - Step-and-throw both arms 10/10 target
     - 'Tennis: split step + shuffle before every drop feed; FH/BH ×20; rally 15–20'
     - 'Basketball: defensive slides, jump stop, chest and bounce pass on the move'
+    dad_note: 'The split step goes in front of every drop feed today, so he never hits
+      a ball from standing still. Ten of ten on the throw target with both arms, and
+      the left will need a shorter distance to get there: move the line in rather than
+      letting the form fall apart. High-intent efforts are the slides and the play
+      block, about 8.'
     hie: 8
+    blocks:
+    - minutes: '10'
+      name: Wake Up
+      body: Animal medley, skips, 10 shadow forehands and 10 shadow backhands.
+      tag:
+    - minutes: '14'
+      name: New Thing
+      body: Cartwheel step 3, the lunge entry, 10 each side. Compare with Monday. Then
+        a wall handstand hold, 3 tries.
+      tag:
+    - minutes: '12'
+      name: Throw
+      body: Step-and-throw at the chalk square. 10 of 10 with the right arm, then 10
+        of 10 with the left, moving the line in for the left if the form goes.
+      tag:
+    - minutes: '32'
+      name: Tennis
+      body: 'Split step, then shuffle, then hit: every drop feed starts with the hop.
+        Forehands ×20, backhands ×20. Then rally with Dad, green ball, target 15 to
+        20 in a row. Reset between points.'
+      tag:
+    - minutes: '22'
+      name: 'Basketball: Footwork & Pass'
+      body: Defensive slides across the key, 6 each way, hands out and feet never crossing.
+        Jump stop off a jog, both feet, 5 of 5. Chest and bounce passes on the move,
+        20 each.
+      tag:
+    - minutes: '6'
+      name: Strong
+      body: 2 dead hangs, hollow hold 2×20s.
+      tag:
+    - minutes: '14'
+      name: Play
+      body: Basketball. HORSE and dribble tag with Dad stationary.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Champion's Log line.
+      tag:
   - dow: fri
     date: '2026-10-02'
     name: Skate & Brake
@@ -565,7 +1012,49 @@ weeks:
     - 'Keeper: set position on cue, shuffle and catch, 20 hand feeds'
     - Jump rope
     - 'Challenge: Red Light (Fri)'
+    dad_note: 'Last low day before Saturday, 5 high-intent efforts at most, and the
+      Red Light attempt is the only fast thing on the card. The keeper set position
+      comes off your cue rather than off the ball, so call it early and call it late
+      and see whether he is still set when the feed arrives. Early bed, big dinner.'
     hie: 5
+    blocks:
+    - minutes: '10'
+      name: Wake Up
+      body: Animal medley, skips, arm circles.
+      tag:
+    - minutes: '30'
+      name: Skate park
+      body: Free skate. Two safe-fall reps from kneeling on the grass before he drops
+        in.
+      tag:
+    - minutes: '10'
+      name: Balance
+      body: 'Balance board or slant board: two-foot hold, then single-leg balance, then
+        catching a tennis ball while holding. 3 rounds.'
+      tag:
+    - minutes: '20'
+      name: 'Soccer: Keeper'
+      body: 'On grass. Dad calls <q>set</q>, Teddy takes the set position and holds
+        it. 20 hand feeds: 10 rolling for the scoop, 10 at chest height for the W-catch,
+        shuffling two steps to each. No diving.'
+      tag:
+    - minutes: '8'
+      name: Coordination
+      body: Jump rope, 2 rounds of 2 minutes. Count the best unbroken run.
+      tag:
+    - minutes: '7'
+      name: Challenge
+      body: '<b>Red Light, round 2.</b> 10 calls at three-quarter speed. Count the
+        quiet stops and beat Monday''s number.'
+      tag: challenge
+    - minutes: '20'
+      name: Play
+      body: Soccer kickaround. No races.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: 'Calves, hamstrings. Champion''s Log: best thing this week.'
+      tag:
   - dow: sat
     date: '2026-10-03'
     name: Game Day
@@ -575,7 +1064,20 @@ weeks:
     summary_lines:
     - Home program off
     - Evening shake-out
+    dad_note: Highest-load day of the week. Watch for heel or knee complaints Sunday
+      morning. If there are any, Sunday's card becomes stretching only and you tell
+      me.
     hie: 0
+    blocks:
+    - minutes: "—"
+      name: Home program
+      body: Off. Add nothing.
+      tag:
+    - minutes: '5'
+      name: Evening shake-out
+      body: 'Walk, calves against the wall, 3 slow breaths. Champion''s Log line: one
+        thing from each sport.'
+      tag:
   - dow: sun
     date: '2026-10-04'
     name: Quick Card
@@ -587,4 +1089,28 @@ weeks:
     - 'Basketball: 15 min handling'
     - 'Patch check: Speed (3-step stop)'
     - 'Preview Week 4: Upside Down'
+    dad_note: 'Last card of the third week, so the review matters more than the work.
+      Read him the two Red Light numbers and ask whether Speed is earned. Then tell
+      him what Week 4 is called and what the new thing will be, because he will think
+      about it all week.'
     hie: 0
+    blocks:
+    - minutes: '5'
+      name: Before tennis
+      body: 'Skips, 10 shadow forehands, 10 shadow backhands. Reset reminder: breathe,
+        bounce, strings.'
+      tag:
+    - minutes: '8'
+      name: After tennis
+      body: Cartwheel step 3, 8 each side. Then 3 jog-to-3-step stops.
+      tag:
+    - minutes: '15'
+      name: 'Basketball: Handle'
+      body: Stationary handling, 200 dribbles, eyes on Dad's fingers. Finish with 10
+        chest passes to a target.
+      tag:
+    - minutes: '10'
+      name: Review
+      body: 'Patch check: Speed, on the 3-step stop. Read the Red Light numbers. Then
+        preview Week 4, Upside Down: wall handstands and the cartwheel from standing.'
+      tag:
