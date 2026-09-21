@@ -550,3 +550,39 @@ so the failure surfaced as a connection error rather than as a missing variable.
 that reads the URL into a variable checks that it is non-empty before using it.
 Recorded because the failure mode is silent and the machine is stopped most of the
 time.
+
+## 2026-09-21: test 8 becomes a constrained wall rally
+
+**What happened.** The baseline recorded 100 for the tennis rally count. Test 8
+was written as a cooperative rally with Dad; the 100 was Teddy alone at the wall,
+and Jeff's note for 17 September says it was capped rather than reached: "he
+could have gone basically forever."
+
+Two faults, not one. The row holds a number taken under a different protocol than
+the one beside it, so a December retest run as written would compare a rally with
+Dad against a solo wall count and chart the gap as a collapse for a boy who had
+improved. And the measure has no headroom, so a test he saturates on the first of
+five dates reports nothing for the rest of the year.
+
+**Rulings.**
+
+- **Test 8 is now a solo wall rally with a constraint.** Green ball, standing
+  behind a line 6m from the wall, every ball landing above a line on the wall at
+  net height, consecutive count, best of 3. The constraint is what restores the
+  headroom, and it measures depth and height control rather than only contact.
+- **It stays solo, because Jeff's running is limited through fall 2026.** A
+  cooperative rally is the better tennis measure and it needs Dad moving at the
+  net. The architecture already forbids fall drills that need him to sprint, and
+  a battery item he cannot administer in October is a battery item that does not
+  get administered. Worth revisiting in the Wolf block when he is running again.
+- **The baseline is owed again and is on Thursday 24 September.** The card gained
+  a `Test: Wall rally` block on the tennis-heaviest day of week 2, eight minutes,
+  taken warm after the drop feeds. Not backdated into the Sep 15-17 window: the
+  window is a recorded fact and the other fourteen rows were taken inside it.
+  The number goes in the Baseline column and replaces the unconstrained 100.
+- **Week 1's card was not rewritten.** It describes what was actually done on 17
+  September, which is the point of the export. A past card edited to match a later
+  decision is a record of nothing.
+- **Weeks 2 and 3 keep their 15-ball and 15-to-20-ball sub-targets.** Those are
+  rallies with Dad over a net, which the 100 says nothing about. The two numbers
+  measure different things and both belong in the program.

@@ -84,13 +84,15 @@ If the program itself needs changing while the rewrite is in flight (a new month
   and the Dec 7 to 11 retest becomes the baseline by default. Measure him shoes
   off against a wall and type it into the Baseline column on the Tests tab.
 
-- **Week 2's tennis sub-target may be far too low.** It asks for a 15-ball rally.
-  The baseline recorded 100, and Jeff's 17 September note says "we capped the
-  wall rallies at 100 for the test, he could have gone basically forever". If
-  that 100 was a wall rally and the cooperative rally with Dad is a different and
-  much smaller number, 15 may be right. If it was with Dad, then weeks 2 and 3
-  both ask him to clear a bar he is 85 balls past. Jeff to say which, and the
-  targets for both weeks move together.
+- **Test 8 is now a constrained wall rally, and its baseline is owed.** The 100 in
+  the Baseline column was Teddy alone at the wall, unconstrained, and capped
+  rather than reached, against a protocol that said cooperative rally with Dad.
+  Test 8 now reads: green ball, behind a line 6m back, every ball above a line on
+  the wall at net height, best of 3. **Thursday 24 September carries the
+  re-measure** as an eight-minute test block on the card; the number replaces the
+  100 in the Baseline column on the Tests tab. Weeks 2 and 3 keep their 15-ball
+  and 15-to-20-ball rally sub-targets, which are rallies with Dad and measure
+  something else. See `docs/decisions.md` for 21 September.
 
 - **Today needs an API deploy before the test sheet appears on it.** The
   test windows' `starts_on` and `ends_on` reach production only when the

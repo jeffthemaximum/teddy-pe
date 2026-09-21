@@ -194,10 +194,20 @@ Gate checks happen in Trials weeks.
 | 5 | Dead hang | Best of 2, seconds. | Strength |
 | 6 | Line-touch agility | 5m out, touch, 5m back, touch, 5m out. 2 trials. Best. | Speed / Coordination |
 | 7 | Jump rope singles | Consecutive, best of 3. | Coordination |
-| 8 | Tennis rally count | Cooperative rally with Dad, current ball, best of 3. | Tennis |
+| 8 | Tennis rally count | Solo wall rally, green ball. Teddy stands behind a line 6m from the wall and every ball must land above a line on the wall at net height. Consecutive count, best of 3. | Tennis |
 | 9 | Basketball cone weave | 5 cones 2m apart, right hand down, left hand back, ball below the waist. 2 trials. Best. | Basketball |
 | 10 | Soccer wall passes | 3m from the wall, 30 s, alternating feet, inside foot. Count controlled returns. | Soccer |
 | + | Height | Shoes off, against a wall. Recorded at every test date to track growth rate. | Growth |
+
+Test 8 was a cooperative rally with Dad until 21 September. The baseline
+recorded a solo wall rally of 100 instead, and it was a cap rather than a
+ceiling: Teddy could have gone on. A test he saturates on the first date cannot
+show progress on the other four, and a December retest run to the old wording
+would have compared a rally with Dad against a solo wall number and charted the
+difference as a collapse. The constraint (back 6m, above net height) puts the
+headroom back and costs Jeff no running, which matters through fall 2026. The
+baseline for this row is owed again under the new protocol; see
+`docs/decisions.md` for 21 September.
 
 Numbers are typed into the test sheet on the This Week tab and stored in the database, keyed by test window and test id, so every device shows the same sheet. The Progress panel on the Year tab charts them. Each row carries a direction in `backend/content/program_years/<year>/program.yml` (lower, higher, or growth) so the chart knows which way is an improvement; height reports a cm/year pace and raises the growth-load protocol when that pace runs fast.
 

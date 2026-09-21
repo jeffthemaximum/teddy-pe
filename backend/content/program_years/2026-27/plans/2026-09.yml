@@ -588,13 +588,17 @@ weeks:
     - Cartwheel step 2 both sides
     - Step-and-throw target 15 R / 10 L
     - 'Tennis: drop feeds FH/BH ×20, rally target 15'
+    - 'Test: wall rally, new protocol'
     - 'Basketball: jump stop + pivot both feet, bounce pass target, form shooting
       1m'
     dad_note: 'Tennis is the point of this day. Twenty drop feeds each wing, and if
       the finish starts dropping below the shoulder, end the set at 10 rather than
       pushing to 20. The rally target is 15 with Dad, cooperative, green ball: count
-      out loud together. High-intent efforts are the jump stops off a jog and the play
-      block, about 8.'
+      out loud together. Then the wall rally is measured again under the new protocol,
+      back 6m and above the line, because the baseline 100 was unconstrained and he
+      never reached his own ceiling. Type it into the Baseline column on the Tests
+      tab. High-intent efforts are the jump stops off a jog and the play block, about
+      8.'
     hie: 8
     blocks:
     - minutes: '10'
@@ -614,13 +618,19 @@ weeks:
         forward. 15 throws with the right arm, 10 with the left. Score the hits, both
         arms.
       tag:
-    - minutes: '32'
+    - minutes: '28'
       name: Tennis
       body: 'Drop-feed forehands ×20 and backhands ×20: unit turn, contact in front,
-        finish over the shoulder. Wall rally for a streak. Then rally with Dad, green
-        ball, target 15 in a row. Between every point, the reset: breathe, bounce,
-        look at the strings.'
+        finish over the shoulder. Then rally with Dad, green ball, target 15 in a row.
+        Between every point, the reset: breathe, bounce, look at the strings.'
       tag:
+    - minutes: '8'
+      name: 'Test: Wall rally'
+      body: 'Chalk a line on the wall at net height and a line on the ground 6m back.
+        Consecutive wall rally with the green ball, standing behind the line, every
+        ball landing above the wall line. Best of 3. This replaces the unconstrained
+        100 from the baseline week, so the number goes in the Baseline column.'
+      tag: test
     - minutes: '22'
       name: 'Basketball: Footwork & Shoot'
       body: Jump stop off a jog, then pivot on each foot, 5 each. Triple-threat stance
@@ -631,7 +641,7 @@ weeks:
       name: Strong
       body: 2 dead hangs, hollow hold 2×20s.
       tag:
-    - minutes: '14'
+    - minutes: '10'
       name: Play
       body: Basketball. Dribble tag with Dad stationary and a ball to roll, then HORSE.
       tag:
