@@ -70,14 +70,27 @@ If the program itself needs changing while the rewrite is in flight (a new month
   rule, and week 3's challenge now says "Run on green" rather than "Sprint on
   green" for the same reason. Both are in `docs/decisions.md` under 2026-09-21.
 
-- **The production export is still owed.** `bin/rails docs:export` against the Fly
-  database was refused by the sandbox on 21 September, both by reading
-  `DATABASE_URL` off the machine and by running the task on it. So
-  `docs/results/2026-27.md` still shows an empty baseline column and
-  `docs/journal/2026-27/2026-09.md` holds one entry, neither of which reflects
-  production. Jeff confirms the Sep 15 to 17 baseline numbers are in the
-  production database. Run the export from a shell that can reach it before
-  planning October, because that is what keeps this repo the memory.
+- **The production export has run and the baseline is in the repo.**
+  `docs/results/2026-27.md` holds 14 of the 15 baseline rows and
+  `docs/journal/2026-27/2026-09.md` holds Jeff's four session entries with their
+  drill ratings, both from the Fly database on 21 September. The Fly machine has
+  to be started before `fly ssh console` will answer it, which is what made the
+  first three attempts fail silently.
+
+- **Height was not recorded at the baseline.** Fourteen of fifteen rows are in;
+  the height cell is empty. `CLAUDE.md` and the architecture both say height is
+  recorded at every test date, and it is the anchor for the tall-frame growth
+  protocol: without a first number, the cm/year pace has nothing to measure from
+  and the Dec 7 to 11 retest becomes the baseline by default. Measure him shoes
+  off against a wall and type it into the Baseline column on the Tests tab.
+
+- **Week 2's tennis sub-target may be far too low.** It asks for a 15-ball rally.
+  The baseline recorded 100, and Jeff's 17 September note says "we capped the
+  wall rallies at 100 for the test, he could have gone basically forever". If
+  that 100 was a wall rally and the cooperative rally with Dad is a different and
+  much smaller number, 15 may be right. If it was with Dad, then weeks 2 and 3
+  both ask him to clear a bar he is 85 balls past. Jeff to say which, and the
+  targets for both weeks move together.
 
 - **Today needs an API deploy before the test sheet appears on it.** The
   test windows' `starts_on` and `ends_on` reach production only when the

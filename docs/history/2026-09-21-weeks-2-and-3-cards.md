@@ -71,14 +71,13 @@ had the same collision in one word, and "Sprint on green" became "Run on green".
 
 ## Still open
 
-- **The export against production did not run.** `CLAUDE.md` asks for
-  `bin/rails docs:export` before planning, and the journal and the results live in
-  the Fly database. Both routes to it, reading `DATABASE_URL` off the machine and
-  running the task on the machine, were refused by this session's sandbox as
-  production reads. `docs/results/2026-27.md` in the repo still shows an empty
-  baseline column, which is either a stale export or a baseline that was never
-  typed in. Jeff confirmed the numbers should be in production, so the file is
-  stale and the export is owed.
+- **The export against production has now run**, after the machine was started.
+  `docs/results/2026-27.md` holds 14 of 15 baseline rows and
+  `docs/journal/2026-27/2026-09.md` holds four session entries. Two things came
+  out of reading them: height was never recorded at the baseline, and week 2's
+  15-ball tennis target may sit far below where he already is. Both are in
+  `docs/status.md`. The export also rewrote the plans prose backwards from the
+  undeployed database, which is its own ruling in `docs/decisions.md`.
 - **The `hie` numbers are still Claude's.** Unchanged from the sketches at 39 of
   40 in both weeks, and still the open item the Phase 1 gate left.
 - **This needs a deploy to reach Teddy.** The cards ship inside the image and the

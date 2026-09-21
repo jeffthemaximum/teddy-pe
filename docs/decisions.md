@@ -506,3 +506,47 @@ month.
   page builds its rating chips from, so a bare week is a week Jeff cannot rate.
 - **No new glossary entries.** Everything both weeks ask for was already among
   the 84 in `drills.yml`. October is the month that needs new ones.
+
+## 2026-09-21: exporting from production before deploying rewrites the plans backwards
+
+**What happened.** `bin/rails docs:export` was run against the Fly database an
+hour after weeks 2 and 3 were written and committed. It pulled the baseline and
+the four session entries into the repo, which is what it was run for. It also
+rewrote `docs/plans/2026-27/2026-09.md` from production's `day_cards`, and
+production had not been deployed, so the prose for weeks 2 and 3 went back to the
+four-bullet sketch: 75 lines in, 120 lines out. The file was restored from the
+commit and the results and journal were kept.
+
+**Rulings.**
+
+- **The plan YAML is the source of truth for the plans doc, and the database is
+  the source of truth for the journal and the results.** The exporter writes all
+  three from the database, which is right for two of them and a round trip for
+  the third. Exporting from a database that has not been seeded with the current
+  YAML therefore moves the repo's memory backwards, quietly, in the one file
+  nobody re-reads after writing it.
+- **The order is deploy, then export.** Running it the other way is safe only when
+  no content has changed since the last deploy, which is exactly the case nobody
+  checks. `docs/history/2026-09-14-deploy-gap.md` recorded the same shape of
+  problem from the other end: a merge that had not been deployed. This is that
+  gap seen from the export side.
+- **Nothing in the code was changed for it.** A guard in the exporter, comparing
+  the seeded content against the YAML on disk and refusing the plans half when
+  they disagree, would close it. That is a change to a tool Jeff runs, and it is
+  his call, so it is written down rather than done.
+
+## 2026-09-21: the Fly machine has to be started before ssh will answer
+
+**What happened.** Three attempts to export against production failed with no
+file written and no visible cause. The machine was `stopped`. `fly ssh console`
+does not start a machine, because only HTTP traffic through the proxy triggers
+auto-start, so the command returned nothing, `DATABASE_URL` was set to the empty
+string, and Rails died on an empty connection URL before the exporter ran. The
+empty string is the trap: `ENV.fetch("DATABASE_URL", <default>)` finds the key
+and returns the empty value rather than falling back to the development default,
+so the failure surfaced as a connection error rather than as a missing variable.
+
+**Ruling.** `fly machine start <id> -a teddy-pe-api` comes first, and any command
+that reads the URL into a variable checks that it is non-empty before using it.
+Recorded because the failure mode is silent and the machine is stopped most of the
+time.
