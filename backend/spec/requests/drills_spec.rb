@@ -11,7 +11,8 @@ RSpec.describe "drills", type: :request do
     get "/api/v1/drills", headers: auth(coach)
     expect(response).to have_http_status(:ok)
     body = JSON.parse(response.body)
-    expect(body["drills"].size).to eq(84)
+    in_yaml = YAML.load_file(Rails.root.join("content/program_years/2026-27/drills.yml"))["drills"].size
+    expect(body["drills"].size).to eq(in_yaml)
     expect(body["drills"].first.keys).to match_array(
       %w[slug name area_name aliases short how watch cue video]
     )

@@ -846,13 +846,15 @@ weeks:
     - Rings passes
     - Hanging knee tucks
     - Bear + crab walks
-    - 'Soccer: touch-then-pass rhythm at the wall, both feet'
+    - 'Soccer: receive and return, Levels 1 to 3; touch-then-pass at the wall'
     - Single-leg balance 30s each
     dad_note: 'Rings again, and the goal is last week''s 5 passes with a turn and a
       trip back. They are the only maximal efforts on the card, about 6. The soccer
-      block is one rhythm: the ball comes out of his feet on the first touch and leaves
-      on the second, so stop him whenever it becomes touch, settle, look, pass. Record
-      both balance legs; a big gap is worth knowing about.'
+      block opens with receive and return, and you feed it kneeling, so it costs you
+      no running: he moves up a level on a foot only after 8 of 10 clean. The wall
+      work after it is one rhythm: the ball comes out of his feet on the first touch
+      and leaves on the second, so stop him whenever it becomes touch, settle, look,
+      pass. Record both balance legs; a big gap is worth knowing about.'
     hie: 6
     blocks:
     - minutes: '10'
@@ -871,8 +873,14 @@ weeks:
       tag:
     - minutes: '20'
       name: 'Soccer: Touch'
-      body: At a wall. Touch then pass in one rhythm, 20 each foot. Then toe taps,
-        tick-tocks and sole rolls, twice through. About 300 touches.
+      body: 'Receive and return first. Dad kneels 3m away and rolls it in. Level
+        1, one star: catch with the outside of one foot, pass back with the inside
+        of the same foot, 10 each foot. Level 2, two stars: receive with the inside
+        of one foot, pass back with the inside of the other, 10 leading with each
+        foot. Level 3, three stars, on any foot that went 8 of 10 at Level 2: sole
+        roll it across, pass with the other foot. Then at the wall, touch then pass
+        in one rhythm, 20 each foot, and toe taps, tick-tocks and sole rolls once
+        through. About 300 touches. <q>Soft catch, send it home.</q>'
       tag:
     - minutes: '8'
       name: Balance
@@ -901,7 +909,8 @@ weeks:
     - Build-ups
     - Red Light sprints 8×10m, stop in 3 steps
     - Split step → shuffle 10/10
-    - 'Soccer: dribble at speed and stop the ball dead on ''red'''
+    - 'Soccer: dribble at speed and stop the ball dead on ''red''; receive and return
+      at speed'
     - Broad jump ×3
     - Soccer game
     dad_note: 'High-intent efforts: 8 red-light sprints over 10m, 3 broad jumps and
@@ -934,7 +943,9 @@ weeks:
     - minutes: '18'
       name: 'Soccer: Touch at speed'
       body: 'Dribble at speed through cone gates, and on <q>red</q> stop the ball dead
-        under the sole and freeze with it. 10 calls each foot.'
+        under the sole and freeze with it. 10 calls each foot. Then receive and return
+        at the highest level he cleared on Tuesday, 10 each foot, with Dad rolling
+        it in harder.'
       tag:
     - minutes: '27'
       name: Play
