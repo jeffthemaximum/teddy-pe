@@ -586,3 +586,38 @@ five dates reports nothing for the rest of the year.
 - **Weeks 2 and 3 keep their 15-ball and 15-to-20-ball sub-targets.** Those are
   rallies with Dad over a net, which the 100 says nothing about. The two numbers
   measure different things and both belong in the program.
+
+## 2026-09-27: receive and return, three levels, joins the soccer Touch strand
+
+**What happened.** Jeff sent a coach's Instagram reel (`@_coachjoel`,
+https://www.instagram.com/reel/DdxDE9nuQki/) of a 7 year old doing one
+receive-and-pass drill at three levels, and asked for the three levels to be added
+to the soccer activities going forward. The reel has no spoken or written
+instructions, only "Level 1/2/3" titles, so the levels were read off the footage
+frame by frame: two flat cones, a coach kneeling beside them rolling the ball in,
+the player controlling it and passing it straight back.
+
+**Rulings.**
+
+- **The levels as read.** Level 1 is inside foot to control and inside foot back.
+  Level 2 is a sole stop, then the pass. Level 3 is a sole stop, a sole tap with
+  each foot, then the pass. The progression is more touches and more sole work
+  before the ball goes back. Level 1 and the Level 3 footwork are the less
+  certain reads, and Jeff should correct the glossary entry if he saw the reel
+  differently.
+- **It goes on Tuesday, and at speed on Wednesday.** Tuesday's soccer Touch block
+  opens with it at his current level on each foot. Wednesday runs the highest
+  level he owns with firmer feeds, which in week 3 is Level 2, the same sole stop
+  the Red Light dribble trains. Friday stays keeper work. Week 3 is the first
+  week, because it is the first unplayed one, and its soccer sub-target
+  (first touch then pass in one rhythm) is this drill.
+- **Per foot, 8 of 10 to move up.** The same bar as the Cub soccer patch's first
+  touch. The weak foot gets extra reps at its own level rather than being pushed.
+- **No change to minutes or `hie`.** The Tuesday block stays 20 minutes and about
+  300 touches, with the wall work cut from twice through to once through to make
+  room. The Wednesday block stays 18. Receiving a rolled ball is technical volume,
+  so neither day's high-intent efforts moved.
+- **The drill spec counts the glossary from the YAML.** `drills_spec.rb` asserted
+  exactly 84 drills and failed on the 85th. It now compares against the entries in
+  `drills.yml`, which is what "lists every drill" means, so the next new drill
+  does not break it.
