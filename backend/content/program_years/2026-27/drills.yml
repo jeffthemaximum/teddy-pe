@@ -56,6 +56,23 @@ drills:
   watch: Straight legs, or weight sitting back on the heels.
   cue: Ready to move any direction.
   video:
+- slug: ball-glide-roll
+  name: Ball glide roll
+  area_name: Basketball
+  aliases:
+  - ball glide
+  - glide roll
+  short: Walking low behind the ball, rolling it along the floor ahead with alternate
+    hands. No dribbling.
+  how:
+  - Stay low, knees bent, chest over the ball.
+  - Push it forward with the right hand, then the left, so it zigzags a little and
+    never leaves the floor.
+  - Walk behind it for 10m, turn and come back.
+  watch: Standing up tall and chasing the ball, or pushing so hard it runs away from
+    him.
+  cue: Low and slow, the ball is on a leash.
+  video:
 - slug: bear-walk
   name: Bear walk
   area_name: Strength & Resilience
@@ -218,6 +235,20 @@ drills:
   - Finish with the thumbs turned down and the palms facing out.
   watch: Winding up behind the head first, which is slow and easy to read.
   cue: Step and push, thumbs down.
+  video:
+- slug: clap-tap
+  name: Clap tap
+  area_name: Basketball
+  aliases:
+  - clap taps
+  short: Walking with the ball, drop it, clap above it, catch it again. No dribbling.
+  how:
+  - Walk forward holding the ball in both hands at waist height.
+  - Let go of it.
+  - Clap once above the ball as it drops.
+  - Catch it again with both hands and keep walking. 10 catches.
+  watch: Stopping his feet to make the catch, or a clap so slow the ball gets away.
+  cue: Let go, clap, snatch it.
   video:
 - slug: collapse-dive
   name: Collapse dive
@@ -396,6 +427,23 @@ drills:
   - Ten each direction, then reverse.
   watch: Looking down at the ball, which is the whole habit being trained out.
   cue: Eyes on my fingers, not the ball.
+  video:
+- slug: figure-8-roll
+  name: Figure 8 roll
+  area_name: Basketball
+  aliases:
+  - figure eight roll
+  short: The ball stays on the floor and rolls in a figure 8 around and between the
+    feet. No dribbling.
+  how:
+  - Feet wide, bent low, fingertips on the ball.
+  - Roll it around the outside of one foot, back through the middle, around the other
+    foot.
+  - Step as you go so the figure 8 travels forward. 5 figure 8s.
+  - 'Backward: the same roll, moving backward, once going forward is smooth.'
+  watch: The ball bumping off his feet, or his hand lifting off the ball between
+    pushes.
+  cue: Fingertips glue it to the floor.
   video:
 - slug: finish-over-the-shoulder
   name: Finish over the shoulder
@@ -699,6 +747,23 @@ drills:
   watch: Throwing from the elbow with a still body. The power comes from the hips
     turning first.
   cue: Hips first, arm last.
+  video:
+- slug: pass-through
+  name: Pass through
+  area_name: Basketball
+  aliases:
+  - pass throughs
+  - pass-through
+  short: Walking in long lunge steps, handing the ball under the front leg every
+    stride. No dribbling.
+  how:
+  - Hold the ball in both hands and take a long step forward.
+  - Pass it under the front thigh from one hand to the other.
+  - Next step, the other leg, and pass it back. 10m.
+  - 'Backward: the same pattern walking backward, once going forward is smooth.'
+  watch: Short choppy steps that leave no room for the ball, or his eyes glued to
+    it.
+  cue: Big step, ball through the tunnel.
   video:
 - slug: pivot
   name: Pivot
@@ -1027,6 +1092,22 @@ drills:
   watch: Standing over the ball too upright, or letting the foot slip off the top.
   cue: Squash it and roll it.
   video:
+- slug: spider-move
+  name: Spider move
+  area_name: Basketball
+  aliases:
+  - spider moves
+  short: Walking with the ball held between the legs, drop it, take a step, catch it
+    between the legs again. No dribbling.
+  how:
+  - Knees bent, ball held between the legs.
+  - Let go of it and take one step forward.
+  - Catch it between the legs again. 10 catches.
+  - 'Backward: the same, stepping backward, once going forward is smooth.'
+  watch: A step so long he cannot get back over the ball, or standing up tall to
+    reach it.
+  cue: Drop, step, snatch.
+  video:
 - slug: split-step
   name: Split step
   area_name: Tennis
@@ -1138,6 +1219,21 @@ drills:
   - Thirty seconds.
   watch: Standing flat-footed, or the ball rolling away because the taps are too heavy.
   cue: Light and fast, like the ball is hot.
+  video:
+- slug: touch-roll
+  name: Touch roll
+  area_name: Basketball
+  aliases:
+  - touch rolls
+  short: Standing still, pushing the ball side to side along the floor between the
+    hands with the fingertips. No dribbling.
+  how:
+  - Feet wide. Bend at the hips and knees until the hands reach the floor.
+  - Push the ball from the right hand to the left and back, fingertips only, a short
+    roll each time.
+  - 30 touches steady, then 10 as fast as it stays under control.
+  watch: Slapping with the palms, or the ball rolling out past his feet.
+  cue: Fingertips, not palms.
   video:
 - slug: touch-then-pass
   name: Touch-then-pass

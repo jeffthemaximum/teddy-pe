@@ -157,6 +157,21 @@ Aug 16 – Sep 12: transition. No program. Next year's architecture written in t
 - Puma: live 1v1 vs Dad, reads (drive or pass), 2v1 when a friend is available, cutting and boxing out, game shots, HORSE tournaments.
 - Cheetah: pickup, driveway games, trick dribbling, shooting games with friends.
 
+*Handles with no dribble, six drills* (added 27 Sep 2026, from the "U10 Handle Foundation" reel by @skillsacademy12 that Jeff sent). Ball feel and hand speed without a single bounce, so they fit a low-impact day and cost no high-intent efforts.
+- Touch roll: standing still, fingertips push the ball side to side along the floor.
+- Figure 8 roll: the ball stays on the floor and rolls in a figure 8 around and between the feet, travelling forward.
+- Ball glide roll: walking low, rolling the ball ahead along the floor with alternate hands.
+- Pass through: long lunge steps, handing the ball under the front leg every stride.
+- Spider move: walking with the ball held between the legs, drop it, take a step, catch it between the legs again.
+- Clap tap: walking with the ball, drop it, clap above it, catch it again.
+- Pass through, figure 8 roll and spider move each have a Backward version, done moving backward.
+
+How it runs from week 3 onward:
+- It is added volume. It sits beside the dribbling block on basketball days and replaces nothing: 5 to 10 minutes on Monday, Thursday and alternate Sundays, sized to stay inside the day's minutes range.
+- The order: the three floor drills first (touch roll, figure 8 roll, ball glide roll), then pass through, then the two drop-and-catch drills (spider move, clap tap). Each Backward version comes after the forward one is rated owns it.
+- Counted like the rest of Ball Skills, in touches, catches or metres, never in minutes: 30 to 40 touch rolls, 5 figure 8s, 10m glides, 10 catches.
+- Once all six are owned forward and backward, the diary proposals are more reps inside the same minutes and doing them with the eyes up on Dad's fingers, not new harder drills. Jeff approves those, the same as any other progression.
+
 **Soccer**
 - Cub: *Touch*: first touch off the wall both feet, toe taps, tick-tocks, sole rolls, 300 touches a session. *Pass*: inside foot at 3m, both feet. *Keeper*: ready position, W-catch and scoop from hand feeds, no diving.
 - Fox: *Touch*: dribbling patterns (inside, outside, sole), weak-foot volume, cone gates indoors. *Pass*: laces, receiving across the body. *Keeper*: shuffle footwork, set position, chest catch, collapse dive from kneeling on a mat.
