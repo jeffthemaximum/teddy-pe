@@ -621,3 +621,41 @@ the player controlling it and passing it straight back.
   exactly 84 drills and failed on the 85th. It now compares against the entries in
   `drills.yml`, which is what "lists every drill" means, so the next new drill
   does not break it.
+
+## 2026-09-27: six no-dribble handle drills join the basketball Handle strand
+
+**What happened.** Jeff sent a screen recording of the "U10 Handle Foundation"
+reel by @skillsacademy12 ("This is where handles begin: 6 drills, no dribbling")
+and asked for the drills and progressions to be added to the basketball program
+as additional volume, removing nothing, and for the drill descriptions to be
+confirmed with him first. The reel names each drill on screen. Claude described
+all six from the frames. Jeff confirmed four and corrected two: clap tap is
+walking with the ball, dropping it, clapping above it and catching it again; spider
+move is walking with the ball held between the legs, dropping it, taking a step
+and catching it between the legs again.
+
+**Rulings.**
+
+- **Six glossary entries**, one per drill: touch roll, figure 8 roll, ball glide
+  roll, pass through, spider move, clap tap. Backward is a step inside pass
+  through, figure 8 roll and spider move rather than a drill of its own, since the
+  reel shows it as a variation. The video field is empty because only the screen
+  recording was shared, not the reel's URL.
+- **Added, never swapped.** Every week 3 basketball day gets a new block, "Handles,
+  no dribble", beside the existing one: 10 minutes on Monday 28 September (the
+  three floor drills), 5 on Thursday 1 October (touch roll recap and pass through),
+  5 on Sunday 4 October (first try at spider move and clap tap). No existing block
+  lost minutes or content.
+- **Thursday stays inside its range.** Thursday already summed to 115 of 100 to 120,
+  so a 10 minute block would have taken it past the top. Claude asked Jeff whether
+  to run over or keep it at 5 minutes. He did not choose, so it is 5, and the day
+  sums to exactly 120. Monday is 86 of 60 to 90 and Sunday 43 of 30 to 45.
+- **The order is floor rolls, then pass through, then drop and catch, with Backward
+  after forward is owned.** Claude's proposal from how hard each drill looked: a
+  ball that stays on the floor is the easiest to control, and letting go of the ball
+  is the hardest. Jeff can reorder it.
+- **No high-intent efforts.** Walking and rolling a ball, so `hie` is unchanged on
+  all three days, and Monday and Sunday stay at zero.
+- **Monday's prose was reworded to link correctly.** "Floor rolls" linked to sole
+  rolls through its alias "roll", and "figure 8s" linked to the old figure 8 entry.
+  The block now links exactly touch roll, figure 8 roll and ball glide roll.

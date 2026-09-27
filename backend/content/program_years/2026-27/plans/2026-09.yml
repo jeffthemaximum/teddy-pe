@@ -792,12 +792,14 @@ weeks:
     - 'Cartwheel step 3: lunge entry ×10'
     - Jog-to-3-step-stop ×6
     - 'Basketball: dribble-jog to jump stop, both feet; figure 8'
+    - 'Basketball: handles with no dribble, the three floor rolls'
     - 'Challenge: Red Light (Mon)'
     dad_note: 'Everything today runs at jog speed, and the score is the stop rather
       than the start. Three steps, quiet, chest up, no fourth step and no skid. Gymnastics
       has already loaded him, so if he starts racing the green light, slow the whole
       game down. Cartwheel step 3 is the lunge entry: hands reach the line before the
-      hips come over.'
+      hips come over. The new no-dribble handles are fingertip work, so if he starts
+      slapping the ball with his palms, slow the roll down.'
     hie: 0
     blocks:
     - minutes: '8'
@@ -821,6 +823,13 @@ weeks:
       body: Dribble-jog to a jump stop, landing on both feet at once, then pivot each
         way, 5 each. Then figure 8 through the legs 10 each way, crossovers ×20 with
         the eyes up, pound dribble 25 each hand. About 200 dribbles.
+      tag:
+    - minutes: '10'
+      name: 'Basketball: Handles, no dribble'
+      body: 'Three drills on the floor, the ball never bouncing. Touch roll, 30 touches
+        steady and 10 fast. Figure 8 roll, 5 times round. Ball glide roll, 10m out and
+        10m back.
+        <q>Fingertips, not palms.</q>'
       tag:
     - minutes: '7'
       name: Challenge
@@ -966,6 +975,7 @@ weeks:
     - Step-and-throw both arms 10/10 target
     - 'Tennis: split step + shuffle before every drop feed; FH/BH ×20; rally 15–20'
     - 'Basketball: defensive slides, jump stop, chest and bounce pass on the move'
+    - 'Basketball: pass through, plus a touch roll recap'
     dad_note: 'The split step goes in front of every drop feed today, so he never hits
       a ball from standing still. Ten of ten on the throw target with both arms, and
       the left will need a shorter distance to get there: move the line in rather than
@@ -998,6 +1008,12 @@ weeks:
       body: Defensive slides across the key, 6 each way, hands out and feet never crossing.
         Jump stop off a jog, both feet, 5 of 5. Chest and bounce passes on the move,
         20 each.
+      tag:
+    - minutes: '5'
+      name: 'Basketball: Handles, no dribble'
+      body: 'Touch roll, 30 touches to wake the fingers up. Then pass through, 2 × 10m,
+        long steps and the ball under the front leg every stride. <q>Big step, ball
+        through the tunnel.</q>'
       tag:
     - minutes: '6'
       name: Strong
@@ -1098,6 +1114,7 @@ weeks:
     summary_lines:
     - Shadow swings
     - 'Basketball: 15 min handling'
+    - 'Basketball: first try at spider move and clap tap'
     - 'Patch check: Speed (3-step stop)'
     - 'Preview Week 4: Upside Down'
     dad_note: 'Last card of the third week, so the review matters more than the work.
@@ -1119,6 +1136,12 @@ weeks:
       name: 'Basketball: Handle'
       body: Stationary handling, 200 dribbles, eyes on Dad's fingers. Finish with 10
         chest passes to a target.
+      tag:
+    - minutes: '5'
+      name: 'Basketball: Handles, no dribble'
+      body: 'First try at the two drop-and-catch handles, walking. Spider move, 10
+        catches: ball between the legs, drop, step, catch. Clap tap, 10 catches: drop,
+        clap above it, catch. Count the catches he makes. <q>Drop, step, snatch.</q>'
       tag:
     - minutes: '10'
       name: Review
