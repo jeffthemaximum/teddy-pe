@@ -874,12 +874,13 @@ weeks:
     - minutes: '20'
       name: 'Soccer: Touch'
       body: 'Receive and return first. Dad kneels 3m away and rolls it in. Level
-        1, one star: inside foot to control, inside foot back, 10 leading with each
-        foot. Level 2, two stars: stop it under the sole, then pass, 10 each foot.
-        Level 3, three stars, on any foot that went 8 of 10 at Level 2: sole stop,
-        tap, tap, pass. Then at the wall, touch then pass in one rhythm, 20 each foot,
-        and toe taps, tick-tocks and sole rolls once through. About 300 touches.
-        <q>Catch it, squash it, send it home.</q>'
+        1, one star: catch with the outside of one foot, pass back with the inside
+        of the same foot, 10 each foot. Level 2, two stars: receive with the inside
+        of one foot, pass back with the inside of the other, 10 leading with each
+        foot. Level 3, three stars, on any foot that went 8 of 10 at Level 2: sole
+        roll it across, pass with the other foot. Then at the wall, touch then pass
+        in one rhythm, 20 each foot, and toe taps, tick-tocks and sole rolls once
+        through. About 300 touches. <q>Soft catch, send it home.</q>'
       tag:
     - minutes: '8'
       name: Balance
@@ -909,7 +910,7 @@ weeks:
     - Red Light sprints 8×10m, stop in 3 steps
     - Split step → shuffle 10/10
     - 'Soccer: dribble at speed and stop the ball dead on ''red''; receive and return
-      Level 2'
+      at speed'
     - Broad jump ×3
     - Soccer game
     dad_note: 'High-intent efforts: 8 red-light sprints over 10m, 3 broad jumps and
@@ -943,8 +944,8 @@ weeks:
       name: 'Soccer: Touch at speed'
       body: 'Dribble at speed through cone gates, and on <q>red</q> stop the ball dead
         under the sole and freeze with it. 10 calls each foot. Then receive and return
-        at Level 2, 10 each foot, with Dad rolling it in harder than Tuesday. Same
-        sole stop, coming at him instead of away.'
+        at the highest level he cleared on Tuesday, 10 each foot, with Dad rolling
+        it in harder.'
       tag:
     - minutes: '27'
       name: Play

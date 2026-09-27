@@ -57,8 +57,8 @@ If the program itself needs changing while the rewrite is in flight (a new month
   deploy before Tuesday 29 September.** `feature/soccer-three-levels` adds the
   drill from the reel Jeff sent to the glossary, puts it on week 3's Tuesday and
   Wednesday soccer blocks, and writes it into the architecture's soccer section
-  so October onward carries it. The levels were read off the footage, which has
-  no spoken instructions, so check the glossary entry against what you saw.
+  so October onward carries it. The level descriptions are Jeff's correction of
+  Claude's first read.
   Backend at 320 examples, clean. Merge, then from `main`:
   `cd backend && fly deploy -a teddy-pe-api`. See
   `docs/history/2026-09-27-soccer-three-levels.md`.

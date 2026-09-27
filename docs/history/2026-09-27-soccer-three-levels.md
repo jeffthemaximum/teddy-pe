@@ -19,18 +19,23 @@ few metres away off to the side, rolling the ball in, and a 7 year old controlli
 it just behind the cones and passing it straight back to the coach's hands. The
 next ball comes in as soon as the last one lands.
 
-- Level 1: control with one foot, pass back. Two touches.
-- Level 2: the ball stopped under the sole, then passed back.
-- Level 3: sole stop, then sole touches with alternating feet, then the pass.
+Claude's first read of the levels was wrong on all three (see the correction
+below). What went on the cards is Jeff's description:
+
+- Level 1: catch with the outside of one foot, pass back with the inside of the
+  same foot.
+- Level 2: receive with the inside of one foot, pass back with the inside of the
+  other.
+- Level 3: catch with a sole roll, pass back with the other foot.
 
 ## What was done
 
 - **Glossary:** a new `receive-and-return` entry in `drills.yml` with the setup,
-  all three levels, the 8-of-10-per-foot bar, what to watch for, a cue ("Catch
-  it, squash it, send it home") and the reel as its video link. 85 drills.
+  all three levels, the 8-of-10-per-foot bar, what to watch for, a cue ("Soft
+  catch, send it home") and the reel as its video link. 85 drills.
 - **Week 3 cards:** Tuesday 29 September's soccer block opens with the three
-  levels. Wednesday 30 September adds Level 2 with firmer feeds after the Red
-  Light dribble. The summary lines and Tuesday's dad note say so. Minutes and
+  levels. Wednesday 30 September adds the highest level he cleared on Tuesday,
+  with firmer feeds, after the Red Light dribble. The summary lines and Tuesday's dad note say so. Minutes and
   `hie` are unchanged.
 - **Architecture:** the soccer section now describes the three levels and how
   they run from week 3 onward, so the October plan and later months carry them.
@@ -51,10 +56,19 @@ next ball comes in as soon as the last one lands.
 - Same local Ruby workaround as 21 September (`DYLD_LIBRARY_PATH` pointed at
   `zlib-ng-compat`).
 
+## Correction
+
+Claude's first version read the frames as Level 1 inside-inside, Level 2 a sole
+stop then pass, Level 3 a sole stop with alternating sole taps. Jeff corrected
+it the same day: "level 1, you catch with the outside of one foot and return with
+the inside of the same foot. level 2, receive with the inside of one foot, pass
+back with the inside of the other. level 3, catch with sole roll and return with
+other foot." The glossary, both week 3 cards, the architecture, the decision log
+and this file were rewritten to match. At 8 frames per second the part of the
+foot touching the ball was not readable, which is what the first version guessed
+at.
+
 ## Still open
 
-- **The read of the levels is Claude's.** Jeff watched the reel; if Level 1 or
-  Level 3 looked different to him, the glossary entry and Tuesday's block change
-  with it.
 - **Needs a deploy before Tuesday.** Merge, then from a checkout of `main`:
   `cd backend && fly deploy -a teddy-pe-api`.

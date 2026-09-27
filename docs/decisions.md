@@ -599,16 +599,16 @@ the player controlling it and passing it straight back.
 
 **Rulings.**
 
-- **The levels as read.** Level 1 is inside foot to control and inside foot back.
-  Level 2 is a sole stop, then the pass. Level 3 is a sole stop, a sole tap with
-  each foot, then the pass. The progression is more touches and more sole work
-  before the ball goes back. Level 1 and the Level 3 footwork are the less
-  certain reads, and Jeff should correct the glossary entry if he saw the reel
-  differently.
+- **The levels, as Jeff corrected them.** Level 1: catch with the outside of one
+  foot, pass back with the inside of the same foot. Level 2: receive with the
+  inside of one foot, pass back with the inside of the other. Level 3: catch with
+  a sole roll, pass back with the other foot. Claude's first read from the frames
+  had Level 1 as inside-inside, Level 2 as a sole stop and Level 3 as sole taps,
+  and was wrong on all three; Jeff's description is the one in the glossary and
+  on the cards.
 - **It goes on Tuesday, and at speed on Wednesday.** Tuesday's soccer Touch block
   opens with it at his current level on each foot. Wednesday runs the highest
-  level he owns with firmer feeds, which in week 3 is Level 2, the same sole stop
-  the Red Light dribble trains. Friday stays keeper work. Week 3 is the first
+  level he cleared on Tuesday with firmer feeds. Friday stays keeper work. Week 3 is the first
   week, because it is the first unplayed one, and its soccer sub-target
   (first touch then pass in one rhythm) is this drill.
 - **Per foot, 8 of 10 to move up.** The same bar as the Cub soccer patch's first

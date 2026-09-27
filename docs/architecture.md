@@ -166,9 +166,9 @@ Aug 16 – Sep 12: transition. No program. Next year's architecture written in t
 - Cheetah: juggling streaks, backyard goals, beach soccer, fun save sessions.
 
 *Receive and return, three levels* (added 27 Sep 2026, from a coach's reel Jeff sent). Two flat cones a stride apart, Dad kneeling about 3m away and rolling the ball in, Teddy controlling it in front of the gate and passing straight back to Dad's hands. Dad feeds from a fixed spot, so it needs none of Jeff's running.
-- Level 1, one star: inside foot to control, inside foot back. Two touches.
-- Level 2, two stars: stop it dead under the sole, then pass.
-- Level 3, three stars: sole stop, sole tap with the other foot, sole tap with the first, then pass. Four touches.
+- Level 1, one star: catch with the outside of one foot, pass back with the inside of the same foot.
+- Level 2, two stars: receive with the inside of one foot, pass back with the inside of the other.
+- Level 3, three stars: catch with a sole roll across the body, pass back with the other foot.
 
 How it runs from week 3 onward:
 - Every Tuesday soccer Touch block opens with it: 10 reps leading with each foot at his current level on that foot, and the touches count toward the session's 300. Wednesday uses it at speed with firmer feeds, at the highest level he owns. It suits alternate-Sunday soccer as the 15 minutes of ball skills. Friday stays keeper work.
