@@ -659,3 +659,46 @@ and catching it between the legs again.
 - **Monday's prose was reworded to link correctly.** "Floor rolls" linked to sole
   rolls through its alias "roll", and "figure 8s" linked to the old figure 8 entry.
   The block now links exactly touch roll, figure 8 roll and ball glide roll.
+
+## 2026-10-05: week 4, Upside Down, written without the diary
+
+**What happened.** Jeff asked for this week's cards and sessions on the morning
+of Monday 5 October. Week 4 existed only as a row in the architecture's theme
+table; there was no October plan file. The export that should come first could
+not run: the Fly machine was stopped and starting it to read production was
+refused by the session's permission settings. So the newest diary entries in the
+repo are still 14 to 17 September, and the ratings from weeks 2 and 3 were not
+read.
+
+**Rulings.**
+
+- **The week was written from the architecture and the week 3 cards.** Every
+  progression on it is the conservative one: the no-dribble handles stay at the
+  floor drills and pass through on Monday, with spider move and clap tap on
+  Thursday as a second look, and no Backward versions are on the card. If the
+  diary says any of them is owned, that is a proposal for Jeff, the same as any
+  other.
+- **Cartwheel step 4 is "straighter legs from the lunge entry".** The theme table
+  gives week 4 "cartwheel with straighter legs", and the Fox row has steps 4 and 5
+  as straight legs and from standing. Step 4 starts here as the New Thing and is
+  expected to carry into the Fox block; step 5, from standing, stays a Fox skill.
+  New glossary entry `cartwheel-step-4`.
+- **Rings inversion stops at upside down in a tuck.** Dad spots back and hips on
+  every rep and Teddy comes back the way he went. Pushing through to hang behind
+  the bar (skin the cat) loads the shoulders in a stretch a 7 year old has not
+  trained for, so it is off the card. New glossary entry `rings-inversion`.
+- **Hang Time runs first on Monday and Friday, and Thursday has no dead hangs**,
+  so both attempts are taken on a fresh grip and the two numbers compare. A hang
+  over 20 seconds is also the Strength patch's hang, which the Sunday review
+  checks.
+- **`hie` is 37 of 40:** Mon 0, Tue 6, Wed 22, Thu 6, Fri 3, Sat 0, Sun 0. Wednesday
+  is the only high-impact day; Wednesday's starts are on Dad's clap from a fixed
+  cone, so Jeff does no running.
+- **Sunday is soccer**, alternating from week 3's basketball Sunday, so it carries
+  receive and return and has no no-dribble handles block.
+- **The October file holds week 4 only for now**, labelled "Cub block · Week 4".
+  Weeks 5 to 7 go into the same file when they are written, and the label and
+  range widen then.
+- **Three specs assumed September was the only plan file** and failed on the
+  second. They now read the plans directory, the same fix `drills_spec.rb` got on
+  27 September.

@@ -144,7 +144,7 @@ RSpec.describe ContentSeeder do
 
     it "removes a week the plan no longer has, and its cards and blocks with it" do
       seed_copy
-      plan = MonthPlan.sole
+      plan = MonthPlan.find_by!(month: "2026-09")
       expect(plan.weeks.count).to eq(3)
       third = Week.find_by!(number: 3)
       card_ids = third.day_cards.pluck(:id)
@@ -183,9 +183,10 @@ RSpec.describe ContentSeeder do
       seed_copy
       before = { month_plans: MonthPlan.count, weeks: Week.count,
                  day_cards: DayCard.count, day_blocks: DayBlock.count }
-      expect(before[:month_plans]).to eq(1)
+      plan_files = Dir[@root.join("2026-27/plans/*.yml")]
+      expect(before[:month_plans]).to eq(plan_files.size)
 
-      File.delete(plan_path)
+      plan_files.each { |f| File.delete(f) }
 
       expect { seed_copy }.to raise_error(ContentSeeder::MissingContent, /plan/i)
 
