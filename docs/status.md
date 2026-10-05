@@ -15,7 +15,8 @@ Update this file whenever something is built, decided, or left open. It is the f
 
 - Year view: 9 areas x 6 blocks (Cub, Fox, Coyote, Wolf, Puma, Cheetah), timeline with retests and Trials weeks, Cub patches (7 of 9 to rank up), tennis ball gates (green now, controlled-yellow gate active), 10-test battery plus height.
 - September view: Cub weeks 1 to 3 (Sep 14 to Oct 4): Baseline & Land, Stick It, Brake. All 21 days are full cards, 139 day blocks, a dad note on every one. Weeks 2 and 3 were summary-line sketches until 21 September; see `docs/history/2026-09-21-weeks-2-and-3-cards.md`.
-- This Week: daily cards for Sep 14 to Oct 4, plus the test sheet (15 rows, five test windows, stored in Neon and shared across devices).
+- October view: Cub week 4 (Oct 5 to 11), Upside Down, seven full cards. Weeks 5 to 7 not yet written.
+- This Week: daily cards for Sep 14 to Oct 11, plus the test sheet (15 rows, five test windows, stored in Neon and shared across devices).
 - Drill glossary: `backend/content/program_years/2026-27/drills.yml`, 91 entries covering everything written so far. The seeder links names and aliases into card prose and block titles; tapping one opens a sheet with how to do it, what to watch for and the cue. A tab lists all of them with a filter.
 - Coach's diary: form on This Week (session, how it went, energy, pain flag, note, challenge number, and a rating per drill from that day's card). One entry per session date, keyed on the server, so every device opens and edits the same entry. Saves go through the offline queue in `core/`. `bin/rails docs:export` writes entries and results back into `docs/`. Entries produce proposed plan changes only.
 - Teddy's own journal, with a share toggle per day. Unshared entries stay out of the API's responses and out of the export. Both journals soft delete.
@@ -52,6 +53,19 @@ If the program itself needs changing while the rewrite is in flight (a new month
 - Pre-existing 20px horizontal overflow on the Year tab at phone width, from a timeline marker. Not caused by the glossary or diary work and left alone.
 
 ## Next
+
+- **Week 4, Upside Down, is written and needs a merge and a deploy today.**
+  `feature/week-4-upside-down` adds `plans/2026-10.yml` with all seven cards for
+  Oct 5 to 11, `cartwheel-step-4` and `rings-inversion` in the glossary, and 37 of
+  40 high-intent efforts. Until it is deployed, Today has no card this week. Merge,
+  then from `main`: `cd backend && fly deploy -a teddy-pe-api`. Backend at 320
+  examples, clean. See `docs/history/2026-10-05-week-4-upside-down.md`.
+
+- **The export is owed, and week 4 was written without it.** The diary for
+  Sep 18 onward is still only in production. After the deploy, run
+  `bin/rails docs:export`, read weeks 2 and 3, and bring any owns-it or not-yet
+  runs as proposals against weeks 4 and 5. Weeks 5 to 7 go into `2026-10.yml`
+  after that.
 
 - **Six no-dribble handle drills are in the basketball strand and need a deploy
   before Monday 28 September.** `feature/basketball-handles-no-dribble` adds touch

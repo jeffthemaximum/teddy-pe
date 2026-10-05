@@ -118,8 +118,8 @@ Aug 16 – Sep 12: transition. No program. Next year's architecture written in t
 - Cheetah: Play power: pool jumps, long-jump pit, trampoline if available.
 
 **Coordination & Balance**
-- Cub: Cartwheel steps 1-3 (bunny hops over a line, hand-hand-foot-foot, lunge entry). Wall handstand prep (donkey kicks). Single-leg balance 30s. Skateboard.
-- Fox: Cartwheel steps 4-5 (straight legs, from standing). Forward and backward rolls. Wall handstand holds. Jump rope singles to 30.
+- Cub: Cartwheel steps 1-3 (bunny hops over a line, hand-hand-foot-foot, lunge entry), then step 4 (straighter legs from the lunge entry) from week 4. Wall handstand prep (donkey kicks), wall handstand holds from week 4, rings inversion with a spot. Single-leg balance 30s. Skateboard.
+- Fox: Cartwheel steps 4-5 (straight legs owned, then from standing). Forward and backward rolls. Wall handstand holds. Jump rope singles to 30.
 - Coyote: Footwork: agility ladder, crossover steps, jump rope tricks, cartwheel both sides.
 - Wolf: Rhythm and bounding: skips, gallops, carioca, A-skips, B-skips.
 - Puma: Agility with decision: cone drills on Dad's call, mirror drills, sport footwork.

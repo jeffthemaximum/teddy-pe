@@ -209,6 +209,21 @@ drills:
   watch: Dropping the chest before the lunge, which turns it back into step 2.
   cue: Arms by your ears, then reach down the line.
   video:
+- slug: cartwheel-step-4
+  name: Cartwheel step 4
+  area_name: Coordination & Balance
+  aliases:
+  - straighter legs
+  short: The lunge-entry cartwheel with the legs kept long as they pass over the top.
+  how:
+  - Start exactly as in step 3, arms by the ears, long lunge, hands down the line.
+  - Kick the back leg up first and keep the knee locked as it goes over.
+  - The front leg follows, also long, so the legs make a wide V in the air.
+  - Land one foot then the other on the line and finish standing tall.
+  watch: Knees bending to tuck the legs over, which is what happens when he is short
+    of hip height. Lift the hips higher before asking for straighter legs.
+  cue: Scissors in the sky.
+  video:
 - slug: champions-log
   name: Champion's Log
   area_name: Compete & Mindset
@@ -891,6 +906,24 @@ drills:
   - Monday number, Friday number.
   watch: Anticipating the call and slowing down early.
   cue: Full speed until you hear it.
+  video:
+- slug: rings-inversion
+  name: Rings inversion
+  area_name: Strength & Resilience
+  aliases:
+  - tuck inversion
+  short: Hanging from rings or a bar and tucking up until upside down in a ball, with
+    Dad spotting.
+  how:
+  - Hang from a pair of rings or a low bar he can reach from the ground, arms straight.
+  - Dad stands beside him, one hand on the back and one on the hips.
+  - Tuck the knees to the chest and lift the hips up over the head until he is upside
+    down, looking at his toes.
+  - Hold 2 seconds, then come back down the same way, slowly.
+  watch: Pushing on past upside down to hang behind the bar. That puts the shoulders
+    in a stretch they are not ready for. Upside down in a ball is the whole skill
+    for now.
+  cue: Tuck, turn, look at your toes.
   video:
 - slug: safe-fall
   name: Safe fall

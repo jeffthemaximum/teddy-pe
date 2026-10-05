@@ -101,9 +101,12 @@ RSpec.describe DocsExporter do
   it "names every file it wrote" do
     paths = export
     # contain_exactly rather than include: with no diary entries yet, this is
-    # every file the run should have produced, not merely a subset of it.
+    # every file the run should have produced, not merely a subset of it. One
+    # plans doc per plan YAML, so the next month does not break this.
+    months = Dir[Rails.root.join("content/program_years/2026-27/plans/*.yml")]
+      .map { |f| "plans/2026-27/#{File.basename(f, '.yml')}.md" }
     expect(paths.map { |p| p.to_s.sub("#{root}/", "") })
-      .to contain_exactly("plans/2026-27/2026-09.md", "results/2026-27.md")
+      .to contain_exactly(*months, "results/2026-27.md")
   end
 
   it "is safe to run twice" do
