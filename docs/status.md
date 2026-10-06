@@ -15,8 +15,8 @@ Update this file whenever something is built, decided, or left open. It is the f
 
 - Year view: 9 areas x 6 blocks (Cub, Fox, Coyote, Wolf, Puma, Cheetah), timeline with retests and Trials weeks, Cub patches (7 of 9 to rank up), tennis ball gates (green now, controlled-yellow gate active), 10-test battery plus height.
 - September view: Cub weeks 1 to 3 (Sep 14 to Oct 4): Baseline & Land, Stick It, Brake. All 21 days are full cards, 139 day blocks, a dad note on every one. Weeks 2 and 3 were summary-line sketches until 21 September; see `docs/history/2026-09-21-weeks-2-and-3-cards.md`.
-- October view: Cub week 4 (Oct 5 to 11), Upside Down, seven full cards. Weeks 5 to 7 not yet written.
-- This Week: daily cards for Sep 14 to Oct 11, plus the test sheet (15 rows, five test windows, stored in Neon and shared across devices).
+- October view: Cub weeks 4 to 6 (Oct 5 to 25), Upside Down, Skip & Bound, Turn, all full cards. Week 7 not yet written.
+- This Week: daily cards for Sep 14 to Oct 25, plus the test sheet (15 rows, five test windows, stored in Neon and shared across devices).
 - Drill glossary: `backend/content/program_years/2026-27/drills.yml`, 91 entries covering everything written so far. The seeder links names and aliases into card prose and block titles; tapping one opens a sheet with how to do it, what to watch for and the cue. A tab lists all of them with a filter.
 - Coach's diary: form on This Week (session, how it went, energy, pain flag, note, challenge number, and a rating per drill from that day's card). One entry per session date, keyed on the server, so every device opens and edits the same entry. Saves go through the offline queue in `core/`. `bin/rails docs:export` writes entries and results back into `docs/`. Entries produce proposed plan changes only.
 - Teddy's own journal, with a share toggle per day. Unshared entries stay out of the API's responses and out of the export. Both journals soft delete.
@@ -54,18 +54,18 @@ If the program itself needs changing while the rewrite is in flight (a new month
 
 ## Next
 
-- **Week 4, Upside Down, is written and needs a merge and a deploy today.**
-  `feature/week-4-upside-down` adds `plans/2026-10.yml` with all seven cards for
-  Oct 5 to 11, `cartwheel-step-4` and `rings-inversion` in the glossary, and 37 of
-  40 high-intent efforts. Until it is deployed, Today has no card this week. Merge,
-  then from `main`: `cd backend && fly deploy -a teddy-pe-api`. Backend at 320
-  examples, clean. See `docs/history/2026-10-05-week-4-upside-down.md`.
+- **Weeks 5 and 6 are written, and the rest of week 4 is changed; needs a deploy
+  before Wednesday 7 October.** `feature/weeks-5-and-6`. The cartwheel restarts at
+  the basics from Wednesday (shoulder taps, frog kicks, sideways bear walk, then
+  bunny hops). Tennis is in four home sessions a week, and the green to yellow
+  gate check is on Thursday 15 October; week 6 carries controlled yellow only if
+  all four parts pass. Basketball runs the jump stop ladder and moving dribble.
+  109 drills, 42 cards, 320 examples clean. Merge, then from `main`:
+  `cd backend && fly deploy -a teddy-pe-api`. See
+  `docs/history/2026-10-06-weeks-5-and-6.md`.
 
-- **The export is owed, and week 4 was written without it.** The diary for
-  Sep 18 onward is still only in production. After the deploy, run
-  `bin/rails docs:export`, read weeks 2 and 3, and bring any owns-it or not-yet
-  runs as proposals against weeks 4 and 5. Weeks 5 to 7 go into `2026-10.yml`
-  after that.
+- **Week 7 (Reactor) is next**, after the week 6 diary. Cub Trials (Nov 2 to 8)
+  goes in a November file.
 
 - **Six no-dribble handle drills are in the basketball strand and need a deploy
   before Monday 28 September.** `feature/basketball-handles-no-dribble` adds touch
@@ -184,4 +184,4 @@ If the program itself needs changing while the rewrite is in flight (a new month
 
 - **Deploying the API is manual, and the repo now says so.** The jump rope move was merged and then sat undeployed for two hours because `CLAUDE.md` and `README.md` both claimed a merge to `main` seeds production on its own. CI only scans, lints and tests. The deploy is `cd backend && fly deploy -a teddy-pe-api`, run from a checkout of `main`, because `fly deploy` uploads the current directory as the build context and the plan YAML ships inside the image. Both files are corrected and both now warn that a Vercel rebuild moves no program content. **Still open and Jeff's call: whether a merge to `main` should deploy the API by itself.** That points an Action at a production database holding Teddy's journal, which is why it was not just done. On `docs/deploy-is-manual`. See `docs/history/2026-09-14-deploy-gap.md`.
 
-- October view (Cub weeks 4 to 8: Upside Down, Skip & Bound, Turn, Reactor, Cub Trials) and Week 2 daily cards. Export the journals first, then write `backend/content/program_years/2026-27/plans/2026-10.yml`, open every Tuesday soccer Touch block with receive and return at his current level per foot, put a no-dribble handles block beside the basketball work on Monday, Thursday and alternate Sundays, add entries to `drills.yml` for the drills October introduces (wall handstand, A-skip, laces pass, med ball hip throw, inside hook turn, reaction starts, low bounds, pull-backs), and run `cd backend && bin/rails content:seed`.
+- October: weeks 4 to 6 are done, with every drill October introduces in the glossary. Week 7, Reactor, goes into `2026-10.yml` next; Cub Trials, week 8, into `2026-11.yml`.

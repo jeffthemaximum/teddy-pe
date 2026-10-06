@@ -702,3 +702,69 @@ read.
 - **Three specs assumed September was the only plan file** and failed on the
   second. They now read the plans directory, the same fix `drills_spec.rb` got on
   27 September.
+
+## 2026-10-06: weeks 5 and 6, from the diary and Jeff's read of the last month
+
+**What happened.** Jeff caught up two diary entries (Monday 5 and Tuesday 6
+October) and asked for the next two weeks, using the journals and his own read:
+tennis drills are easy for him and he wants more tennis, with specific yellow
+ball and tennis wall skills; basketball footwork (the jump stop) is behind, and he
+dribbles and shoots well standing but neither on the move; soccer has improved a
+lot, keep it similar; strength is enjoyed and improving; the cartwheel is behind
+and should restart at the absolute basics; handstands are improving steadily.
+The production export ran this time, on the machine after Jeff's v14 deploy, so
+the content in the database matched the repo.
+
+The diary agrees with him. Cartwheel steps 2, 3 and 4 were rated not yet on
+every session they appeared (17 and 21 September, 5 October), and donkey kicks
+were not yet three sessions running. Stick landing and single-leg stick were
+owns it on 21 September. Tuesday 6 October was a gym session instead of the card:
+TRX rows, sled pushes, basketball play and an hour's swim.
+
+**Rulings.**
+
+- **The cartwheel restarts below step 1, and so does the rest of week 4.** The
+  diary rule (not yet three sessions running drops to an easier entry point)
+  applies to both the cartwheel and donkey kicks. The basics ladder is shoulder
+  taps and frog kicks for locked arms, then the sideways bear walk for the four
+  beats at floor height, then bunny hops, then steps 2 to 4 in order. Wednesday 7
+  to Sunday 11 October were changed from step 4 to the basics, since they had not
+  happened yet. Monday and Tuesday were left as they were planned. Donkey kicks
+  are off the card. Four new glossary entries: `shoulder-taps`, `frog-kicks`,
+  `side-bear-walk`, and the ladder itself is in the architecture.
+- **Week 6's "cartwheel other side intro" is replaced** by bunny hops, because
+  there is no first side yet.
+- **More tennis is added as technical volume.** Wall blocks on Tuesday and Friday
+  and a serve or rotation block on Wednesday, with Thursday still the heaviest:
+  about 80 home minutes a week, up from about 50. No high-intent efforts come
+  with it. New entries: `wall-targets`, `wall-volleys`, `serve-to-target`,
+  `high-bounce-feed`, `cross-court-pattern`, `controlled-yellow`.
+- **The yellow ball stays gated on skill, and the gate check moves earlier.** The
+  four parts are unchanged (20-ball green rally, 8 of 10 high bounces with space,
+  6 of 10 serves, cross-court on request). The check runs on Thursday 15 October
+  instead of waiting for Cub Trials, because Jeff reports he is ahead on every
+  tennis drill. If all four pass, week 6 carries controlled yellow exactly as the
+  architecture defines it: the last 5 minutes at the wall and 20 hand feeds on a
+  short court, with green staying the rally ball. If any part is not yet, every
+  yellow block runs on green and the check repeats in Trials. Week 6's cards are
+  written to work either way.
+- **Basketball footwork is rebuilt from the jump stop.** A four-rung jump stop
+  ladder (`jump-stop-ladder`) on Monday, Thursday and basketball Sunday, and
+  moving dribble lanes (`moving-dribble`) at a walk and then a jog. Shooting and
+  passing come out of a jump stop. Week 5's form shooting sub-target became "jump
+  stop off a jog into a form shot", because the shot is not the problem.
+- **The jump rope sub-target is 40, not 20.** He did 14 at the baseline and 34
+  practising straight after, so 20 was already passed.
+- **Strength gets body rows** on the rings or a TRX (`body-row`), since Jeff has
+  TRX straps and it is going well. Hanging knee tucks go from 8 to 10.
+- **Soccer is unchanged in shape:** receive and return opens every Tuesday,
+  sole rolls and pull-backs continue, and the laces pass (week 5) and inside hook
+  (week 6) are the new pieces. `laces-pass`, `a-skip`, `low-bounds` and
+  `med-ball-hip-throw` were the other entries October needed. 109 drills.
+- **The Power & Landing patch check goes on Wednesday 14 October**, because it
+  needs a stuck broad jump and Sunday has zero high-intent efforts. Throw &
+  Catch is checked on Sunday 25 October through the step-and-throw, which is
+  technique rather than effort.
+- **`hie`:** week 5 is 36 (Tue 6, Wed 21, Thu 6, Fri 3) and week 6 is 38 (Tue 10,
+  Wed 18, Thu 6, Fri 4). Throw Far is 2 throws an arm, so Friday's attempt is 4
+  maximal throws and stays at or under 5.

@@ -16,6 +16,23 @@ drills:
   watch: Leaning back, or the foot reaching out in front of the body on the way down.
   cue: Knee up, foot down under you, stay tall.
   video:
+- slug: a-skip
+  name: A-skip
+  area_name: Coordination & Balance
+  aliases:
+  - a-skips
+  - a skip
+  - a skips
+  short: The A-march with a skip in it. The sprinting knee drive done with rhythm.
+  how:
+  - Start with 10m of A-march so the shape is right.
+  - Add a small skip on the standing leg as the other knee comes up to hip height.
+  - Foot comes down under the hip, toe pulled up, and the other knee comes up.
+  - Two times 10m, walking back between.
+  watch: Leaning back, or the skip getting big and bouncy. It is a quick, small skip
+    with a big knee.
+  cue: Knee up, skip quick, stay tall.
+  video:
 - slug: animal-walk-medley
   name: Animal walk medley
   area_name: Strength & Resilience
@@ -102,6 +119,24 @@ drills:
   watch: Skipping it when he is annoyed. That is the exact moment it is worth the
     most.
   cue: Breathe, bounce, strings.
+  video:
+- slug: body-row
+  name: Body row
+  area_name: Strength & Resilience
+  aliases:
+  - body rows
+  - trx rows
+  - trx row
+  short: Hanging under rings, a bar or a TRX with the heels on the ground, pulling
+    the chest up to the hands.
+  how:
+  - Hold the rings or TRX handles, arms straight, walk the feet forward until leaning
+    back.
+  - Body straight from heels to head, like a plank facing up.
+  - Pull the chest up to the hands, squeeze the shoulder blades, lower slowly.
+  - Walk the feet further forward to make it harder, back to make it easier.
+  watch: Hips sagging, or the chin reaching for the hands instead of the chest.
+  cue: Plank on your heels, chest to your hands.
   video:
 - slug: bounce-pass
   name: Bounce pass
@@ -327,6 +362,23 @@ drills:
     or the split step was missed.
   cue: Hit it where you can see it.
   video:
+- slug: controlled-yellow
+  name: Controlled yellow
+  area_name: Tennis
+  aliases:
+  - yellow ball
+  - yellow balls
+  short: The first taste of the yellow ball, only at the wall and on Dad's hand feeds
+    on a short court, once the green to yellow gate is cleared.
+  how:
+  - Only after all four gate checks are passed and written in the diary.
+  - Hand feeds first, from the side, at a height between his waist and his shoulder.
+  - Then the wall, from the same 6m line, with a split step on every ball.
+  - No full-court rallies or matches with it. Green stays the rally ball.
+  watch: Contact creeping up above the shoulder or late beside the body. If it does,
+    move closer to the wall or go back to green for the day.
+  cue: Same swing, faster ball. Meet it out front.
+  video:
 - slug: crab-walk
   name: Crab walk
   area_name: Strength & Resilience
@@ -338,6 +390,24 @@ drills:
   - Walk forward, backward and sideways without letting the hips sag.
   watch: The bottom dragging along the floor. That means the hips gave up.
   cue: Hips to the sky.
+  video:
+- slug: cross-court-pattern
+  name: Cross-court pattern
+  area_name: Tennis
+  aliases:
+  - cross-court
+  - cross court
+  short: Hitting the ball diagonally across the court on request, the default pattern
+    in a rally.
+  how:
+  - Two cones mark a target box deep in the cross-court corner.
+  - Dad feeds or rallies from the other side and calls cross-court.
+  - Teddy lets the ball come a little further in front, so the strings face across
+    the court.
+  - Five in a row into the box is a pass on the gate check.
+  watch: Pulling the ball cross-court by turning the shoulders early and flicking the
+    wrist. The contact point moves, the swing stays the same.
+  cue: Meet it early, send it across.
   video:
 - slug: crossover
   name: Crossover
@@ -510,6 +580,7 @@ drills:
   area_name: Basketball
   aliases:
   - form shots
+  - form shot
   short: Close-range shooting with one hand under the ball, built purely for shape.
   how:
   - Stand one metre from the basket.
@@ -519,6 +590,23 @@ drills:
   watch: Guide hand pushing, or throwing from the chest because the basket is too
     high. Lower the hoop before lowering the standard.
   cue: Reach into the cookie jar and hold it.
+  video:
+- slug: frog-kicks
+  name: Frog kicks
+  area_name: Coordination & Balance
+  aliases:
+  - frog kick
+  short: Crouched with the hands flat on the floor, a small hop that puts all the weight
+    on the hands for a moment. The first rung of the cartwheel basics.
+  how:
+  - Squat down, hands flat on the floor shoulder width in front of the feet.
+  - Lock the arms straight and lean the shoulders over the hands.
+  - Hop both feet off the floor so the weight is on the hands, and land them softly
+    where they started.
+  - Ten reps. As they get easier, the hips go higher, up toward over the shoulders.
+  watch: Bent elbows, or the head tucking under. Eyes look at the floor between the
+    hands.
+  cue: Lock your arms, float your feet.
   video:
 - slug: gallops
   name: Gallops
@@ -574,6 +662,24 @@ drills:
   - Lower them slowly back down.
   watch: Kicking and swinging to get the knees up. Slow down instead.
   cue: No swinging, use your belly.
+  video:
+- slug: high-bounce-feed
+  name: High bounce feed
+  area_name: Tennis
+  aliases:
+  - high bounce feeds
+  - high bounces
+  - high bounce
+  short: Dad feeds green balls that bounce up to the shoulder, and Teddy moves his
+    feet to take them at a good height with space from his body.
+  how:
+  - Dad feeds from the side or across the net with a high, loopy bounce.
+  - Teddy steps back or moves in so he meets the ball between waist and shoulder.
+  - Room between the ball and the body at contact, arm comfortably out.
+  - 8 of 10 clean, with space, is a pass on the gate check.
+  watch: Getting jammed, the ball arriving at the hip with the elbow tucked. That is
+    feet, not swing.
+  cue: Move your feet, give it room.
   video:
 - slug: high-knees
   name: High knees
@@ -692,6 +798,25 @@ drills:
     if he picks the wrong one.
   cue: Both feet, same moment, stick it.
   video:
+- slug: jump-stop-ladder
+  name: Jump stop ladder
+  area_name: Basketball
+  aliases:
+  - jump-stop ladder
+  short: The jump stop learned in four rungs, from walking with the ball in two hands
+    to jogging off the dribble.
+  how:
+  - 'Rung 1: walk holding the ball, and on Dad''s <q>stop</q> hop and land on both
+    feet at once.'
+  - 'Rung 2: jog holding the ball, same stop.'
+  - 'Rung 3: one dribble, pick it up, jump stop.'
+  - 'Rung 4: dribble at a jog, jump stop on the call. 5 of 5 each hand moves him up.'
+  - After every stop, hold triple threat for a count of two, then pivot on the foot
+    Dad calls.
+  watch: One foot landing before the other, or a skid. Slow the rung down before dropping
+    to an easier one.
+  cue: Both feet, same moment, stick it.
+  video:
 - slug: keeper-ready-position
   name: Keeper ready position
   area_name: Soccer
@@ -706,6 +831,23 @@ drills:
   - Be still at the moment of the strike, not moving.
   watch: Hands down by the hips, or being caught mid-step when the shot comes.
   cue: Hands up, still feet, be set when he hits it.
+  video:
+- slug: laces-pass
+  name: Laces pass
+  area_name: Soccer
+  aliases:
+  - laces passes
+  - laces
+  short: A firmer pass struck with the top of the foot, for distance.
+  how:
+  - Plant the standing foot beside the ball, pointing at the target.
+  - Point the toe of the kicking foot down and lock the ankle.
+  - Strike through the middle of the ball with the laces, and land on the kicking
+    foot.
+  - Start at 5m to Dad's feet or a cone gate, 10 with each foot.
+  watch: Toe pointing up, which sends it into the air, or toe-poking with the tip
+    of the shoe.
+  cue: Toe down, ankle locked, laces through the middle.
   video:
 - slug: line-touch
   name: Line-touch
@@ -722,6 +864,23 @@ drills:
   watch: Rounding the turn instead of stopping and touching. The braking is the point.
   cue: Low on the turns, hand all the way down.
   video:
+- slug: low-bounds
+  name: Low bounds
+  area_name: Power & Landing
+  aliases:
+  - low bound
+  - bounds
+  short: Long springy running strides, pushing off one leg and landing on the other,
+    kept low and quiet.
+  how:
+  - Start from a walk into 3 skips, then bound.
+  - Push off one foot, drive the other knee forward, land on that foot and push again.
+  - 6 bounds a rep, each landing quiet, then walk back.
+  - Low and long, never as high as possible.
+  watch: Heavy flat-footed landings, or knees caving in. Shorter bounds until they
+    are quiet again.
+  cue: Long and low, land like a cat.
+  video:
 - slug: med-ball-chest-pass
   name: Med ball chest pass
   area_name: Strength & Resilience
@@ -736,6 +895,23 @@ drills:
   watch: Using a ball that is too heavy, which turns a fast push into a slow heave.
   cue: Push it like you mean it.
   video:
+- slug: med-ball-hip-throw
+  name: Med ball hip throw
+  area_name: Throw & Catch
+  aliases:
+  - hip throw
+  - hip throws
+  short: Turning the hips to throw a light med ball sideways at a wall, the throwing
+    and forehand rotation in one move.
+  how:
+  - Stand side on to a wall, 2m away, ball held at the back hip.
+  - Turn the hips toward the wall first, then the shoulders, then let the ball go.
+  - Catch it off the wall or let it drop, reset, 5 each side.
+  - Both sides, the same number.
+  watch: Throwing with the arms while the hips stay still, or a ball heavy enough
+    that he has to heave it.
+  cue: Hips throw it, arms just let go.
+  video:
 - slug: monkey-walk
   name: Monkey walk
   area_name: Strength & Resilience
@@ -747,6 +923,23 @@ drills:
   - Stay low the whole way.
   watch: Standing up between hops. The point is staying down in the squat.
   cue: Stay low, big monkey hops.
+  video:
+- slug: moving-dribble
+  name: Moving dribble
+  area_name: Basketball
+  aliases:
+  - moving dribbles
+  - dribble lanes
+  short: Dribbling while walking and then jogging in a straight lane, eyes up, each
+    hand.
+  how:
+  - Mark a lane about 10m long.
+  - Walk it dribbling with the right hand, back with the left.
+  - Then jog it, ball out in front on the dribbling side, not straight down.
+  - Eyes up on Dad at the far end, who holds up fingers to call out.
+  watch: The ball bouncing straight down beside the foot, so he has to slow to keep
+    it. Push it out in front.
+  cue: Push it out, eyes up, keep walking.
   video:
 - slug: overhand-throw
   name: Overhand throw
@@ -956,6 +1149,23 @@ drills:
     hands and the legs.
   cue: Get behind it, scoop and hug.
   video:
+- slug: serve-to-target
+  name: Serve to a target
+  area_name: Tennis
+  aliases:
+  - serve to target
+  - serves
+  - serve
+  short: Serving into a box with a target in it, counted out of 10.
+  how:
+  - Stand side on at the baseline, front foot pointing at the net post.
+  - Toss up and slightly in front of the front foot, reach up and hit it high.
+  - A cone in the service box is the target. Count serves in out of 10.
+  - At the wall, a chalk line at net height and a box above it does the same job.
+  watch: A low toss that has him swinging at it around his head. Toss first, and catch
+    the bad ones.
+  cue: Toss up, reach up, hit up.
+  video:
 - slug: shadow-swings
   name: Shadow swings
   area_name: Tennis
@@ -1007,6 +1217,22 @@ drills:
   watch: Nothing technical. It is change of direction disguised as a game.
   cue: Wait for your moment, then go.
   video:
+- slug: shoulder-taps
+  name: Shoulder taps
+  area_name: Strength & Resilience
+  aliases:
+  - shoulder tap
+  short: In a straight-arm plank, tapping each shoulder with the opposite hand while
+    the hips stay still.
+  how:
+  - Straight-arm plank, hands under the shoulders, feet wide.
+  - Lift one hand and tap the opposite shoulder, put it back.
+  - Alternate, 10 each side.
+  - Easier on the knees, harder with the feet together.
+  watch: Hips rocking side to side, or the arms bending. That is the support arm doing
+    the job the cartwheel needs.
+  cue: Table top hips, still as a statue.
+  video:
 - slug: shuffle
   name: Shuffle
   area_name: Speed & Acceleration
@@ -1021,6 +1247,23 @@ drills:
   - Stay low the whole way.
   watch: Feet clicking together, standing up tall, or crossing over.
   cue: Stay wide, stay low, don't let your feet kiss.
+  video:
+- slug: side-bear-walk
+  name: Sideways bear walk
+  area_name: Coordination & Balance
+  aliases:
+  - sideways bear walks
+  - side bear walk
+  short: A bear walk travelling sideways along a line, hand, hand, foot, foot. The
+    cartwheel's four beats at floor height.
+  how:
+  - Bear position side on to a chalk line, hands and feet near it, hips up.
+  - Move the lead hand along the line, then the other hand.
+  - Then the lead foot, then the other foot.
+  - Travel 5m one way, then 5m back the other way so both sides learn it. Say the
+    beats out loud.
+  watch: Hands and feet moving together, or knees touching down. Four separate beats.
+  cue: Hand, hand, foot, foot, low and slow.
   video:
 - slug: silent-landings
   name: Silent Landings
@@ -1396,4 +1639,37 @@ drills:
   - Count the streak out loud and try to beat it.
   watch: Standing too close, which turns it into fast blocking instead of real strokes.
   cue: Back up, full swing, count out loud.
+  video:
+- slug: wall-targets
+  name: Wall targets
+  area_name: Tennis
+  aliases:
+  - wall target
+  short: Wall rallying at a chalk target box above the net line, counting hits inside
+    it.
+  how:
+  - Chalk a line at net height and a box about a metre square above it.
+  - From the 6m line, rally and count every ball that hits inside the box.
+  - Forehands only, then backhands only, then alternating.
+  - Move the box left and right to aim cross and straight.
+  watch: Bunting it into the box with a short swing. Full swing every time, the box
+    is for aim.
+  cue: Full swing, aim small.
+  video:
+- slug: wall-volleys
+  name: Wall volleys
+  area_name: Tennis
+  aliases:
+  - wall volley
+  - volleys
+  - volley
+  short: Volleying against the wall without letting the ball bounce, short punches
+    with a firm wrist.
+  how:
+  - Stand 2 to 3m from the wall, racket up in front, continental or comfortable grip.
+  - Punch the ball back to the wall without a swing, short and firm.
+  - Forehand side only, then backhand side only, then alternate.
+  - Count the streak out loud.
+  watch: A big backswing, or the racket head dropping below the wrist.
+  cue: Racket up, punch, don't swing.
   video:

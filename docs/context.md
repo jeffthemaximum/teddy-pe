@@ -10,7 +10,7 @@ Working memory for anyone (or any AI session) picking this project up cold. Keep
 - Handles a lot of volume. The program adds it as technical volume (touches, dribbles, swings), not intensity.
 - Very tall, very athletic parents and family. Height is recorded at every test date; see the tall-frame notes in the architecture.
 - Baseline skills: excellent bike rider, swims, catches a tennis ball out of the air, throws overhand without full rotation, no cartwheel yet.
-- Loves nearly all of it, and especially loves doing it with Dad. Skateboards at a skate park.
+- Loves nearly all of it, and especially loves doing it with Dad. Play blocks are often "choice time": Teddy picks (on 21 September he picked tennis matches on the pickleball courts). Skateboards at a skate park.
 - Organized week: Sat soccer + lacrosse + tennis (2h); Sun tennis (2h); Mon gymnastics; Tue swim. Tennis is a coached small group; Jeff also coaches him.
 - Home program adds dedicated basketball (Mon, Thu, alternate Sun) and soccer including keeper work (Tue, Wed, Fri, alternate Sun).
 
@@ -35,6 +35,7 @@ From the Rails rewrite onward, each person signs in with their own email and pas
 - Manhattan through October 2026; West Chester, PA from November. Assume all activities and facilities continue.
 - Riverside Park traveling rings (skills, strength, progression). Skate park. Basketball courts, tennis wall, soccer fields, hills. Yard/park space, indoor space and pool.
 - Med ball, cones, mini hurdles, jump rope, balance/slant board, hang bar, kid racket and green balls. Youth basketball, soccer ball, a small goal or cone goal, keeper gloves, a mat for dive progressions.
+- A gym with TRX straps and a sled, used on 6 October for rows and sled pushes. Indoor pool for play swims.
 
 ## How the program is run
 

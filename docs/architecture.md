@@ -118,7 +118,13 @@ Aug 16 – Sep 12: transition. No program. Next year's architecture written in t
 - Cheetah: Play power: pool jumps, long-jump pit, trampoline if available.
 
 **Coordination & Balance**
-- Cub: Cartwheel steps 1-3 (bunny hops over a line, hand-hand-foot-foot, lunge entry), then step 4 (straighter legs from the lunge entry) from week 4. Wall handstand prep (donkey kicks), wall handstand holds from week 4, rings inversion with a spot. Single-leg balance 30s. Skateboard.
+- Cub: Cartwheel basics, then steps 1-3 (bunny hops over a line, hand-hand-foot-foot, lunge entry). Wall handstand holds, rings inversion with a spot. Single-leg balance 30s. Skateboard.
+
+*Cartwheel basics* (from 7 Oct 2026, when steps 2 to 4 and donkey kicks had all been rated not yet for three weeks). The cartwheel restarts below step 1, one rung at a time, and keeps the New Thing slot until it is owned:
+- Rung 1, locked arms: shoulder taps and frog kicks. 10 of 10 frog kicks with locked arms moves him up.
+- Rung 2, the four beats at floor height: sideways bear walk along a line, both directions.
+- Rung 3: bunny hops over a line (cartwheel step 1), hips rising toward over the shoulders.
+- Then step 2, step 3, and straighter legs (step 4) in that order, each only after the one before is rated owns it. Donkey kicks are off the card; frog kicks do their job at a lower rung.
 - Fox: Cartwheel steps 4-5 (straight legs owned, then from standing). Forward and backward rolls. Wall handstand holds. Jump rope singles to 30.
 - Coyote: Footwork: agility ladder, crossover steps, jump rope tricks, cartwheel both sides.
 - Wolf: Rhythm and bounding: skips, gallops, carioca, A-skips, B-skips.
@@ -142,7 +148,9 @@ Aug 16 – Sep 12: transition. No program. Next year's architecture written in t
 - Cheetah: Sport sampling: baseball catch, frisbee, water tosses.
 
 **Tennis** (four strands)
-- Cub: *Form*: unit turn, contact in front, finish over the shoulder; shadow swings, side feeds, drop feeds. *Footwork*: ready position, split step on Dad's clap, shuffle recovery. *Ball*: current ball; wall rally. *Match*: cooperative rally counting.
+- Cub: *Form*: unit turn, contact in front, finish over the shoulder; shadow swings, side feeds, drop feeds, rotation. *Footwork*: ready position, split step on Dad's clap, shuffle recovery. *Ball*: current ball; wall rally, wall targets, wall volleys, serve to a target; the green to yellow gate check early in week 5, and controlled yellow at the wall and on hand feeds once it is cleared. *Match*: cooperative rally counting, cross-court pattern on call.
+
+  From week 5, tennis is in four home sessions instead of two: a 12 to 15 minute wall block on Tuesday and Friday, a short serve or rotation block on Wednesday, and Thursday still the heaviest at about 40. That is roughly 80 home minutes a week, up from about 50, all of it technical volume and none of it high-intent.
 - Fox: *Form*: both wings equal volume; med ball forehand/backhand rotation; one-hand vs two-hand backhand settled. *Footwork*: adjust steps and recovery shuffle without a ball; footwork patterns in the hallway. *Ball*: wall rally with the next ball up. *Match*: mini-tennis points.
 - Coyote: *Form*: open-stance forehand; consistent low-to-high path. *Footwork*: crossover recovery step, first step to the ball. *Ball*: cooperative rally on the next ball, depth targets, 20-ball rallies. *Match*: directional control games (cross-court, down the line).
 - Wolf: *Form*: serve pattern from overhead throw; volley (charge, split, catch). *Footwork*: approach footwork, split step before volley. *Ball*: gate check. *Match*: serve + 1, attack the short ball.
@@ -150,7 +158,7 @@ Aug 16 – Sep 12: transition. No program. Next year's architecture written in t
 - Cheetah: *Form*: maintain. *Ball*: whatever the gates allow. *Match*: fun matches, local kids, retest rally counts.
 
 **Basketball**
-- Cub: *Handle*: stationary pound, crossover, figure 8, both hands equal, eyes up, 200 dribbles a session. *Footwork*: jump stop and pivot on both feet, triple threat. *Pass*: chest and bounce to a 3m wall target. *Shoot*: form shooting from 1m, hold the finish.
+- Cub: *Handle*: stationary pound, crossover, figure 8, both hands equal, eyes up, 200 dribbles a session; moving dribble at a walk then a jog. *Footwork*: jump stop and pivot on both feet, triple threat, learned through the jump stop ladder (walk holding the ball, jog holding it, one dribble, jog dribbling), and from week 5 the shot and the pass come out of a jump stop rather than from standing. *Pass*: chest and bounce to a 3m wall target. *Shoot*: form shooting from 1m, hold the finish.
 - Fox: *Handle*: moving (walk to jog), weak hand, retreat dribble, hallway friendly. *Footwork*: defensive slides, close-outs, drop step. *Pass*: on the move, give-and-go. *Shoot*: form from 2m, 50 makes a session.
 - Coyote: *Handle*: combo moves, two-ball dribbling. *Footwork*: inside-outside, hesitation. *Pass*: one-hand push pass off the dribble, pass-and-cut. *Shoot*: layup footwork both sides, free-throw routine begins.
 - Wolf: *Handle*: speed dribble, change of pace, pull-up jump stop. *Footwork*: rip-through, first step, rebound and outlet. *Pass*: under pressure (Dad shadows). *Shoot*: off the dribble from 3m, layups at speed.
@@ -207,7 +215,7 @@ Standard developmental path: red to age 8, orange 8-10, green 9-10, yellow 11+. 
 - **Green → Controlled yellow exposure** (hand feeds, short court, wall only). **This is the active gate.** Requires: 20-ball green rally on the full court; handles green high bounce with spacing (not jammed) on 8 of 10; serve in 6 of 10; can hit a cross-court pattern on request.
 - **Yellow full-court match play**: held until controlled exposure has been clean for a full block and his coach agrees. Even then, green stays the default rally ball for form work this year. Reassess in September 2027.
 
-Gate checks happen in Trials weeks.
+Gate checks happen in Trials weeks. The Cub green to yellow check was brought forward to Thursday 15 October at Jeff's request, because he is ahead on every tennis drill; if any part is not yet, it runs again in Cub Trials as normal.
 
 ## Test battery (baseline Sep 15-17, retest Dec 7-11, Mar 1-5, Jun 14-18, Aug 9-13)
 
@@ -253,8 +261,8 @@ Every week has **one theme** and **five or six sub-targets** across areas, alway
 | 2 | Sep 21-27 | **Stick It** | 10/10 quiet landings from 30cm; single-leg stick 3s; cartwheel step 2; 15-ball rally; basketball crossover eyes up ×20 and bounce pass target; soccer 10 wall passes in a row each foot, keeper scoop | Broad Jump & Stick: longest jump that you also stick |
 | 3 | Sep 28 – Oct 4 | **Brake** | Sprint-to-stop in 3 steps; split step 10/10 into a shuffle; cartwheel step 3 (lunge entry); step-and-throw 10/10 both arms; basketball jump stop off a jog 5/5 both feet; soccer touch-then-pass rhythm, keeper set position on cue | Red Light: sprint on "green", stop in 3 steps on "red", score quiet stops |
 | 4 | Oct 5-11 | **Upside Down** | Wall handstand 5s; cartwheel with straighter legs; rings inversion with spot; forehand finish over the shoulder 10/10; basketball figure 8 eyes up 10 each way; soccer sole rolls and pull-backs | Hang Time: dead hang PR |
-| 5 | Oct 12-18 | **Skip & Bound** | A-skip and gallop rhythm; jump rope 20 singles; low bounds; backhand unit turn 10/10; basketball form shooting 20 makes from 1m; soccer laces pass intro | Rope Streak: consecutive singles |
-| 6 | Oct 19-25 | **Turn** | Med ball hip throw both sides; cartwheel other side intro; throwing with hip turn; FH and BH from drop feed with rotation; basketball pivot into a pass; soccer inside hook turn | Throw Far: overhand distance, each arm |
+| 5 | Oct 12-18 | **Skip & Bound** | A-skips, gallops and low bounds; cartwheel basics (frog kicks, sideways bear walk); jump rope 40 singles; backhand unit turn 10/10 and the yellow gate check; basketball jump stop off a jog into a form shot; soccer laces pass intro | Rope Streak: consecutive singles |
+| 6 | Oct 19-25 | **Turn** | Med ball hip throw both sides; throwing with hip turn; cartwheel basics (bunny hops); FH and BH from drop feed with rotation, controlled yellow if the gate is cleared; basketball jump stop off the dribble, pivot into a pass; soccer inside hook turn | Throw Far: overhand distance, each arm |
 | 7 | Oct 26 – Nov 1 | **Reactor** | Reaction starts on sound and sight; split step to first step; catch games under pressure; 20-ball rally; basketball dribble on Dad's hand signals; keeper reacts to thrown balls left/right (catch only) | Reaction Race: 10m from Dad's clap, best time |
 | 8 | Nov 2-8 | **Cub Trials** | Half volume. Patch attempts. Rank-up ceremony Sunday. Pack for the move. | Beat any Week 1 number |
 

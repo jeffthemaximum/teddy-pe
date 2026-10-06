@@ -2,8 +2,8 @@
 month_plan:
   month: 2026-10
   block: cub
-  label: Cub block · Week 4
-  range_display: Oct 5 – Oct 11
+  label: Cub block · Weeks 4–6
+  range_display: Oct 5 – Oct 25
 weeks:
 - number: 4
   position_in_block: 4
@@ -12,7 +12,7 @@ weeks:
   trials: false
   targets:
   - Wall handstand hold, 5 seconds
-  - 'Cartwheel step 4: straighter legs from the lunge entry'
+  - 'Cartwheel: back to basics from Wednesday, frog kicks and sideways bear walk'
   - Rings inversion with Dad spotting
   - 'Tennis: forehand finish over the shoulder, 10 of 10'
   - 'Basketball: figure 8 through the legs, eyes up, 10 each way'
@@ -147,7 +147,7 @@ weeks:
     intensity: 3
     summary_lines:
     - Build-ups
-    - Cartwheel step 4, wall handstand
+    - Cartwheel basics, wall handstand
     - Clap starts 6×10m, stop in 3 steps
     - Box sticks, single-leg hop and stick, broad jump ×3
     - 'Soccer: pull-back at speed; receive and return with firm feeds'
@@ -156,8 +156,8 @@ weeks:
       jumps and about 7 bursts in the soccer game, so 22. Full rest between starts,
       and you stay at the cone, so you clap and he comes to you. Every landing is
       a stick; one that wobbles is repeated, and two in a row means the jumping
-      is over for today. The cartwheel and handstand go before the speed work so
-      they get his best attention.'
+      is over for today. The cartwheel goes back to the very first rungs from today,
+      and it goes before the speed work so it gets his best attention.'
     hie: 22
     blocks:
     - minutes: '14'
@@ -167,8 +167,10 @@ weeks:
       tag:
     - minutes: '12'
       name: New Thing
-      body: Cartwheel step 4, 8 each side, legs long over the top. Then wall handstand,
-        2 holds.
+      body: 'Cartwheel basics, from the very start. Shoulder taps, 10 each side. Frog
+        kicks ×10, arms locked, feet floating for a moment. Sideways bear walk along
+        a chalk line, 5m each way, saying the four beats out loud. Then wall handstand,
+        2 holds. <q>Lock your arms, float your feet.</q>'
       tag:
     - minutes: '14'
       name: Fast
@@ -207,7 +209,7 @@ weeks:
     minutes: 100–120
     intensity: 2
     summary_lines:
-    - Cartwheel step 4, wall handstand best time
+    - Cartwheel basics, wall handstand best time
     - Step-and-throw both arms
     - 'Tennis: forehand finish over the shoulder 10/10; BH ×20; rally to 20'
     - 'Basketball: figure 8 eyes up, jump stop and pivot, chest and bounce pass'
@@ -226,8 +228,9 @@ weeks:
       tag:
     - minutes: '14'
       name: New Thing
-      body: Cartwheel step 4, 10 each side, and Dad scores the legs again. Compare
-        with Monday. Then wall handstand, 3 holds, and the best time goes in the diary.
+      body: 'Cartwheel basics. Frog kicks ×10, and Dad counts how many had locked
+        arms. Sideways bear walk, 5m each way, twice. Then wall handstand, 3 holds,
+        and the best time goes in the diary.'
       tag:
     - minutes: '10'
       name: Throw
@@ -352,7 +355,7 @@ weeks:
     intensity: 1
     summary_lines:
     - Shadow swings, finish held
-    - Cartwheel step 4, wall handstand
+    - Cartwheel basics, wall handstand
     - 'Soccer: 15 min receive and return, sole rolls, pull-backs'
     - 'Patch check: Strength (20s dead hang)'
     - 'Preview Week 5: Skip & Bound'
@@ -369,7 +372,8 @@ weeks:
       tag:
     - minutes: '8'
       name: After tennis
-      body: Cartwheel step 4, 6 each side. Then wall handstand, 2 holds.
+      body: Frog kicks ×10 and sideways bear walk 5m each way. Then wall handstand,
+        2 holds.
       tag:
     - minutes: '15'
       name: 'Soccer: Touch'
@@ -380,4 +384,759 @@ weeks:
       name: Review
       body: 'Patch check: Strength, on the dead hang. Read the two Hang Time numbers.
         Then preview Week 5, Skip & Bound: A-skips, gallops and the jump rope.'
+      tag:
+- number: 5
+  position_in_block: 5
+  theme: Skip & Bound
+  dates_display: Oct 12–18
+  trials: false
+  targets:
+  - A-skips, gallops and low bounds in rhythm
+  - 'Cartwheel basics: frog kicks with locked arms 10 of 10, sideways bear walk both
+    ways'
+  - 'Jump rope: 40 singles in a row'
+  - 'Tennis: backhand unit turn 10 of 10; green to yellow gate check on Thursday'
+  - 'Basketball: jump stop off a jog, both feet, 5 of 5, into a form shot'
+  - 'Soccer: laces pass intro, 10 each foot'
+  challenge: Rope Streak. Consecutive jump rope singles, best of 3. Tuesday number,
+    Friday number.
+  days:
+  - dow: mon
+    date: '2026-10-12'
+    name: Stop and Pop
+    role: Floor Day
+    minutes: 60–90
+    intensity: 1
+    summary_lines:
+    - 'Cartwheel basics: shoulder taps, frog kicks, sideways bear walk'
+    - Wall handstand holds
+    - 'Basketball: jump stop ladder, pivot, form shot off the stop'
+    - 'Basketball: moving dribble lanes, figure 8'
+    - 'Basketball: handles with no dribble'
+    dad_note: 'Footwork is the basketball job this week, so the dribbling and shooting
+      come out of a stop rather than standing still. If a foot lands before the other
+      or he skids, go back a rung of the ladder; a clean stop on an easy rung is worth
+      more than a messy one on a hard rung. The cartwheel is back at the very start
+      on purpose: count the frog kicks with locked arms, and bunny hops only come
+      in once that count is 10 of 10.'
+    hie: 0
+    blocks:
+    - minutes: '8'
+      name: Wake Up
+      body: Animal medley, skips, arm circles, wrist circles both ways.
+      tag:
+    - minutes: '15'
+      name: New Thing
+      body: 'Cartwheel basics. Shoulder taps, 10 each side. Frog kicks, 2 × 10, Dad
+        counts how many had locked arms. Sideways bear walk along a chalk line, 5m
+        each way, twice, saying the four beats out loud. If the frog kicks were 10
+        of 10 locked, finish with 5 bunny hops each way as a first look. <q>Lock your
+        arms, float your feet.</q>'
+      tag:
+    - minutes: '6'
+      name: Handstand
+      body: Wall handstand, 3 holds, counting out loud. Last week's best plus one second
+        is the target.
+      tag:
+    - minutes: '20'
+      name: 'Basketball: Footwork'
+      body: 'Jump stop ladder, rungs 1 to 3. Walk holding the ball and stop on Dad''s
+        call ×5. Jog holding the ball ×5. One dribble, pick it up, stop ×5 each hand.
+        After every stop, triple threat for a count of two, then pivot on the foot
+        Dad calls. Then one step, jump stop, form shot from 1m, until 10 makes. <q>Both
+        feet, same moment, stick it.</q>'
+      tag:
+    - minutes: '10'
+      name: 'Basketball: Handle'
+      body: Moving dribble, a 10m lane, walking, 4 lanes with each hand, eyes up on
+        Dad's fingers. Then figure 8 through the legs, 10 each way. About 200 dribbles
+        across both blocks.
+      tag:
+    - minutes: '8'
+      name: 'Basketball: Handles, no dribble'
+      body: Touch roll, 30 steady and 10 fast. Figure 8 roll, 5 times round. Ball glide
+        roll, 10m out and back. Pass through, 2 × 10m.
+      tag:
+    - minutes: '4'
+      name: Champion's Log
+      body: 'One line: what did your feet do well today?'
+      tag:
+    - minutes: '10'
+      name: Play
+      body: Choice time. Teddy picks.
+      tag:
+  - dow: tue
+    date: '2026-10-13'
+    name: Rope & Rings
+    role: Rings Day
+    minutes: 75–90
+    intensity: 2
+    summary_lines:
+    - 'Challenge: Rope Streak (Tue)'
+    - Rings passes and inversion
+    - Body rows, knee tucks, hollow hold
+    - 'Soccer: receive and return, sole rolls, pull-backs, laces pass intro'
+    - 'Tennis: wall targets, forehand, backhand, alternating'
+    dad_note: 'Rope Streak first, three tries with a full minute between, and the best
+      is Tuesday''s number. He got to 34 practising after the baseline, so 40 is a
+      real target and not a stretch. Strength is going well, so body rows join the
+      rings work; walk his feet forward only when all 8 have a straight body. The
+      laces pass is new: toe down and ankle locked matter far more than how hard it
+      goes. The rings passes are the only maximal efforts, about 6.'
+    hie: 6
+    blocks:
+    - minutes: '8'
+      name: Wake Up
+      body: Skips, arm circles, inchworms ×5, wrist circles.
+      tag:
+    - minutes: '6'
+      name: Challenge
+      body: '<b>Rope Streak.</b> Jump rope singles, as many in a row as he can. Three
+        tries, a minute between, best one counts. Again Friday.'
+      tag: challenge
+    - minutes: '16'
+      name: Rings
+      body: Riverside traveling rings, 5 passes out and back, twice if he is fresh.
+        Then rings inversion with Dad spotting, 4 reps.
+      tag:
+    - minutes: '12'
+      name: Strong
+      body: Body rows on the rings or a TRX, 2 × 8. Hanging knee tucks ×10. Hollow
+        hold 2×20s. Bear walk 2×15m.
+      tag:
+    - minutes: '20'
+      name: 'Soccer: Touch & Pass'
+      body: 'Receive and return, 10 leading with each foot at its own level. Sole
+        rolls 20 each foot, pull-backs 10 each foot. Then the laces pass, 5m to Dad''s
+        feet, 10 with each foot. About 300 touches. <q>Toe down, ankle locked.</q>'
+      tag:
+    - minutes: '12'
+      name: 'Tennis: Wall'
+      body: 'Wall targets from the 6m line: a chalk box above the net line. Forehands
+        only, count the hits in the box. Backhands only. Then alternating. Split step
+        every time the ball leaves the wall. <q>Full swing, aim small.</q>'
+      tag:
+    - minutes: '4'
+      name: Shake Out
+      body: Champion's Log line.
+      tag:
+  - dow: wed
+    date: '2026-10-14'
+    name: Skip & Bound
+    role: Fast Day
+    minutes: 100–120
+    intensity: 3
+    summary_lines:
+    - Cartwheel basics
+    - A-skips, gallops, low bounds
+    - 'Patch check: Power & Landing'
+    - Clap starts 4×10m
+    - 'Tennis: split step, serve to target'
+    - 'Soccer: pull-backs and laces passes at speed; game'
+    dad_note: 'High-intent efforts: 8 low bounds, 1 broad jump for the patch, 4 clap
+      starts and about 8 bursts in the soccer game, so 21. Bounds stay low and quiet;
+      the moment they get loud, cut them shorter. He owns the stick landing in the
+      diary, so the Power & Landing patch check goes here, on a fresh day, rather
+      than on Sunday when jumping is off. Serves are counted out of 10 because the
+      yellow gate on Thursday needs 6 of 10.'
+    hie: 21
+    blocks:
+    - minutes: '12'
+      name: Wake Up
+      body: A-march, high knees, gallops each lead. Then 3 build-up runs over 20m
+        at 60, 70, 80%.
+      tag:
+    - minutes: '12'
+      name: New Thing
+      body: Cartwheel basics. Frog kicks ×10, sideways bear walk 5m each way twice,
+        and bunny hops ×5 each way if Monday's frog kicks were 10 of 10.
+      tag:
+    - minutes: '12'
+      name: Rhythm
+      body: 'A-skips, 2 × 10m, after one A-march to set the shape. Gallops, 2 × 10m
+        on each lead. Skips for height, 2 × 10m. <q>Knee up, skip quick, stay tall.</q>'
+      tag:
+    - minutes: '10'
+      name: Bound
+      body: 'Low bounds, 4 reps of 6 bounds, walking back between. Then the patch
+        check: stick landing off the 30cm box, 10 in a row and all silent, and one
+        broad jump that he sticks. Both done is the Power & Landing patch.'
+      tag:
+    - minutes: '10'
+      name: Fast
+      body: Reaction starts, 4 × 10m. Athletic stance, go on Dad's clap, stop in 3
+        quiet steps at the cone. Walk back slowly.
+      tag:
+    - minutes: '14'
+      name: Tennis
+      body: Split step into a shuffle, 10 of 10. Then serve to a target, 2 × 10 into
+        the box with a cone in it, and count the ones that land in.
+      tag:
+    - minutes: '14'
+      name: 'Soccer: Touch at speed'
+      body: Dribble through cone gates and pull-back on Dad's <q>back</q>, 10 calls
+        each foot. Then dribble to a cone and play a laces pass through a gate 5m
+        away, 10 each foot.
+      tag:
+    - minutes: '20'
+      name: Play
+      body: Soccer game with Dad in goal.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Walk a lap, calves on the wall. Champion's Log line.
+      tag:
+  - dow: thu
+    date: '2026-10-15'
+    name: Gate Day
+    role: Wall Day
+    minutes: 100–120
+    intensity: 2
+    summary_lines:
+    - Cartwheel basics, wall handstand
+    - 'Tennis: backhand unit turn 10/10, forehands, wall volleys'
+    - 'Tennis: green to yellow gate check, four parts'
+    - 'Basketball: jump stop off the dribble, pivot into a pass, form shots'
+    - 'Basketball: pass through, spider move, clap tap'
+    dad_note: 'The gate check is four separate passes, and he needs all four for the
+      yellow ball: a 20-ball rally with you, 8 of 10 high bounces taken with space,
+      6 of 10 serves in, and 5 cross-court in a row on call. Write each one in the
+      diary as passed or not yet. You rally from the middle of your baseline and
+      place it to him, so he does the moving. If any part is not yet, it is green
+      next week and the check runs again in Trials, which is normal.'
+    hie: 6
+    blocks:
+    - minutes: '10'
+      name: Wake Up
+      body: Animal medley, skips. 10 shadow forehands, 10 shadow backhands, each
+        with the unit turn first.
+      tag:
+    - minutes: '12'
+      name: New Thing
+      body: Cartwheel basics at the rung he is on, frog kicks or sideways bear walk,
+        and bunny hops if he has earned them. Then wall handstand, 2 holds.
+      tag:
+    - minutes: '22'
+      name: Tennis
+      body: 'Backhands from drop feeds, 2 × 10, and the unit turn happens before the
+        ball bounces. Dad counts; 10 of 10 is the target. Forehands ×20 with the finish
+        held. Then wall volleys, three streaks on the forehand side and three on the
+        backhand side. <q>Turn first, then swing.</q>'
+      tag:
+    - minutes: '20'
+      name: 'Tennis: Gate check'
+      body: 'Green to yellow, four parts. Rally with Dad, green ball, full court: 20
+        in a row, three tries. High bounce feeds, 10 balls: 8 taken between waist
+        and shoulder with space. Serve to a target, 10 serves: 6 in. Cross-court
+        pattern on Dad''s call: 5 in a row into the cone box. Write down each part.'
+      tag:
+    - minutes: '18'
+      name: 'Basketball: Footwork & Pass'
+      body: Jump stop ladder at his rung, rung 4 if Monday was clean, 5 each hand.
+        Then jump stop, pivot, chest pass to the 3m target ×10. Then one step, jump
+        stop, form shot, 10 makes.
+      tag:
+    - minutes: '5'
+      name: 'Basketball: Handles, no dribble'
+      body: 'Pass through, 2 × 10m. Spider move and clap tap, 10 catches each, walking.
+        <q>Drop, step, snatch.</q>'
+      tag:
+    - minutes: '12'
+      name: Play
+      body: Basketball. HORSE and dribble tag with Dad stationary.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Champion's Log line.
+      tag:
+  - dow: fri
+    date: '2026-10-16'
+    name: Rope & Wall
+    role: Skate Day
+    minutes: 90–120
+    intensity: 1
+    summary_lines:
+    - 'Challenge: Rope Streak (Fri)'
+    - Skate park 30
+    - Balance games
+    - 'Keeper: set position, scoop, W-catch, feeds to both sides'
+    - 'Tennis: wall rally streak above the line, wall volleys'
+    dad_note: 'Rope Streak round 2 goes first, and the number goes next to Tuesday''s.
+      The tennis wall is extra tennis on a light day: rhythm and streaks, nothing
+      hard. Last low day before Saturday, about 3 high-intent efforts, all at the
+      skate park.'
+    hie: 3
+    blocks:
+    - minutes: '10'
+      name: Wake Up
+      body: Animal medley, skips, arm circles.
+      tag:
+    - minutes: '6'
+      name: Challenge
+      body: '<b>Rope Streak, round 2.</b> Jump rope singles, three tries, a minute between. Beat Tuesday''s
+        number.'
+      tag: challenge
+    - minutes: '30'
+      name: Skate park
+      body: Free skate. Two safe-fall reps from kneeling on the grass before he drops
+        in.
+      tag:
+    - minutes: '8'
+      name: Balance
+      body: 'Balance board or slant board: single-leg balance, then catching a tennis
+        ball while holding. 3 rounds.'
+      tag:
+    - minutes: '20'
+      name: 'Soccer: Keeper'
+      body: 'On grass. Keeper ready position on Dad''s <q>set</q>. 20 hand feeds:
+        10 along the ground for the scoop, 10 at chest height for the W-catch. Then
+        10 more, alternating sides, two shuffle steps to each. No diving.'
+      tag:
+    - minutes: '15'
+      name: 'Tennis: Wall'
+      body: Wall rally from the 6m line, every ball above the net line. Three tries
+        at a best streak. Then wall volleys, alternating sides, for a streak.
+      tag:
+    - minutes: '15'
+      name: Play
+      body: Choice time. No races.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: 'Calves, hamstrings. Champion''s Log: best thing this week.'
+      tag:
+  - dow: sat
+    date: '2026-10-17'
+    name: Game Day
+    role: Game Day
+    minutes: 'off'
+    intensity: 4
+    summary_lines:
+    - Home program off
+    - Evening shake-out
+    dad_note: Highest-load day of the week. Watch for heel or knee complaints Sunday
+      morning. If there are any, Sunday's card becomes stretching only and you tell
+      me.
+    hie: 0
+    blocks:
+    - minutes: "—"
+      name: Home program
+      body: Off. Add nothing.
+      tag:
+    - minutes: '5'
+      name: Evening shake-out
+      body: 'Walk, calves against the wall, 3 slow breaths. Champion''s Log line: one
+        thing from each sport.'
+      tag:
+  - dow: sun
+    date: '2026-10-18'
+    name: Quick Card
+    role: Court Day
+    minutes: 30–45
+    intensity: 1
+    summary_lines:
+    - Shadow swings
+    - Cartwheel basics, wall handstand
+    - 'Basketball: jump stop ladder, moving dribble, form shots'
+    - 'Basketball: spider move and clap tap'
+    - 'Review: Rope Streak, the gate check, Week 6 preview'
+    dad_note: 'Basketball Sunday. Read him both Rope Streak numbers and tell him how
+      the gate check went, part by part, whatever the result. If the Power & Landing
+      patch went in on Wednesday, this is where he draws it on the card. Then tell
+      him Week 6 is Turn, and he will be throwing a med ball.'
+    hie: 0
+    blocks:
+    - minutes: '5'
+      name: Before tennis
+      body: 'Skips, 10 shadow forehands, 10 shadow backhands. Reset reminder: breathe,
+        bounce, strings.'
+      tag:
+    - minutes: '8'
+      name: After tennis
+      body: Cartwheel basics at his rung, frog kicks or bunny hops, 10 reps. Wall handstand,
+        2 holds.
+      tag:
+    - minutes: '15'
+      name: 'Basketball: Footwork & Handle'
+      body: Jump stop ladder at his rung, 5 each hand. Moving dribble, 2 lanes each
+        hand. Then one step, jump stop, form shot, 10 makes.
+      tag:
+    - minutes: '5'
+      name: 'Basketball: Handles, no dribble'
+      body: Spider move and clap tap, 10 catches each. Count them and compare with
+        Thursday.
+      tag:
+    - minutes: '8'
+      name: Review
+      body: 'Read the Rope Streak numbers and the four gate parts. Draw any patch
+        earned this week. Preview Week 6, Turn: med ball hip throws and the inside
+        hook.'
+      tag:
+- number: 6
+  position_in_block: 6
+  theme: Turn
+  dates_display: Oct 19–25
+  trials: false
+  targets:
+  - Med ball hip throw both sides, hips first
+  - Overhand throw with a hip turn, both arms
+  - 'Cartwheel basics: bunny hops over a line, arms locked, 10 each way'
+  - 'Tennis: forehand and backhand with full rotation from drop feeds; controlled
+    yellow at the wall if the gate is cleared'
+  - 'Basketball: jump stop off the dribble, pivot into a pass'
+  - 'Soccer: inside hook turn, both feet'
+  challenge: Throw Far. Overhand throw with a tennis ball, 2 throws each arm, best
+    each arm. Tuesday number, Friday number.
+  days:
+  - dow: mon
+    date: '2026-10-19'
+    name: Hips First
+    role: Floor Day
+    minutes: 60–90
+    intensity: 1
+    summary_lines:
+    - 'Cartwheel basics: frog kicks, bunny hops'
+    - Wall handstand holds
+    - Med ball hip throw, easy, technique only
+    - 'Basketball: jump stop ladder, pivots, pivot into a bounce pass'
+    - 'Basketball: moving dribble at a jog; handles with no dribble'
+    dad_note: 'The med ball hip throw is new and Monday is zero high-intent efforts,
+      so it is half speed today and only about the order: hips, then shoulders, then
+      the ball. Bunny hops go in only if last week ended with the frog kicks 10 of
+      10 locked; if not, stay on frog kicks and the sideways bear walk without a
+      second thought. In basketball, the pivot is the new piece, so the foot stays
+      glued and the pass comes out of a low stance.'
+    hie: 0
+    blocks:
+    - minutes: '8'
+      name: Wake Up
+      body: Animal medley, skips, arm circles, wrist circles.
+      tag:
+    - minutes: '15'
+      name: New Thing
+      body: 'Cartwheel basics. Frog kicks ×10 to warm up the arms. Then bunny hops
+        over a chalk line, 10 each way: hands flat on the line, arms locked, kick
+        both feet over and land together. Hips a little higher each time. <q>Arms
+        straight, look at your hands.</q>'
+      tag:
+    - minutes: '6'
+      name: Handstand
+      body: Wall handstand, 3 holds, counting out loud.
+      tag:
+    - minutes: '8'
+      name: Turn
+      body: 'Med ball hip throw at half speed, side on to the wall, 5 each side. Hips
+        turn first, then shoulders, then the ball. <q>Hips throw it, arms just let
+        go.</q>'
+      tag:
+    - minutes: '20'
+      name: 'Basketball: Footwork'
+      body: Jump stop ladder at his rung, 5 each hand. After each stop, a front pivot
+        and a reverse pivot on the foot Dad calls. Then jump stop, pivot, bounce pass
+        to the 3m target ×10. Moving dribble at a jog, 3 lanes each hand, eyes up.
+      tag:
+    - minutes: '8'
+      name: 'Basketball: Handles, no dribble'
+      body: Touch roll, 30 fast. Figure 8 roll, 5 times round. Pass through, 2 ×
+        10m. Spider move, 10 catches.
+      tag:
+    - minutes: '4'
+      name: Champion's Log
+      body: 'One line: best thing today.'
+      tag:
+    - minutes: '10'
+      name: Play
+      body: Choice time. Teddy picks.
+      tag:
+  - dow: tue
+    date: '2026-10-20'
+    name: Throw Far
+    role: Rings Day
+    minutes: 75–90
+    intensity: 2
+    summary_lines:
+    - 'Challenge: Throw Far (Tue)'
+    - Rings passes and inversion
+    - Body rows, knee tucks, hollow hold
+    - 'Soccer: receive and return, inside hook turn intro'
+    - 'Tennis: wall targets, yellow at the wall if the gate is cleared'
+    dad_note: 'Throw Far is 4 maximal throws and the rings passes are about 6, so 10
+      today. Warm the arm up properly first with easy throws. In the tennis block,
+      the yellow ball comes out only if all four gate parts were passed last Thursday,
+      and only for the last 5 minutes at the wall; if contact creeps up above his
+      shoulder, back to green. The inside hook is new, so walk it before he jogs it.'
+    hie: 10
+    blocks:
+    - minutes: '10'
+      name: Wake Up
+      body: Skips, arm circles, inchworms ×5. Then 5 easy throws with each arm, getting
+        longer.
+      tag:
+    - minutes: '6'
+      name: Challenge
+      body: '<b>Throw Far.</b> Overhand throw with a tennis ball, opposite foot forward,
+        hips turning. 2 throws with each arm, Dad marks the landing, best of each
+        arm. Again Friday.'
+      tag: challenge
+    - minutes: '15'
+      name: Rings
+      body: Riverside traveling rings, 5 passes out and back. Rings inversion with
+        Dad spotting, 4 reps.
+      tag:
+    - minutes: '10'
+      name: Strong
+      body: Body rows, 2 × 8, feet a little further forward than last week if the
+        body stayed straight. Hanging knee tucks ×10. Hollow hold 2×20s.
+      tag:
+    - minutes: '20'
+      name: 'Soccer: Touch'
+      body: 'Receive and return, 10 leading with each foot at its own level. Then
+        the inside hook, walking: run at the ball, reach past it, hook it back with
+        the inside and go the other way, 10 each foot, then the same at a jog. Sole
+        rolls and pull-backs, 10 each foot. About 300 touches. <q>Sell it, then hook
+        it back.</q>'
+      tag:
+    - minutes: '12'
+      name: 'Tennis: Wall'
+      body: Wall targets from the 6m line, forehands, backhands, then alternating.
+        If the gate was cleared, the last 5 minutes are controlled yellow at the wall
+        from the same line.
+      tag:
+    - minutes: '4'
+      name: Shake Out
+      body: Champion's Log line.
+      tag:
+  - dow: wed
+    date: '2026-10-21'
+    name: Turn and Go
+    role: Fast Day
+    minutes: 100–120
+    intensity: 3
+    summary_lines:
+    - Cartwheel basics
+    - Med ball hip throws full effort; step-and-throw with hip turn
+    - Turn-and-go starts 4×10m
+    - 'Tennis: drop feeds with rotation; split step'
+    - 'Soccer: inside hook at speed; game'
+    dad_note: 'High-intent efforts: 6 full-effort med ball hip throws, 4 turn-and-go
+      starts and about 8 bursts in the soccer game, so 18. The starts begin facing
+      away from you, so he has to turn before he goes, which is this week''s theme
+      in his feet. Full rest between all of them.'
+    hie: 18
+    blocks:
+    - minutes: '12'
+      name: Wake Up
+      body: A-skips, gallops each lead, high knees. Then 3 build-up runs over 20m
+        at 60, 70, 80%.
+      tag:
+    - minutes: '12'
+      name: New Thing
+      body: Cartwheel basics, bunny hops 10 each way, or frog kicks and the sideways
+        bear walk if that is still his rung.
+      tag:
+    - minutes: '12'
+      name: Throw
+      body: Med ball hip throw at full effort, 3 each side, walking back between.
+        Then step-and-throw at the chalk square with a hip turn, 10 with each arm.
+      tag:
+    - minutes: '10'
+      name: Fast
+      body: 'Reaction starts with a turn, 4 × 10m. Start facing away from Dad, and
+        on his clap turn and go, then stop in 3 quiet steps at the cone. <q>Clap,
+        turn, go.</q>'
+      tag:
+    - minutes: '15'
+      name: Tennis
+      body: 'Split step into a shuffle, 10 of 10. Then drop feeds with full rotation,
+        forehands ×20 and backhands ×20: unit turn, hips through, finish over the
+        shoulder.'
+      tag:
+    - minutes: '14'
+      name: 'Soccer: Touch at speed'
+      body: Dribble at speed, and on Dad's <q>turn</q> an inside hook and away, 10
+        calls each foot. Then receive and return at the highest level he owns, firm
+        feeds, 10 each foot.
+      tag:
+    - minutes: '20'
+      name: Play
+      body: Soccer game with Dad in goal.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Walk a lap, calves on the wall. Champion's Log line.
+      tag:
+  - dow: thu
+    date: '2026-10-22'
+    name: Rotation
+    role: Wall Day
+    minutes: 100–120
+    intensity: 2
+    summary_lines:
+    - Cartwheel basics, wall handstand
+    - 'Tennis: rotation from drop feeds, high bounces, cross-court, rally to 20'
+    - 'Tennis: controlled yellow on hand feeds if the gate is cleared'
+    - 'Basketball: jump stop off the dribble, pivot into chest and bounce passes'
+    - 'Basketball: handles with no dribble'
+    dad_note: 'The longest tennis block of the month. If the gate was cleared, the
+      yellow ball is 20 hand feeds from the side on a short court and then it goes
+      back in the bag; the rally stays green. If it was not, those 20 feeds are green
+      high bounces instead. The basketball target is the jump stop off a real dribble,
+      5 of 5 with each hand, and then a pivot into the pass. High-intent efforts are
+      the play block, about 6.'
+    hie: 6
+    blocks:
+    - minutes: '10'
+      name: Wake Up
+      body: Animal medley, skips. 10 shadow forehands and 10 shadow backhands with
+        the hips turning through.
+      tag:
+    - minutes: '12'
+      name: New Thing
+      body: Bunny hops, 10 each way, or frog kicks if that is still his rung. Then
+        wall handstand, 3 holds, best time in the diary.
+      tag:
+    - minutes: '40'
+      name: Tennis
+      body: 'Drop feeds with full rotation, forehands and backhands in sets of 10.
+        High bounce feeds ×10, moving his feet to give it room. Cross-court pattern,
+        5 in a row into the cone box, each side. If the gate was cleared, controlled
+        yellow: 20 hand feeds from the side, short court. Then rally with Dad, green
+        ball, target 20 in a row, reset between points. Wall volleys to finish. <q>Turn
+        first, then swing.</q>'
+      tag:
+    - minutes: '20'
+      name: 'Basketball: Footwork & Pass'
+      body: Jump stop off a dribble at a jog, 5 of 5 with each hand. Then jump stop,
+        pivot, chest pass to the target ×10, and the same with a bounce pass ×10.
+        One step, jump stop, form shot, 10 makes.
+      tag:
+    - minutes: '5'
+      name: 'Basketball: Handles, no dribble'
+      body: Pass through, 2 × 10m. Spider move and clap tap, 10 catches each.
+      tag:
+    - minutes: '12'
+      name: Play
+      body: Basketball. HORSE and dribble tag with Dad stationary.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Champion's Log line.
+      tag:
+  - dow: fri
+    date: '2026-10-23'
+    name: Skate & Throw
+    role: Skate Day
+    minutes: 90–120
+    intensity: 1
+    summary_lines:
+    - 'Challenge: Throw Far (Fri)'
+    - Skate park 30
+    - Balance games
+    - 'Keeper: set position, scoop, W-catch, both sides'
+    - 'Tennis: wall streaks and serves at the wall'
+    dad_note: 'Throw Far round 2 is 4 maximal throws, and that is the day''s whole
+      high-intent budget, so the skate park is cruising rather than tricks today.
+      Warm the arm up first. Tennis at the wall is rhythm work; the yellow ball
+      comes out for the last 5 minutes only if the gate was cleared.'
+    hie: 4
+    blocks:
+    - minutes: '10'
+      name: Wake Up
+      body: Animal medley, skips, arm circles. 5 easy throws with each arm.
+      tag:
+    - minutes: '6'
+      name: Challenge
+      body: '<b>Throw Far, round 2.</b> Overhand throw, 2 each arm, best of each. Beat Tuesday''s
+        numbers.'
+      tag: challenge
+    - minutes: '30'
+      name: Skate park
+      body: Cruising and carving. Two safe-fall reps from kneeling on the grass before
+        he drops in.
+      tag:
+    - minutes: '8'
+      name: Balance
+      body: 'Balance board or slant board: single-leg balance, then catching a tennis
+        ball while holding. 3 rounds.'
+      tag:
+    - minutes: '20'
+      name: 'Soccer: Keeper'
+      body: 'On grass. Keeper ready position on Dad''s <q>set</q>. 20 hand feeds,
+        scoop and W-catch, alternating sides with two shuffle steps. After each catch,
+        bowl it back underarm to Dad''s feet.'
+      tag:
+    - minutes: '15'
+      name: 'Tennis: Wall'
+      body: Wall rally from the 6m line, above the net line, best streak of three
+        tries. Serve to a target at the wall, a chalk box above the line, 10 serves.
+        Controlled yellow for the last 5 minutes if the gate was cleared.
+      tag:
+    - minutes: '12'
+      name: Play
+      body: Choice time. No races.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: 'Calves, hamstrings. Champion''s Log: best thing this week.'
+      tag:
+  - dow: sat
+    date: '2026-10-24'
+    name: Game Day
+    role: Game Day
+    minutes: 'off'
+    intensity: 4
+    summary_lines:
+    - Home program off
+    - Evening shake-out
+    dad_note: Highest-load day of the week. Watch for heel or knee complaints Sunday
+      morning. If there are any, Sunday's card becomes stretching only and you tell
+      me.
+    hie: 0
+    blocks:
+    - minutes: "—"
+      name: Home program
+      body: Off. Add nothing.
+      tag:
+    - minutes: '5'
+      name: Evening shake-out
+      body: 'Walk, calves against the wall, 3 slow breaths. Champion''s Log line: one
+        thing from each sport.'
+      tag:
+  - dow: sun
+    date: '2026-10-25'
+    name: Quick Card
+    role: Court Day
+    minutes: 30–45
+    intensity: 1
+    summary_lines:
+    - Shadow swings with rotation
+    - Cartwheel basics, wall handstand
+    - 'Soccer: receive and return, inside hook'
+    - 'Patch check: Throw & Catch (step-and-throw 10/10 both arms)'
+    - 'Preview Week 7: Reactor'
+    dad_note: 'Soccer Sunday. Read him both Throw Far numbers, then the patch check:
+      the step-and-throw with the opposite foot, 10 of 10 with each arm at an easy
+      distance, which is technique and not effort. Tell him Week 7 is Reactor and
+      it is all about reacting to your signal.'
+    hie: 0
+    blocks:
+    - minutes: '5'
+      name: Before tennis
+      body: 'Skips, 10 shadow forehands, 10 shadow backhands, hips turning through.
+        Reset reminder: breathe, bounce, strings.'
+      tag:
+    - minutes: '8'
+      name: After tennis
+      body: Bunny hops, 10 each way, or frog kicks if that is still his rung. Wall
+        handstand, 2 holds.
+      tag:
+    - minutes: '15'
+      name: 'Soccer: Touch'
+      body: Receive and return, 10 leading with each foot at its own level. Inside
+        hook, 10 each foot at a jog. About 200 touches.
+      tag:
+    - minutes: '10'
+      name: Review
+      body: 'Patch check: Throw & Catch, step-and-throw 10 of 10 with each arm. Read
+        the Throw Far numbers. Preview Week 7, Reactor.'
       tag:
