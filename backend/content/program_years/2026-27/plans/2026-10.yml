@@ -790,55 +790,55 @@ weeks:
   days:
   - dow: mon
     date: '2026-10-19'
-    name: Hips First
+    name: Easy Hips
     role: Floor Day
-    minutes: 60–90
+    minutes: '60'
     intensity: 1
     summary_lines:
-    - 'Cartwheel basics: frog kicks, bunny hops'
-    - Wall handstand holds
-    - Med ball hip throw, easy, technique only
-    - 'Basketball: jump stop ladder, pivots, pivot into a bounce pass'
-    - 'Basketball: moving dribble at a jog; handles with no dribble'
-    dad_note: 'The med ball hip throw is new and Monday is zero high-intent efforts,
-      so it is half speed today and only about the order: hips, then shoulders, then
-      the ball. Bunny hops go in only if last week ended with the frog kicks 10 of
-      10 locked; if not, stay on frog kicks and the sideways bear walk without a
-      second thought. In basketball, the pivot is the new piece, so the foot stays
-      glued and the pass comes out of a low stance.'
+    - 'Cartwheel basics as a game: frog kicks, bunny hops over the river'
+    - Wall handstand, 2 holds
+    - Med ball hip throw, easy, at a chalk mark
+    - 'Basketball: dribble tag at a walk, jump stop and pivot'
+    - Long choice time
+    dad_note: 'Everyone is tired from the weekend, and swim is today, so this is a
+      slow, playful hour and stopping early is fine. Nothing is scored except the
+      bunny hops, and only if last week ended with the frog kicks 10 of 10 locked;
+      if not, stay on frog kicks and the sideways bear walk. The med ball and the
+      pivot are both new, so all you are looking for is the order: hips, then the
+      ball, and the pivot foot staying glued.'
     hie: 0
     blocks:
-    - minutes: '8'
+    - minutes: '6'
       name: Wake Up
-      body: Animal medley, skips, arm circles, wrist circles.
+      body: Animal medley at his own pace, he picks the animals. Wrist circles both
+        ways.
       tag:
-    - minutes: '15'
+    - minutes: '10'
       name: New Thing
-      body: 'Cartwheel basics. Frog kicks ×10 to warm up the arms. Then bunny hops
-        over a chalk line, 10 each way: hands flat on the line, arms locked, kick
-        both feet over and land together. Hips a little higher each time. <q>Arms
-        straight, look at your hands.</q>'
+      body: 'Cartwheel basics as a game. Frog kicks ×10. Then the chalk line is a
+        river and he crosses it with bunny hops, 6 each way: hands flat on the bank,
+        arms locked, both feet over and land together. <q>Arms straight, look at
+        your hands.</q>'
+      tag:
+    - minutes: '4'
+      name: Handstand
+      body: Wall handstand, 2 holds, counting out loud. No target today.
       tag:
     - minutes: '6'
-      name: Handstand
-      body: Wall handstand, 3 holds, counting out loud.
-      tag:
-    - minutes: '8'
       name: Turn
-      body: 'Med ball hip throw at half speed, side on to the wall, 5 each side. Hips
-        turn first, then shoulders, then the ball. <q>Hips throw it, arms just let
-        go.</q>'
+      body: 'Med ball hip throw at half speed, side on to the wall, 4 each side, aiming
+        at a chalk mark. Points for hitting it, nothing for distance. <q>Hips throw
+        it, arms just let go.</q>'
       tag:
-    - minutes: '20'
-      name: 'Basketball: Footwork'
-      body: Jump stop ladder at his rung, 5 each hand. After each stop, a front pivot
-        and a reverse pivot on the foot Dad calls. Then jump stop, pivot, bounce pass
-        to the 3m target ×10. Moving dribble at a jog, 3 lanes each hand, eyes up.
+    - minutes: '15'
+      name: 'Basketball: Play'
+      body: Dribble tag at a walk in a big square, Dad stationary. When Dad calls <q>stop</q>,
+        a jump stop and a pivot before he dribbles on. Then 10 jump stop, pivot, bounce
+        pass to Dad. About 150 dribbles.
       tag:
-    - minutes: '8'
+    - minutes: '5'
       name: 'Basketball: Handles, no dribble'
-      body: Touch roll, 30 fast. Figure 8 roll, 5 times round. Pass through, 2 ×
-        10m. Spider move, 10 catches.
+      body: Touch roll, 30. Figure 8 roll, 5 times round. Spider move, 10 catches.
       tag:
     - minutes: '4'
       name: Champion's Log
@@ -846,30 +846,31 @@ weeks:
       tag:
     - minutes: '10'
       name: Play
-      body: Choice time. Teddy picks.
+      body: Choice time. Teddy picks, nothing that races.
       tag:
   - dow: tue
     date: '2026-10-20'
-    name: Throw Far
+    name: Swing and Hook
     role: Rings Day
-    minutes: 75–90
+    minutes: '75'
     intensity: 2
     summary_lines:
     - 'Challenge: Throw Far (Tue)'
-    - Rings passes and inversion
-    - Body rows, knee tucks, hollow hold
-    - 'Soccer: receive and return, inside hook turn intro'
-    - 'Tennis: wall targets, yellow at the wall if the gate is cleared'
-    dad_note: 'Throw Far is 4 maximal throws and the rings passes are about 6, so 10
-      today. Warm the arm up properly first with easy throws. In the tennis block,
-      the yellow ball comes out only if all four gate parts were passed last Thursday,
-      and only for the last 5 minutes at the wall; if contact creeps up above his
-      shoulder, back to green. The inside hook is new, so walk it before he jogs it.'
-    hie: 10
+    - Rings for fun, no counting
+    - Hollow hold and knee tucks, short
+    - 'Soccer: inside hook intro at a walk, wall pass game'
+    - 'Tennis: wall streak game, green ball'
+    - Long choice time
+    dad_note: 'Gymnastics is today and he is still tired from the weekend, so this
+      is a light, playful card. Throw Far stays, because it is only 4 throws and the
+      first number has to land early in the week; warm the arm up properly first.
+      Rings are as many passes as he wants up to 4, so 8 high-intent efforts in all.
+      Walk the inside hook the whole time today; jogging it is Wednesday''s job.'
+    hie: 8
     blocks:
-    - minutes: '10'
+    - minutes: '8'
       name: Wake Up
-      body: Skips, arm circles, inchworms ×5. Then 5 easy throws with each arm, getting
+      body: Skips, arm circles, inchworms ×3. Then 5 easy throws with each arm, getting
         longer.
       tag:
     - minutes: '6'
@@ -878,29 +879,32 @@ weeks:
         hips turning. 2 throws with each arm, Dad marks the landing, best of each
         arm. Again Friday.'
       tag: challenge
-    - minutes: '15'
+    - minutes: '12'
       name: Rings
-      body: Riverside traveling rings, 5 passes out and back. Rings inversion with
-        Dad spotting, 4 reps.
+      body: Riverside traveling rings for fun, out and back as many times as he wants
+        up to 4. Then monkey walk along the bars. No inversion today, gymnastics has
+        his shoulders.
+      tag:
+    - minutes: '5'
+      name: Strong
+      body: Hollow hold while Dad counts to a number Teddy picks, 2 rounds. Hanging
+        knee tucks ×6.
+      tag:
+    - minutes: '18'
+      name: 'Soccer: Touch'
+      body: 'Wall passes, first to 10 clean ones against Dad. Then the inside hook,
+        walking only: walk at the ball, reach past it, hook it back with the inside
+        and go the other way, 8 each foot. Receive and return, 6 leading with each
+        foot at its own level. About 200 touches. <q>Sell it, then hook it back.</q>'
       tag:
     - minutes: '10'
-      name: Strong
-      body: Body rows, 2 × 8, feet a little further forward than last week if the
-        body stayed straight. Hanging knee tucks ×10. Hollow hold 2×20s.
-      tag:
-    - minutes: '20'
-      name: 'Soccer: Touch'
-      body: 'Receive and return, 10 leading with each foot at its own level. Then
-        the inside hook, walking: run at the ball, reach past it, hook it back with
-        the inside and go the other way, 10 each foot, then the same at a jog. Sole
-        rolls and pull-backs, 10 each foot. About 300 touches. <q>Sell it, then hook
-        it back.</q>'
+      name: 'Tennis: Wall'
+      body: Wall rally streak game from the 6m line, green ball. Dad picks a number,
+        Teddy tries to beat it, then they swap. Yellow stays in the bag today.
       tag:
     - minutes: '12'
-      name: 'Tennis: Wall'
-      body: Wall targets from the 6m line, forehands, backhands, then alternating.
-        If the gate was cleared, the last 5 minutes are controlled yellow at the wall
-        from the same line.
+      name: Play
+      body: Choice time. Teddy picks, nothing that races.
       tag:
     - minutes: '4'
       name: Shake Out
@@ -919,9 +923,9 @@ weeks:
     - 'Tennis: drop feeds with rotation; split step'
     - 'Soccer: inside hook at speed; game'
     dad_note: 'High-intent efforts: 6 full-effort med ball hip throws, 4 turn-and-go
-      starts and about 8 bursts in the soccer game, so 18. The starts begin facing
-      away from you, so he has to turn before he goes, which is this week''s theme
-      in his feet. Full rest between all of them.'
+      starts and about 8 bursts in the soccer game, so 18. Gymnastics was yesterday;
+      if the build-up runs look heavy, cut the starts to 2. Full rest between all
+      of them.'
     hie: 18
     blocks:
     - minutes: '12'

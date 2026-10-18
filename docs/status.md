@@ -54,6 +54,13 @@ If the program itself needs changing while the rewrite is in flight (a new month
 
 ## Next
 
+- **Swim and gymnastics switched days, and Monday and Tuesday of week 6 are easy
+  play days. Needs a deploy before Monday 19 October.** `feature/swim-monday-gym-tuesday`.
+  Swim is Monday and gymnastics Tuesday from here; the home roles stay on their
+  days. 320 examples, clean. Merge, then from `main`:
+  `cd backend && fly deploy -a teddy-pe-api`. See
+  `docs/history/2026-10-18-swim-monday-easy-start.md`.
+
 - **Weeks 5 and 6 are written, and the rest of week 4 is changed; needs a deploy
   before Wednesday 7 October.** `feature/weeks-5-and-6`. The cartwheel restarts at
   the basics from Wednesday (shoulder taps, frog kicks, sideways bear walk, then

@@ -11,7 +11,7 @@ Working memory for anyone (or any AI session) picking this project up cold. Keep
 - Very tall, very athletic parents and family. Height is recorded at every test date; see the tall-frame notes in the architecture.
 - Baseline skills: excellent bike rider, swims, catches a tennis ball out of the air, throws overhand without full rotation, no cartwheel yet.
 - Loves nearly all of it, and especially loves doing it with Dad. Play blocks are often "choice time": Teddy picks (on 21 September he picked tennis matches on the pickleball courts). Skateboards at a skate park.
-- Organized week: Sat soccer + lacrosse + tennis (2h); Sun tennis (2h); Mon gymnastics; Tue swim. Tennis is a coached small group; Jeff also coaches him.
+- Organized week: Sat soccer + lacrosse + tennis (2h); Sun tennis (2h); Mon swim; Tue gymnastics (switched from Mon gymnastics, Tue swim on 19 October 2026). Tennis is a coached small group; Jeff also coaches him.
 - Home program adds dedicated basketball (Mon, Thu, alternate Sun) and soccer including keeper work (Tue, Wed, Fri, alternate Sun).
 
 ## Who has access

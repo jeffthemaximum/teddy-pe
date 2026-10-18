@@ -768,3 +768,36 @@ TRX rows, sled pushes, basketball play and an hour's swim.
 - **`hie`:** week 5 is 36 (Tue 6, Wed 21, Thu 6, Fri 3) and week 6 is 38 (Tue 10,
   Wed 18, Thu 6, Fri 4). Throw Far is 2 throws an arm, so Friday's attempt is 4
   maximal throws and stays at or under 5.
+
+## 2026-10-18: swim and gymnastics switch days, and an easy start to week 6
+
+**What Jeff asked.** Swim and gymnastics have switched for good: swim Monday,
+gymnastics Tuesday. Update the schedule going forward. And make Monday and
+Tuesday of this coming week (19 and 20 October) slower and more play based,
+because the family is tired from the weekend.
+
+**Rulings.**
+
+- **The home roles stay on their days.** Monday is still Floor Day and Tuesday
+  is still Rings Day. Swapping the roles would put Rings, with its high-intent
+  efforts and the early Challenge attempt, on a Monday, which has to stay at zero
+  after Saturday. Swim on Monday fits Floor Day well, since both are low load.
+- **Tuesday now shares a day with gymnastics**, so the Rings card keeps hangs and
+  inversions short: gymnastics loads the same hands and shoulders. Wednesday now
+  follows a gymnastics day, so its dad note says to cut the starts if his landings
+  look heavy in the build-ups. Written into `program.yml` day roles and the
+  architecture's organized schedule, so week 7 onward is written to it.
+- **Week 6 is the only written week from here**, so it is the only plan that
+  changed. Weeks 1 to 5 are history and keep the old days.
+- **Monday 19 October** is 60 minutes, zero high-intent efforts, and play first:
+  the cartwheel basics as a "cross the river" bunny hop game (6 each way, down
+  from 10), two handstand holds with no target, the med ball hip throw at a chalk
+  mark for points instead of reps, and the jump stop and pivot inside walking
+  dribble tag instead of the jump stop ladder. Moving dribble at a jog is off.
+- **Tuesday 20 October** is 75 minutes. Throw Far stays, because the content spec
+  holds the early Challenge attempt to Monday or Tuesday and it is only 4 throws.
+  Rings are passes for fun up to 4, no inversion; body rows are off; the inside
+  hook stays at a walk inside a wall pass game, about 200 touches down from 300;
+  the tennis wall is a green streak game with the yellow ball left in the bag;
+  12 minutes of choice time is added.
+- **`hie`:** week 6 is 36 (Tue 8, Wed 18, Thu 6, Fri 4), down from 38.

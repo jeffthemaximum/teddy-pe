@@ -46,10 +46,12 @@ Trained deliberately, like a stroke, one thing per block:
 
 ## Organized schedule (assumed constant all year)
 
+Swim and gymnastics switched days from 19 October 2026: swim is Monday, gymnastics Tuesday. The home roles stayed where they were, so Monday is still zero high-intent efforts and Wednesday is still the one high-impact day. What changed is Tuesday: gymnastics now shares a day with the Rings card, so hangs and inversions stay short there, and Wednesday follows a gymnastics day, so if his landings look heavy in the build-up runs, the starts come down.
+
 | Day | Organized | Home program role | Home minutes |
 |---|---|---|---|
-| Mon | Gymnastics | **Floor Day**: tumbling homework, landing, basketball handling block. Low impact. | 60-90 |
-| Tue | Swim (recovery) | **Rings Day**: hanging, climbing, strength, soccer touch and passing at the wall. Moderate. | 75-90 |
+| Mon | Swim (recovery) | **Floor Day**: tumbling homework, landing, basketball handling block. Low impact. | 60-90 |
+| Tue | Gymnastics | **Rings Day**: hanging, climbing, strength, soccer touch and passing at the wall. Moderate, and short on hangs and inversions, because gymnastics loads the same hands and shoulders the same day. | 75-90 |
 | Wed | none | **Fast Day**: the one high-impact home day. Speed, power, soccer at speed, games. | 100-120 |
 | Thu | none | **Wall Day**: tennis wall and court, throwing, basketball skill block. Moderate. | 100-120 |
 | Fri | none | **Skate Day**: skate park, balance, keeper work on grass, weekly challenge. Low impact before Saturday. | 90-120 |

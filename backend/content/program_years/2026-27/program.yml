@@ -494,18 +494,18 @@ day_roles:
   position: 1
   name: Floor Day
   organized:
-  - Gymnastics
+  - Swim
   minutes: 60–90
   intensity: 1
-  note: Tumbling homework, landing, basketball handling. Low impact after gym.
+  note: Tumbling homework, landing, basketball handling. Low impact, swim is recovery.
 - dow: tue
   position: 2
   name: Rings Day
   organized:
-  - Swim
+  - Gymnastics
   minutes: 75–90
   intensity: 2
-  note: Rings, hangs, strength, soccer touch and passing at the wall.
+  note: Rings, hangs, strength, soccer touch and passing at the wall. Short on hangs, since gym loads the same hands and shoulders.
 - dow: wed
   position: 3
   name: Fast Day
