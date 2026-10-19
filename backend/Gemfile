@@ -3,7 +3,7 @@ source "https://rubygems.org"
 ruby "3.3.5"
 
 gem "rails", "~> 8.0.0"
-gem "puma", "~> 6.4"
+gem "puma", "~> 8.0"
 gem "pg", "~> 1.5"
 
 # Rails 8.0 still passes quirks_mode to JSON.generate, which json 3.x removed,
