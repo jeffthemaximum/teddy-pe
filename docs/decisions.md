@@ -801,3 +801,29 @@ because the family is tired from the weekend.
   the tennis wall is a green streak game with the yellow ball left in the bag;
   12 minutes of choice time is added.
 - **`hie`:** week 6 is 36 (Tue 8, Wed 18, Thu 6, Fri 4), down from 38.
+
+## 2026-10-26: week 7, Reactor, written around two travel days
+
+**What Jeff asked.** Generate this week. The family is travelling on Tuesday and
+Friday, so only Monday, Wednesday and Thursday are likely sessions.
+
+**What happened.** The production export was refused by the session's permission
+settings, as it was on 5 October, so the week 6 diary was not read. The cards
+carry the same rung language as week 6 ("bunny hops, or frog kicks if that is
+still his rung", yellow "if the gate was cleared").
+
+**Rulings.**
+
+- **Tuesday and Friday keep their roles and get 10-minute road cards**, optional,
+  zero high-intent efforts. The content spec holds every weekday to its role and
+  wants a Challenge attempt on Monday or Tuesday and on Friday, so the days stay
+  in the plan rather than disappearing.
+- **The challenge changed from Reaction Race to Ruler Drop.** A 10m race from a
+  clap is a sprint, which cannot go on a zero-effort Monday, and Friday is in a
+  hotel. Ruler Drop measures the same thing (reaction) with a ruler and a table.
+  Reaction starts on a clap and on sight stay in the week, on Wednesday.
+- **Tuesday's strength moves to Wednesday** as 8 minutes of body rows and hollow
+  holds. Friday's keeper work moves into Wednesday's keeper block (catch only).
+- **Sunday is basketball**, since week 6's Sunday was soccer.
+- **New glossary entries:** `ruler-drop` and `signal-dribble`.
+- **`hie`:** 24 (Wed 18, Thu 6), well under 40, which suits the week before Trials.

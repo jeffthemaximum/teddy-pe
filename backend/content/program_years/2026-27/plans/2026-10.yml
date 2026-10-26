@@ -2,8 +2,8 @@
 month_plan:
   month: 2026-10
   block: cub
-  label: Cub block · Weeks 4–6
-  range_display: Oct 5 – Oct 25
+  label: Cub block · Weeks 4–7
+  range_display: Oct 5 – Nov 1
 weeks:
 - number: 4
   position_in_block: 4
@@ -1143,4 +1143,320 @@ weeks:
       name: Review
       body: 'Patch check: Throw & Catch, step-and-throw 10 of 10 with each arm. Read
         the Throw Far numbers. Preview Week 7, Reactor.'
+      tag:
+- number: 7
+  position_in_block: 7
+  theme: Reactor
+  dates_display: Oct 26–Nov 1
+  trials: false
+  targets:
+  - Reaction starts on a clap and on a dropped ball, stop in 3 quiet steps
+  - 'Cartwheel basics: bunny hops, hips a little higher'
+  - 'Tennis: split step into the first step, 10 of 10; rally to 20 with Dad, green
+    ball'
+  - 'Basketball: signal dribble, eyes up, at a walk and a jog'
+  - 'Soccer: keeper reacts to thrown balls left and right, catch only'
+  challenge: Ruler Drop. Catch a falling ruler, 3 tries each hand, best of each, in
+    centimetres. Smaller is faster. Monday number, Friday number.
+  days:
+  - dow: mon
+    date: '2026-10-26'
+    name: Catch It
+    role: Floor Day
+    minutes: 60–90
+    intensity: 1
+    summary_lines:
+    - 'Challenge: Ruler Drop (Mon)'
+    - 'Cartwheel basics: bunny hops'
+    - Wall handstand holds
+    - Drop catch game
+    - 'Basketball: signal dribble standing, then walking; handles with no dribble'
+    dad_note: 'Short week: today, Wednesday and Thursday are the full sessions, and
+      Tuesday and Friday are 10 minutes on the road. Ruler Drop goes first; vary
+      how long you wait before each drop so he cannot guess it, and write both hands''
+      numbers down, because Friday''s attempt is in a hotel. Nothing today is a
+      sprint or a jump; reacting is all hands and eyes.'
+    hie: 0
+    blocks:
+    - minutes: '8'
+      name: Wake Up
+      body: Animal medley, skips, arm circles, wrist circles.
+      tag:
+    - minutes: '6'
+      name: Challenge
+      body: '<b>Ruler Drop.</b> Forearm on the table, hand just past the edge, finger
+        and thumb open at the zero end. Dad lets go with no warning. 3 tries each
+        hand, best of each in centimetres. Smaller is faster. Again Friday.'
+      tag: challenge
+    - minutes: '12'
+      name: New Thing
+      body: 'Cartwheel basics. Frog kicks ×10. Then bunny hops over the chalk line,
+        10 each way, hips a little higher than last week. If the frog kicks are still
+        not locked every time, stay there and add the sideways bear walk. <q>Arms
+        straight, look at your hands.</q>'
+      tag:
+    - minutes: '5'
+      name: Handstand
+      body: Wall handstand, 3 holds, counting out loud.
+      tag:
+    - minutes: '8'
+      name: React
+      body: 'Drop catch. Dad holds a tennis ball out in each hand at shoulder height
+        and lets one go. Teddy, in ready position 1m away, catches it after one bounce.
+        10 catches, then closer, then no bounce if he is catching everything. <q>Watch
+        both hands.</q>'
+      tag:
+    - minutes: '18'
+      name: 'Basketball: Signal dribble'
+      body: 'Signal dribble standing still: Dad''s hand to one side is a crossover
+        to that hand, a fist is freeze in triple threat, two hands up is back up three
+        dribbles. 2 minutes, then walking a lane, 3 lanes each way. Teddy calls out
+        each signal as he does it. About 250 dribbles. <q>Eyes on Dad.</q>'
+      tag:
+    - minutes: '6'
+      name: 'Basketball: Handles, no dribble'
+      body: Touch roll, 30 fast. Figure 8 roll, 5 times round. Spider move and clap
+        tap, 10 catches each.
+      tag:
+    - minutes: '4'
+      name: Champion's Log
+      body: 'One line: best thing today.'
+      tag:
+    - minutes: '10'
+      name: Play
+      body: Choice time. Teddy picks.
+      tag:
+  - dow: tue
+    date: '2026-10-27'
+    name: On the Road
+    role: Rings Day
+    minutes: '10'
+    intensity: 1
+    summary_lines:
+    - Travel day, 10 minutes if it fits
+    - Hollow hold, shadow swings with a split step
+    - Champion's Log
+    dad_note: 'Travel day. If 10 minutes fits somewhere, here they are; if it does
+      not, skip it without a second thought. No rings, no strength to make up later.'
+    hie: 0
+    blocks:
+    - minutes: '4'
+      name: Strong
+      body: Hollow hold 2 × 20 seconds on any floor. 10 bear walk steps forward and
+        back.
+      tag:
+    - minutes: '4'
+      name: 'Tennis: Shadow'
+      body: 'Split step on Dad''s <q>hop</q>, then a first step and a shadow swing
+        to the side Dad points. 10 forehands, 10 backhands, 20 swings.'
+      tag:
+    - minutes: '2'
+      name: Champion's Log
+      body: 'One line: the best thing about today''s trip.'
+      tag:
+  - dow: wed
+    date: '2026-10-28'
+    name: Reactor
+    role: Fast Day
+    minutes: 100–120
+    intensity: 3
+    summary_lines:
+    - Cartwheel basics
+    - Reaction starts on a clap and on a dropped ball
+    - 'Tennis: split step to first step'
+    - 'Keeper: thrown balls left and right, catch only'
+    - Body rows and hollow hold; game
+    dad_note: 'High-intent efforts: 4 starts on a clap, 4 on a dropped ball and about
+      10 bursts in the game, so 18. You stay at the start line and he runs to the
+      cone, then 3 quiet steps to stop. Full rest between starts, and stop the set
+      if the third one is slower. The keeper work is catch only, no dives yet.'
+    hie: 18
+    blocks:
+    - minutes: '12'
+      name: Wake Up
+      body: A-skips, gallops each lead, high knees. Then 3 build-up runs over 20m
+        at 60, 70, 80%.
+      tag:
+    - minutes: '12'
+      name: New Thing
+      body: Cartwheel basics, bunny hops 10 each way, or frog kicks and the sideways
+        bear walk if that is still his rung.
+      tag:
+    - minutes: '14'
+      name: Fast
+      body: 'Reaction starts, 10m to a cone. 4 on a clap: ready stance, eyes forward,
+        go on the sound. Then 4 on sight: Dad holds a tennis ball up and he goes the
+        moment it drops. Stop in 3 quiet steps every time. <q>Hear it, go.</q>'
+      tag:
+    - minutes: '15'
+      name: Tennis
+      body: 'Split step on Dad''s <q>hop</q>, then Dad points and he takes the first
+        step and shadow swings, 10 of 10. Then drop feeds to alternating sides: split,
+        first step, swing, 20 forehands and 20 backhands. <q>Hop, then go.</q>'
+      tag:
+    - minutes: '14'
+      name: 'Soccer: Keeper'
+      body: 'On grass. Keeper ready position, Dad 4m away throws underarm to the left
+        or right with no warning. Two shuffle steps and catch, scoop low or W-catch
+        high, 10 each side, catch only. Then receive and return with firm feeds, 10
+        each foot, at the highest level he owns. About 100 touches.'
+      tag:
+    - minutes: '8'
+      name: Strong
+      body: Body rows, 2 × 8. Hollow hold 2 × 20 seconds. This is Tuesday's strength,
+        moved here.
+      tag:
+    - minutes: '20'
+      name: Play
+      body: Sharks and minnows with Dad stationary, or the soccer game with Dad in
+        goal. Teddy picks.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Walk a lap, calves on the wall. Champion's Log line.
+      tag:
+  - dow: thu
+    date: '2026-10-29'
+    name: Split and Go
+    role: Wall Day
+    minutes: 100–120
+    intensity: 2
+    summary_lines:
+    - Cartwheel basics, wall handstand
+    - 'Tennis: split step to first step on live feeds, rally to 20, reaction volleys'
+    - 'Tennis: controlled yellow on hand feeds if the gate is cleared'
+    - 'Basketball: signal dribble at a jog, jump stop and pivot into a pass'
+    - Dribble tag
+    dad_note: 'The big tennis day of a short week. The rally to 20 is the target:
+      green ball, reset between points, and if he gets it early, ask for 20 with every
+      ball landing past the service line. High-intent efforts are the dribble tag,
+      about 6. If the gate was cleared, yellow is 20 hand feeds and then back in the
+      bag.'
+    hie: 6
+    blocks:
+    - minutes: '10'
+      name: Wake Up
+      body: Animal medley, skips. 10 split steps into a shuffle, then 10 shadow forehands
+        and 10 shadow backhands with the hips turning through.
+      tag:
+    - minutes: '12'
+      name: New Thing
+      body: Bunny hops, 10 each way, or frog kicks if that is still his rung. Then
+        wall handstand, 3 holds, best time in the diary.
+      tag:
+    - minutes: '40'
+      name: Tennis
+      body: 'Live feeds from the other side: split step as Dad hits, first step, swing,
+        sets of 10 to forehand, backhand, then either side. Cross-court pattern, 5
+        in a row into the cone box, each side. If the gate was cleared, controlled
+        yellow: 20 hand feeds from the side, short court. Then rally with Dad, green
+        ball, target 20 in a row, reset between points. Reaction volleys to finish:
+        Dad close at the net, quick feeds, 20 volleys. <q>Split, then go.</q>'
+      tag:
+    - minutes: '20'
+      name: 'Basketball: Signals & Footwork'
+      body: Signal dribble at a jog, 3 lanes each way, calling out each signal. Then
+        jump stop, pivot, bounce pass to the target ×10. One step, jump stop, form
+        shot, 10 makes. About 300 dribbles.
+      tag:
+    - minutes: '5'
+      name: 'Basketball: Handles, no dribble'
+      body: Pass through, 2 × 10m. Figure 8 roll, 5 times round.
+      tag:
+    - minutes: '12'
+      name: Play
+      body: Dribble tag with Dad stationary, then HORSE.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Champion's Log line.
+      tag:
+  - dow: fri
+    date: '2026-10-30'
+    name: Ruler on the Road
+    role: Skate Day
+    minutes: '10'
+    intensity: 1
+    summary_lines:
+    - 'Challenge: Ruler Drop (Fri)'
+    - Travel day, 10 minutes if it fits
+    - 'Champion''s Log: best thing this week'
+    dad_note: 'Travel day, so no skate park and no keeper work. Pack a ruler: Ruler
+      Drop round 2 needs only a table and two minutes, and it is the week''s second
+      number. The rest is optional.'
+    hie: 0
+    blocks:
+    - minutes: '4'
+      name: Challenge
+      body: '<b>Ruler Drop, round 2.</b> Forearm on the table, 3 tries each hand,
+        best of each. Beat Monday''s numbers.'
+      tag: challenge
+    - minutes: '4'
+      name: Balance
+      body: Single-leg balance, 30 seconds each leg, then each leg with eyes closed.
+      tag:
+    - minutes: '2'
+      name: Champion's Log
+      body: 'Best thing this week.'
+      tag:
+  - dow: sat
+    date: '2026-10-31'
+    name: Game Day
+    role: Game Day
+    minutes: 'off'
+    intensity: 4
+    summary_lines:
+    - Home program off
+    - Evening shake-out
+    dad_note: Highest-load day of the week. Watch for heel or knee complaints Sunday
+      morning. If there are any, Sunday's card becomes stretching only and you tell
+      me.
+    hie: 0
+    blocks:
+    - minutes: "—"
+      name: Home program
+      body: Off. Add nothing.
+      tag:
+    - minutes: '5'
+      name: Evening shake-out
+      body: 'Walk, calves against the wall, 3 slow breaths. Champion''s Log line: one
+        thing from each sport.'
+      tag:
+  - dow: sun
+    date: '2026-11-01'
+    name: Quick Card
+    role: Court Day
+    minutes: 30–45
+    intensity: 1
+    summary_lines:
+    - Shadow swings with a split step
+    - Cartwheel basics, wall handstand
+    - 'Basketball: signal dribble'
+    - Ruler Drop numbers
+    - 'Preview: Cub Trials'
+    dad_note: 'Basketball Sunday, since last Sunday was soccer. Read him both Ruler
+      Drop numbers. Then tell him next week is Cub Trials: half the work, his chance
+      to earn the patches he is missing, and the rank-up next Sunday. Ask which one
+      he wants most.'
+    hie: 0
+    blocks:
+    - minutes: '5'
+      name: Before tennis
+      body: 'Skips, 10 split steps into a shadow forehand, 10 into a shadow backhand.
+        Reset reminder: breathe, bounce, strings.'
+      tag:
+    - minutes: '8'
+      name: After tennis
+      body: Bunny hops, 10 each way, or frog kicks if that is still his rung. Wall
+        handstand, 2 holds.
+      tag:
+    - minutes: '15'
+      name: 'Basketball: Signal dribble'
+      body: Signal dribble standing, then at a walk, 3 lanes each way. Spider move,
+        10 catches. About 200 dribbles.
+      tag:
+    - minutes: '10'
+      name: Review
+      body: 'Read the Ruler Drop numbers. Preview Cub Trials: half volume, patch attempts,
+        rank-up next Sunday. Teddy picks the patch he wants most.'
       tag:

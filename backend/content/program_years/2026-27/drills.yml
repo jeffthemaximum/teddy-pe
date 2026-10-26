@@ -1118,6 +1118,23 @@ drills:
     for now.
   cue: Tuck, turn, look at your toes.
   video:
+- slug: ruler-drop
+  name: Ruler drop
+  area_name: Throw & Catch
+  aliases:
+  - ruler drop catch
+  short: 'The Week 7 challenge: catch a falling ruler between finger and thumb, measured
+    in centimetres.'
+  how:
+  - Teddy sits with his forearm resting on a table, hand just past the edge.
+  - Dad holds a 30cm ruler at the top, zero end between Teddy's open finger and thumb.
+  - Dad lets go with no warning. Teddy pinches it as fast as he can.
+  - Read the number at the top of his thumb. Smaller is faster. Three tries each hand,
+    best of each.
+  watch: Teddy's hand creeping down to chase the ruler before it drops, or Dad giving
+    it away with a count or a nod. Vary the wait every time.
+  cue: Eyes on the ruler, pinch.
+  video:
 - slug: safe-fall
   name: Safe fall
   area_name: Coordination & Balance
@@ -1264,6 +1281,23 @@ drills:
     beats out loud.
   watch: Hands and feet moving together, or knees touching down. Four separate beats.
   cue: Hand, hand, foot, foot, low and slow.
+  video:
+- slug: signal-dribble
+  name: Signal dribble
+  area_name: Basketball
+  aliases:
+  - dribble on signals
+  - dribble on Dad's hand signals
+  short: Dribbling while reading Dad's hand signals, so the eyes have to stay up.
+  how:
+  - 'Dad stands 5m away and shows a signal: a hand to one side means cross over to
+    that hand, a fist means freeze in triple threat, two hands up means back up three
+    dribbles.'
+  - Start standing still, then walking a lane, then at a jog.
+  - Teddy calls out the signal as he does it, so Dad knows he saw it.
+  watch: Eyes dropping to the ball between signals. If he misses one, slow the lane
+    down rather than the signals.
+  cue: Eyes on Dad, ball does its own thing.
   video:
 - slug: silent-landings
   name: Silent Landings

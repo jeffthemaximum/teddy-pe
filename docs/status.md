@@ -54,6 +54,18 @@ If the program itself needs changing while the rewrite is in flight (a new month
 
 ## Next
 
+- **Week 7, Reactor (Oct 26 to Nov 1), is written and needs a deploy today,
+  Monday 26 October.** `feature/week-7-reactor`. Travel on Tuesday and Friday,
+  so those are 10-minute road cards; Monday, Wednesday and Thursday are full.
+  The challenge is Ruler Drop, so Friday's attempt works in a hotel. Written
+  without the week 6 diary, because the production export was refused again.
+  Two new glossary drills, 111 in all; 49 cards; 320 examples clean. Merge,
+  then from `main`: `cd backend && fly deploy -a teddy-pe-api`. See
+  `docs/history/2026-10-26-week-7-reactor.md`.
+
+- **Cub Trials (Nov 2 to 8) is next**, in a new `plans/2026-11.yml`. Run the
+  export first so the week 6 and 7 diary is read before patches are attempted.
+
 - **Swim and gymnastics switched days, and Monday and Tuesday of week 6 are easy
   play days. Needs a deploy before Monday 19 October.** `feature/swim-monday-gym-tuesday`.
   Swim is Monday and gymnastics Tuesday from here; the home roles stay on their
@@ -70,9 +82,6 @@ If the program itself needs changing while the rewrite is in flight (a new month
   109 drills, 42 cards, 320 examples clean. Merge, then from `main`:
   `cd backend && fly deploy -a teddy-pe-api`. See
   `docs/history/2026-10-06-weeks-5-and-6.md`.
-
-- **Week 7 (Reactor) is next**, after the week 6 diary. Cub Trials (Nov 2 to 8)
-  goes in a November file.
 
 - **Six no-dribble handle drills are in the basketball strand and need a deploy
   before Monday 28 September.** `feature/basketball-handles-no-dribble` adds touch
