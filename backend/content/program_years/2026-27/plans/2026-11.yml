@@ -1,0 +1,328 @@
+---
+month_plan:
+  month: 2026-11
+  block: cub
+  label: Cub block · Week 8
+  range_display: Nov 2 – 8
+weeks:
+- number: 8
+  position_in_block: 8
+  theme: Cub Trials
+  dates_display: Nov 2–8
+  trials: true
+  targets:
+  - Half volume all week, 20 high-intent efforts at most
+  - Attempt every Cub patch he does not already hold, each on the day that suits
+    its load
+  - 'Tennis: the Tennis patch on Thursday, and the green to yellow gate check if
+    any part was not yet on 15 October'
+  - 'Basketball: the Basketball patch on Monday'
+  - 'Soccer: the Soccer patch on Tuesday'
+  - Rank-up ceremony Sunday after tennis. Pack for the move.
+  challenge: Beat a Week 1 Number. Teddy picks one of jump rope singles (14), the
+    basketball cone weave (12.30 s) or soccer wall passes in 30 seconds (18). Monday
+    number, Friday number.
+  days:
+  - dow: mon
+    date: '2026-11-02'
+    name: Trials Begin
+    role: Floor Day
+    minutes: 30–45
+    intensity: 1
+    summary_lines:
+    - 'Challenge: Beat a Week 1 Number (Mon)'
+    - 'Patch: Coordination (cartwheel over a line, single-leg balance)'
+    - 'Patch: Basketball (crossovers, jump stop and pivot, chest passes)'
+    - Champion's Log, day 1 of 5
+    dad_note: 'Trials week: half the work, and every patch he does not already hold
+      gets one honest try on the day that suits it. Skip any patch he has already
+      earned. The cartwheel over a line is the least likely today; give it 3 tries,
+      write down what you see, and move on without a fuss, because 7 of 9 is the
+      rule exactly so one hard skill cannot hold him back. Zero high-intent efforts
+      after swim.'
+    hie: 0
+    blocks:
+    - minutes: '6'
+      name: Wake Up
+      body: Animal medley, skips, arm circles, wrist circles.
+      tag:
+    - minutes: '6'
+      name: Challenge
+      body: '<b>Beat a Week 1 Number.</b> Teddy picks one: jump rope singles (beat
+        14), the cone weave (beat 12.30 seconds) or wall passes in 30 seconds (beat
+        18). Two tries, best one on the chart. Again Friday.'
+      tag: challenge
+    - minutes: '8'
+      name: 'Patch: Coordination'
+      body: 'Frog kicks ×5 to warm the arms. Then cartwheel over the chalk line, 3
+        tries each side he wants, hands and feet on the line. Then single-leg balance,
+        30 seconds each leg. Balance alone will not earn the patch; the cartwheel
+        has to be there too. <q>Arms straight, look at your hands.</q>'
+      tag:
+    - minutes: '12'
+      name: 'Patch: Basketball'
+      body: '20 stationary crossovers, eyes up on Dad''s fingers, without losing the
+        ball. Jump stop and pivot, 5 on the left foot and 5 on the right. Then 10
+        chest passes at the 3m target. One more try at any part that misses, then
+        it waits for Friday.'
+      tag:
+    - minutes: '4'
+      name: Champion's Log
+      body: 'One line: which patch he wants most this week. Day 1 of 5 for the Compete
+        & Mindset patch.'
+      tag:
+    - minutes: '8'
+      name: Play
+      body: Choice time. Teddy picks.
+      tag:
+  - dow: tue
+    date: '2026-11-03'
+    name: Hang On
+    role: Rings Day
+    minutes: 40–45
+    intensity: 1
+    summary_lines:
+    - 'Patch: Strength (dead hang, rings passes or bear walk)'
+    - 'Patch: Soccer (wall passes, first touch, keeper W-catch)'
+    - Champion's Log, day 2 of 5
+    dad_note: 'Gymnastics day, so the hanging is one try each and done. The dead hang
+      needs only 20 seconds against his 80 at the baseline; stop him at 25. If his
+      hands are cooked from gym, do the 20m bear walk instead of the rings passes,
+      since either one earns the Strength patch.'
+    hie: 0
+    blocks:
+    - minutes: '6'
+      name: Wake Up
+      body: Animal medley, inchworms, arm circles.
+      tag:
+    - minutes: '8'
+      name: 'Patch: Strength'
+      body: 'Dead hang, one try, 20 seconds. Then traveling rings, 5 passes with Dad
+        spotting, or bear walk 20m without the knees touching. One try at each.'
+      tag:
+    - minutes: '15'
+      name: 'Patch: Soccer'
+      body: 'Receive and return, 5 each foot, to warm up. Then inside-foot wall passes
+        from 3m, 10 in a row with the right, 10 in a row with the left; three tries
+        each foot. First touch off the wall, 10 balls, 8 must stop dead in front of
+        him. Keeper W-catch, 10 hand feeds from Dad, all 10 caught. <q>Soft feet,
+        hands make a W.</q>'
+      tag:
+    - minutes: '4'
+      name: Champion's Log
+      body: 'One line: day 2 of 5.'
+      tag:
+    - minutes: '10'
+      name: Play
+      body: Wall ball or choice time. Teddy picks.
+      tag:
+  - dow: wed
+    date: '2026-11-04'
+    name: Stop and Stick
+    role: Fast Day
+    minutes: 50–60
+    intensity: 2
+    summary_lines:
+    - Cartwheel basics
+    - 'Patch: Speed (3-step stops, split step)'
+    - 'Patch: Power & Landing (box landings, stuck broad jump)'
+    - 'Patch: Throw & Catch if he still needs it'
+    - Short game, Champion's Log day 3 of 5
+    dad_note: 'The only high-impact day of Trials, and still half a normal Wednesday.
+      High-intent efforts: 3 broad jumps and about 8 bursts in the game, so 11. The
+      stops are from a jog and the box landings are step-offs, so neither is maximal.
+      He comes off gymnastics yesterday: if the build-up runs look heavy, do the landings
+      and the stops and leave the broad jump for next week.'
+    hie: 11
+    blocks:
+    - minutes: '10'
+      name: Wake Up
+      body: A-skips, gallops each lead, high knees. Then 3 build-up runs over 20m
+        at 60, 70, 80%.
+      tag:
+    - minutes: '8'
+      name: New Thing
+      body: Cartwheel basics, bunny hops 10 each way, or frog kicks if that is still
+        his rung.
+      tag:
+    - minutes: '10'
+      name: 'Patch: Speed'
+      body: 'Three-step stop from a jog to the cone, 5 quiet stops in a row; two tries
+        at the set. Then split step on Dad''s clap, 10 claps at random gaps, 10 of
+        10 on time. <q>Brake, brake, freeze.</q>'
+      tag:
+    - minutes: '10'
+      name: 'Patch: Power & Landing'
+      body: 'Stick landing off the 30cm box, 10 in a row, every one silent. Full rest,
+        then 3 broad jumps; one he also sticks earns it. <q>Land like a cat.</q>'
+      tag:
+    - minutes: '6'
+      name: 'Patch: Throw & Catch'
+      body: 'Only if he does not hold it already. Step-and-throw at the wall target,
+        10 right arm and 10 left arm, opposite foot forward on all 20. Otherwise wall
+        ball for fun.'
+      tag:
+    - minutes: '10'
+      name: Play
+      body: Sharks and minnows with Dad stationary, short and fun.
+      tag:
+    - minutes: '4'
+      name: Shake Out
+      body: 'Walk a lap, calves on the wall. Champion''s Log: day 3 of 5.'
+      tag:
+  - dow: thu
+    date: '2026-11-05'
+    name: Rally Trials
+    role: Wall Day
+    minutes: 50–60
+    intensity: 1
+    summary_lines:
+    - Cartwheel basics
+    - 'Patch: Tennis (15-ball rally, drop feeds 8 of 10)'
+    - 'Patch: Compete & Mindset (between-point reset, no reminders)'
+    - Green to yellow gate check, only if a part was not yet on 15 October
+    - Champion's Log day 4 of 5
+    dad_note: 'Tennis day, and two patches ride on it. The Compete & Mindset patch
+      needs him to run the between-point reset on his own for the whole session,
+      so say nothing about it today; just watch and tally. If the 15 October gate
+      check passed all four parts, skip the gate block and give the time to more rally.
+      High-intent efforts are the HORSE game, about 3.'
+    hie: 3
+    blocks:
+    - minutes: '8'
+      name: Wake Up
+      body: Animal medley, skips. 10 split steps into a shuffle, 10 shadow forehands,
+        10 shadow backhands.
+      tag:
+    - minutes: '6'
+      name: New Thing
+      body: Bunny hops, 10 each way, or frog kicks if that is still his rung.
+      tag:
+    - minutes: '25'
+      name: 'Patch: Tennis'
+      body: 'Drop feed from the side, 10 forehands, then 10 backhands: unit turn early,
+        contact in front, finish over the shoulder, 8 of 10 each side. Then rally
+        with Dad, green ball, 15 in a row; as many tries as the time allows. Reset
+        between every point, without being asked. <q>Turn, hit, finish.</q>'
+      tag:
+    - minutes: '10'
+      name: 'Tennis: Gate check'
+      body: 'Only if a part was not yet on 15 October, and only that part. Rally to
+        20 with Dad. High bounce feed, 8 of 10 with space. Serve to a target, 6 of
+        10. Cross-court pattern on request. All four must be passed for controlled
+        yellow.'
+      tag:
+    - minutes: '8'
+      name: Play
+      body: HORSE, or keep rallying. Teddy picks.
+      tag:
+    - minutes: '3'
+      name: Shake Out
+      body: 'Champion''s Log: day 4 of 5.'
+      tag:
+  - dow: fri
+    date: '2026-11-06'
+    name: Last Chance Friday
+    role: Skate Day
+    minutes: 45–60
+    intensity: 1
+    summary_lines:
+    - 'Challenge: Beat a Week 1 Number (Fri)'
+    - Second try at any patch missed this week
+    - Skate park, balance
+    - Champion's Log day 5 of 5
+    dad_note: 'Friday is for a second try at anything missed Monday to Thursday, as
+      long as it is low impact. The Power & Landing patch is the exception: no broad
+      jump the day before Saturday; if he missed it Wednesday, it waits for the first
+      week of Fox. Zero high-intent efforts today.'
+    hie: 0
+    blocks:
+    - minutes: '6'
+      name: Wake Up
+      body: Animal medley, skips, flamingo walk.
+      tag:
+    - minutes: '6'
+      name: Challenge
+      body: '<b>Beat a Week 1 Number, round 2.</b> The same one he picked Monday. Two
+        tries, best one on the chart, next to Monday''s.'
+      tag: challenge
+    - minutes: '15'
+      name: Second Try
+      body: 'Any patch part he missed earlier in the week, one at a time, two tries
+        each: crossovers, jump stop and pivot, chest passes, wall passes, first touch,
+        W-catch, the 3-step stops, split step, box landings, step-and-throw, drop
+        feeds. If there is nothing left to try, keeper W-catch for fun.'
+      tag:
+    - minutes: '20'
+      name: Skate
+      body: Skateboard cruise at the park, and single-leg balance with eyes closed,
+        20 seconds each leg, for fun.
+      tag:
+    - minutes: '3'
+      name: Champion's Log
+      body: 'Day 5 of 5. If he wrote all five, that half of the Compete & Mindset
+        patch is done.'
+      tag:
+  - dow: sat
+    date: '2026-11-07'
+    name: Game Day
+    role: Game Day
+    minutes: 'off'
+    intensity: 4
+    summary_lines:
+    - Home program off
+    - Evening shake-out
+    dad_note: Highest-load day of the week. Watch for heel or knee complaints Sunday
+      morning. If there are any, Sunday is the ceremony and stretching only, and you
+      tell me.
+    hie: 0
+    blocks:
+    - minutes: "—"
+      name: Home program
+      body: Off. Add nothing.
+      tag:
+    - minutes: '5'
+      name: Evening shake-out
+      body: 'Walk, calves against the wall, 3 slow breaths. Champion''s Log line: one
+        thing from each sport.'
+      tag:
+  - dow: sun
+    date: '2026-11-08'
+    name: Rank Up
+    role: Court Day
+    minutes: 30–45
+    intensity: 1
+    summary_lines:
+    - Shadow swings with a split step
+    - 'Basketball: crossovers and jump stops, easy'
+    - Count the patches
+    - 'Rank-up ceremony: Cub to Fox'
+    - Pack for the move
+    dad_note: 'Ceremony after tennis. Lay the nine patches out and let him count them;
+      7 or more makes him a Fox. If he has 6, he is still a Fox-in-waiting and gets
+      the missing one in the first week of Fox, said plainly and without drama. Measure
+      his height tonight, shoes off against a wall, so the Fox block starts with the
+      number the Tests tab still lacks.'
+    hie: 0
+    blocks:
+    - minutes: '5'
+      name: Before tennis
+      body: 'Skips, 10 split steps into a shadow forehand, 10 into a shadow backhand.
+        Reset reminder: breathe, bounce, strings.'
+      tag:
+    - minutes: '15'
+      name: 'Basketball: Easy handles'
+      body: Crossovers standing, eyes up, then signal dribble at a walk, 3 lanes each
+        way. Jump stop and pivot, 5 each foot. About 200 dribbles.
+      tag:
+    - minutes: '15'
+      name: Rank-up ceremony
+      body: 'Count the patches together. Read both challenge numbers next to the Week
+        1 number. Teddy says the best thing about being a Cub. Then: Fox starts tomorrow,
+        and Foxes learn rolls, jump rope streaks and how to lose well.'
+      tag:
+    - minutes: '5'
+      name: Pack
+      body: Teddy packs his own gear bag for the move. Racket, balls, basketball,
+        soccer ball, keeper gloves, rope, cones.
+      tag:

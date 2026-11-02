@@ -165,13 +165,15 @@ RSpec.describe ContentSeeder do
       october["month_plan"]["label"] = "October"
       File.write(october_path, october.to_yaml)
       seed_copy
-      expect(MonthPlan.count).to eq(2)
+      plan_files = Dir[@root.join("2026-27/plans/*.yml")]
+      expect(MonthPlan.count).to eq(plan_files.size)
 
       File.delete(plan_path)
       seed_copy
 
-      expect(MonthPlan.count).to eq(1)
-      expect(MonthPlan.sole.month).to eq("2026-10")
+      expect(MonthPlan.count).to eq(plan_files.size - 1)
+      expect(MonthPlan.find_by(month: "2026-09")).to be_nil
+      expect(MonthPlan.find_by(month: "2026-10")).to be_present
     end
 
     # A plans/ directory that matched nothing is not a real removal, it is a

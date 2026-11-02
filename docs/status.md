@@ -15,7 +15,7 @@ Update this file whenever something is built, decided, or left open. It is the f
 
 - Year view: 9 areas x 6 blocks (Cub, Fox, Coyote, Wolf, Puma, Cheetah), timeline with retests and Trials weeks, Cub patches (7 of 9 to rank up), tennis ball gates (green now, controlled-yellow gate active), 10-test battery plus height.
 - September view: Cub weeks 1 to 3 (Sep 14 to Oct 4): Baseline & Land, Stick It, Brake. All 21 days are full cards, 139 day blocks, a dad note on every one. Weeks 2 and 3 were summary-line sketches until 21 September; see `docs/history/2026-09-21-weeks-2-and-3-cards.md`.
-- October view: Cub weeks 4 to 6 (Oct 5 to 25), Upside Down, Skip & Bound, Turn, all full cards. Week 7 not yet written.
+- October view: Cub weeks 4 to 7 (Oct 5 to Nov 1), all full cards. November view: Cub Trials, week 8 (Nov 2 to 8).
 - This Week: daily cards for Sep 14 to Oct 25, plus the test sheet (15 rows, five test windows, stored in Neon and shared across devices).
 - Drill glossary: `backend/content/program_years/2026-27/drills.yml`, 91 entries covering everything written so far. The seeder links names and aliases into card prose and block titles; tapping one opens a sheet with how to do it, what to watch for and the cue. A tab lists all of them with a filter.
 - Coach's diary: form on This Week (session, how it went, energy, pain flag, note, challenge number, and a rating per drill from that day's card). One entry per session date, keyed on the server, so every device opens and edits the same entry. Saves go through the offline queue in `core/`. `bin/rails docs:export` writes entries and results back into `docs/`. Entries produce proposed plan changes only.
@@ -54,17 +54,18 @@ If the program itself needs changing while the rewrite is in flight (a new month
 
 ## Next
 
-- **Week 7, Reactor (Oct 26 to Nov 1), is written and needs a deploy today,
-  Monday 26 October.** `feature/week-7-reactor`. Travel on Tuesday and Friday,
-  so those are 10-minute road cards; Monday, Wednesday and Thursday are full.
-  The challenge is Ruler Drop, so Friday's attempt works in a hotel. Written
-  without the week 6 diary, because the production export was refused again.
-  Two new glossary drills, 111 in all; 49 cards; 320 examples clean. Merge,
-  then from `main`: `cd backend && fly deploy -a teddy-pe-api`. See
-  `docs/history/2026-10-26-week-7-reactor.md`.
+- **Week 8, Cub Trials (Nov 2 to 8), is written and needs a deploy today,
+  Monday 2 November.** `feature/week-8-cub-trials`, in a new `plans/2026-11.yml`.
+  Half volume, 14 of 20 high-intent efforts, each patch attempted on the day its
+  load fits, rank-up ceremony and a height measurement on Sunday. Written without
+  the diary, because the production export was refused again, so every patch and
+  gate block says to skip what he already holds. 56 cards; 320 examples clean.
+  Merge, then from `main`: `cd backend && fly deploy -a teddy-pe-api`. See
+  `docs/history/2026-11-02-week-8-cub-trials.md`.
 
-- **Cub Trials (Nov 2 to 8) is next**, in a new `plans/2026-11.yml`. Run the
-  export first so the week 6 and 7 diary is read before patches are attempted.
+- **Fox week 1 (Nov 9 to 15) is next.** Run the export first: the week 6 to 8
+  diary, the 15 October gate result and the patches awarded have not been read
+  since 5 October.
 
 - **Swim and gymnastics switched days, and Monday and Tuesday of week 6 are easy
   play days. Needs a deploy before Monday 19 October.** `feature/swim-monday-gym-tuesday`.
@@ -200,4 +201,4 @@ If the program itself needs changing while the rewrite is in flight (a new month
 
 - **Deploying the API is manual, and the repo now says so.** The jump rope move was merged and then sat undeployed for two hours because `CLAUDE.md` and `README.md` both claimed a merge to `main` seeds production on its own. CI only scans, lints and tests. The deploy is `cd backend && fly deploy -a teddy-pe-api`, run from a checkout of `main`, because `fly deploy` uploads the current directory as the build context and the plan YAML ships inside the image. Both files are corrected and both now warn that a Vercel rebuild moves no program content. **Still open and Jeff's call: whether a merge to `main` should deploy the API by itself.** That points an Action at a production database holding Teddy's journal, which is why it was not just done. On `docs/deploy-is-manual`. See `docs/history/2026-09-14-deploy-gap.md`.
 
-- October: weeks 4 to 6 are done, with every drill October introduces in the glossary. Week 7, Reactor, goes into `2026-10.yml` next; Cub Trials, week 8, into `2026-11.yml`.
+- October: weeks 4 to 6 are done, with every drill October introduces in the glossary. Weeks 7 and 8 are written; Fox begins 9 November.
