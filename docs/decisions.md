@@ -827,3 +827,35 @@ still his rung", yellow "if the gate was cleared").
 - **Sunday is basketball**, since week 6's Sunday was soccer.
 - **New glossary entries:** `ruler-drop` and `signal-dribble`.
 - **`hie`:** 24 (Wed 18, Thu 6), well under 40, which suits the week before Trials.
+
+## 2026-11-02: week 8, Cub Trials
+
+**What Jeff asked.** Add this week's workouts.
+
+**What happened.** The production export was refused by the session's permission
+settings again, so the week 6 and 7 diary, the 15 October gate check and the
+patches already awarded were not read. The cards are written to work either way:
+every patch block says to skip a patch he already holds, and Thursday's gate
+block runs only the parts that were not yet on 15 October.
+
+**Rulings.**
+
+- **Each patch is attempted on the day its load fits.** Monday (zero efforts,
+  after swim): Coordination and Basketball. Tuesday (gymnastics day): Strength,
+  one hang only, and Soccer. Wednesday, the only high-impact day: Speed, Power &
+  Landing (the broad jump is the week's main cost) and Throw & Catch if still
+  needed. Thursday: Tennis, and Compete & Mindset through an unprompted
+  between-point reset. Friday is a second try at anything low impact; a missed
+  broad jump waits for Fox week 1 rather than go the day before Saturday.
+- **The Champion's Log half of the Compete & Mindset patch is counted Monday to
+  Friday**, a line a day, named on each card.
+- **"Beat any Week 1 number" is narrowed to three tests:** jump rope (14), cone
+  weave (12.30 s), soccer wall passes in 30 s (18). Any of the sprint, jump or
+  throw tests would put maximal efforts on Monday, which must stay at zero.
+- **The cartwheel over a line is the patch least likely to come.** He is on the
+  basics ladder. Monday gives it 3 tries and moves on; 7 of 9 exists for this.
+- **Height is measured Sunday night at the rank-up**, because the Tests tab still
+  has no height and the Fox block should start with one.
+- **`hie`:** 14 of 20 (Wed 11, Thu 3).
+- **A seeder spec assumed exactly two plan files** and now reads the directory,
+  the same fix week 4 made to its neighbours.
