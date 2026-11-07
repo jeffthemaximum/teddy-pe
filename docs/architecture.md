@@ -207,7 +207,7 @@ How it runs from week 3 onward:
 - Lizard: a sole roll across the body, then kick it away with the other foot.
 - Scissors: swirl around the ball with one foot then the other, nonstop.
 
-How they run from Fox week 1: introduced in that order of ease (lizard, kangaroo, Tazmanian devil, scissors) on Tuesday's Touch block, used on Dad's call while dribbling on Wednesday, and as the 15 minutes of ball skills on soccer Sundays. Once a move is rated owns it three sessions running, it goes faster or on the move; Jeff approves that, as with any progression.
+How they run from Fox week 2 (Nov 16), the first week Jeff is home: introduced in that order of ease (lizard, kangaroo, Tazmanian devil, scissors) on Tuesday's Touch block, used on Dad's call while dribbling on Wednesday, and as the 15 minutes of ball skills on soccer Sundays. Once a move is rated owns it three sessions running, it goes faster or on the move; Jeff approves that, as with any progression.
 
 **Compete & Mindset**
 - Cub: Games with Dad stationary: wall ball, HORSE, roll-out sharks and minnows, tag with a base. Effort language, the between-point reset, the Champion's Log.
@@ -282,7 +282,8 @@ Written a week at a time. Retest 1 (Dec 7 to 11) falls in Fox week 5.
 
 | Wk | Dates | Theme | Sub-targets | Challenge of the week |
 |---|---|---|---|---|
-| 1 | Nov 9-15 | **New Den** | Forward roll to standing, cartwheel at his rung; pogo hops and rope streaks; tennis both wings equal at the wall; basketball moving dribble weak hand first and retreat dribble; soccer four new moves (kangaroo, Tazmanian devil, lizard, scissors) and keeper shuffle and chest catch; losing well in handicap games | Wall Pass Blitz: wall passes in 30 s, alternating feet (baseline 18) |
+| 1 | Nov 9-15 | **Away Week** | Jeff travelling. Short optional cards with Mom: cartwheel and forward rolls, wall tennis, 200 dribbles, 300 touches | Rope Streak: rope singles in a row |
+| 2 | Nov 16-22 | **New Den** | Forward roll to standing, cartwheel at his rung; pogo hops and rope streaks; tennis both wings equal at the wall; basketball moving dribble weak hand first and retreat dribble; soccer four new moves (kangaroo, Tazmanian devil, lizard, scissors) and keeper shuffle and chest catch; losing well in handicap games | Wall Pass Blitz: wall passes in 30 s, alternating feet (baseline 18) |
 
 ### Cub patches (need 7 of 9 to become a Fox)
 

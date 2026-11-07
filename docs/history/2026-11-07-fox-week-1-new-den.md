@@ -30,3 +30,11 @@ branch; the Rails 8.1 upgrade is owed.
 
 Merge, then from `main`: `cd backend && fly deploy -a teddy-pe-api` before
 Monday 9 November. Rails 8.1 upgrade.
+
+## Follow-up: Jeff travelling Nov 9 to 15
+
+**What Jeff asked.** Delay this week until he is back, the week of 16 November.
+
+**Done.** New Den moved to Nov 16 to 22 as Fox week 2. Nov 9 to 15 is an
+optional Away Week with short summary cards for Mom. Local seed: 70 cards, 10
+weeks; rspec 321 examples, the same single Rails version failure.

@@ -2,8 +2,8 @@
 month_plan:
   month: 2026-11
   block: fox
-  label: Cub Trials, then Fox block · Weeks 8 to 9
-  range_display: Nov 2 – 15
+  label: Cub Trials, then Fox block · Weeks 8 to 10
+  range_display: Nov 2 – 22
 weeks:
 - number: 8
   block: cub
@@ -329,8 +329,102 @@ weeks:
       tag:
 - number: 9
   position_in_block: 1
-  theme: New Den
+  theme: Away Week
   dates_display: Nov 9–15
+  trials: false
+  targets:
+  - Dad is travelling, so every card is optional and short, done with Mom if he
+    wants to
+  - Cartwheel at his rung and forward rolls on a bed or a mat
+  - 'Tennis: wall rally, the same count of forehands and backhands'
+  - 'Basketball: 200 dribbles on any day, either hand'
+  - 'Soccer: 300 touches on any day (toe taps, sole rolls, wall passes)'
+  challenge: Rope Streak. Jump rope singles in a row, best of 3. Monday number, Friday
+    number.
+  days:
+  - dow: mon
+    date: '2026-11-09'
+    name: Away Monday
+    role: Floor Day
+    minutes: 0–20
+    intensity: 1
+    summary_lines:
+    - 'Challenge: Rope Streak (Mon)'
+    - Cartwheel at his rung, 10 each way
+    - 'Basketball: 200 dribbles, either hand'
+    - Champion's Log line
+    dad_note: Dad is away this week. Swim as usual. Everything here is a bonus,
+      done only if he wants to, and nothing is scored except the rope streak.
+    hie: 0
+  - dow: tue
+    date: '2026-11-10'
+    name: Away Tuesday
+    role: Rings Day
+    minutes: 0–20
+    intensity: 1
+    summary_lines:
+    - 'Soccer: 300 touches, toe taps, sole rolls, wall passes'
+    - Dead hang or monkey bars if there is a playground
+    dad_note: Gymnastics day, so the hanging is one go at most.
+    hie: 0
+  - dow: wed
+    date: '2026-11-11'
+    name: Away Wednesday
+    role: Fast Day
+    minutes: 0–30
+    intensity: 1
+    summary_lines:
+    - Free play outside, park or playground
+    - Forward rolls on a bed or mat, 5
+    dad_note: No sprint or jump work without Dad. Outdoor play is plenty.
+    hie: 0
+  - dow: thu
+    date: '2026-11-12'
+    name: Away Thursday
+    role: Wall Day
+    minutes: 0–30
+    intensity: 1
+    summary_lines:
+    - 'Tennis: wall rally, 25 forehands and 25 backhands'
+    - 'Basketball: dribbles at a walk, left hand first'
+    dad_note: If there is a wall, the backhand gets the same count as the forehand.
+    hie: 0
+  - dow: fri
+    date: '2026-11-13'
+    name: Away Friday
+    role: Skate Day
+    minutes: 0–30
+    intensity: 1
+    summary_lines:
+    - 'Challenge: Rope Streak (Fri)'
+    - Skate park or a bike ride
+    dad_note: Rope streak again, best of 3, next to Monday's number.
+    hie: 0
+  - dow: sat
+    date: '2026-11-14'
+    name: Game Day
+    role: Game Day
+    minutes: 'off'
+    intensity: 4
+    summary_lines:
+    - Home program off
+    dad_note: Highest-load day of the week. Add nothing.
+    hie: 0
+  - dow: sun
+    date: '2026-11-15'
+    name: Welcome Back
+    role: Court Day
+    minutes: 0–15
+    intensity: 1
+    summary_lines:
+    - Tennis as usual
+    - 'Champion''s Log: the best thing this week, to tell Dad'
+    dad_note: Ask him for the rope numbers and his best thing from the week.
+    hie: 0
+- number: 10
+  position_in_block: 2
+  theme: New Den
+  dates_display: Nov 16–22
   trials: false
   targets:
   - Forward roll to standing on a soft surface, chin tucked; cartwheel at his current
@@ -347,7 +441,7 @@ weeks:
     number.
   days:
   - dow: mon
-    date: '2026-11-09'
+    date: '2026-11-16'
     name: Fox Den
     role: Floor Day
     minutes: 60–75
@@ -357,8 +451,8 @@ weeks:
     - Hollow holds, wall handstand
     - 'Basketball: moving dribble weak hand first, retreat dribble'
     - HORSE with a handicap, the first losing-well game
-    dad_note: 'First day of Fox and first week in the new place, so set up wherever
-      there is floor and a soft landing. Losing well starts today: set the HORSE handicap
+    dad_note: 'Dad is back, and this is the first full Fox week, so set up wherever there
+      is floor and a soft landing. Losing well starts today: set the HORSE handicap
       so he wins about two games in three, and ask the same question after every game,
       won or lost: what would you do differently? Zero high-intent efforts after swim.'
     hie: 0
@@ -395,7 +489,7 @@ weeks:
       body: Calves on the wall, 3 slow breaths. Champion's Log line.
       tag:
   - dow: tue
-    date: '2026-11-10'
+    date: '2026-11-17'
     name: New Moves
     role: Rings Day
     minutes: 75–90
@@ -452,7 +546,7 @@ weeks:
       body: 'Champion''s Log: which new move he liked best.'
       tag:
   - dow: wed
-    date: '2026-11-11'
+    date: '2026-11-18'
     name: Quick Feet
     role: Fast Day
     minutes: 100–120
@@ -513,7 +607,7 @@ weeks:
       body: Walk a lap, calves on the wall. Champion's Log line.
       tag:
   - dow: thu
-    date: '2026-11-12'
+    date: '2026-11-19'
     name: Both Wings
     role: Wall Day
     minutes: 100–120
@@ -569,7 +663,7 @@ weeks:
       body: Champion's Log line.
       tag:
   - dow: fri
-    date: '2026-11-13'
+    date: '2026-11-20'
     name: Safe Hands
     role: Skate Day
     minutes: 90–120
@@ -615,7 +709,7 @@ weeks:
       body: Champion's Log line.
       tag:
   - dow: sat
-    date: '2026-11-14'
+    date: '2026-11-21'
     name: Game Day
     role: Game Day
     minutes: 'off'
@@ -637,7 +731,7 @@ weeks:
         one thing from each sport.'
       tag:
   - dow: sun
-    date: '2026-11-15'
+    date: '2026-11-22'
     name: Move Review
     role: Court Day
     minutes: 30–45
@@ -646,7 +740,7 @@ weeks:
     - Shadow swings with a split step
     - 'Soccer: the four new moves, both feet'
     - Week review
-    dad_note: 'Soccer Sunday, since last Sunday was basketball. Ask which of the four
+    dad_note: 'Soccer Sunday. Ask which of the four
       new moves he likes best and which is hardest; the hardest one gets the extra
       reps next week.'
     hie: 0
@@ -663,5 +757,5 @@ weeks:
     - minutes: '10'
       name: Week review
       body: 'Read both Wall Pass Blitz numbers next to 18. Teddy says the best thing
-        about his first Fox week. Champion''s Log line.'
+        about this week. Champion''s Log line.'
       tag:

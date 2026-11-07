@@ -888,3 +888,14 @@ broad jump on Wednesday only if Power & Landing is still owed.
 - **`hie`:** 21 of 40 (Wed 17 with the optional broad jump, Thu 4). Low on
   purpose for the first week in the new house.
 - **Next assessment:** Retest 1, Monday 7 to Friday 11 December, Fox week 5.
+
+**Later the same day: New Den moves to Nov 16 to 22.** Jeff is travelling the
+week of 9 November; Teddy will do some things with Mom, likely not the plan.
+
+- **Fox keeps its dates (Nov 9 to Jan 3).** Shifting the block would move every
+  later block, the Trials weeks and the retests. Fox loses one planned week
+  instead; the Christmas week was already light by design.
+- **Fox week 1 is Away Week**: summary-only cards, every one optional, zero
+  high-intent efforts, Rope Streak as the challenge since it needs only a rope.
+- **New Den is Fox week 2**, the same cards a week later, with three lines
+  reworded for the new dates. Retest 1 (Dec 7 to 11) is still Fox week 5.
