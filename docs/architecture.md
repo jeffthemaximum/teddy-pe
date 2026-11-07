@@ -201,6 +201,14 @@ How it runs from week 3 onward:
 - Once Level 3 is rated owns it three sessions running, the ball stops changing and the feed does: a bouncing feed, feeds to alternate sides, then the pass back threaded through the cone gate. That lines up with the Coyote block's receiving under light pressure. These are proposals for Jeff when the diary gets there, not automatic steps.
 - It is technical volume, so it costs no high-intent efforts.
 
+*Four ball mastery moves* (added 7 Nov 2026, Jeff's names and descriptions). All on the spot or at a walk first, both feet, counted in reps toward the session's touches. No high-intent efforts.
+- Kangaroo: bump the ball back with the sole, bump it back again, then kick it away.
+- Tazmanian devil: swirl the right foot around the ball, then kick it away with the left. Mirrored the other way.
+- Lizard: a sole roll across the body, then kick it away with the other foot.
+- Scissors: swirl around the ball with one foot then the other, nonstop.
+
+How they run from Fox week 2 (Nov 16), the first week Jeff is home: introduced in that order of ease (lizard, kangaroo, Tazmanian devil, scissors) on Tuesday's Touch block, used on Dad's call while dribbling on Wednesday, and as the 15 minutes of ball skills on soccer Sundays. Once a move is rated owns it three sessions running, it goes faster or on the move; Jeff approves that, as with any progression.
+
 **Compete & Mindset**
 - Cub: Games with Dad stationary: wall ball, HORSE, roll-out sharks and minnows, tag with a base. Effort language, the between-point reset, the Champion's Log.
 - Fox: Indoor games, losing well by design. Rings and skate park stay in the rotation through the move. Holiday weeks light.
@@ -267,6 +275,15 @@ Every week has **one theme** and **five or six sub-targets** across areas, alway
 | 6 | Oct 19-25 | **Turn** | Med ball hip throw both sides; throwing with hip turn; cartwheel basics (bunny hops); FH and BH from drop feed with rotation, controlled yellow if the gate is cleared; basketball jump stop off the dribble, pivot into a pass; soccer inside hook turn | Throw Far: overhand distance, each arm |
 | 7 | Oct 26 – Nov 1 | **Reactor** | Reaction starts on sound and sight; split step to first step; catch games under pressure; 20-ball rally; basketball dribble on Dad's hand signals; keeper reacts to thrown balls left/right (catch only) | Ruler Drop: catch a falling ruler, best of 3 each hand, in cm (was Reaction Race, changed 26 Oct for a travel week) |
 | 8 | Nov 2-8 | **Cub Trials** | Half volume. Patch attempts. Rank-up ceremony Sunday. Pack for the move. | Beat a Week 1 Number: jump rope (14), cone weave (12.30 s) or wall passes in 30 s (18), Teddy's pick (narrowed 2 Nov so Monday stays at zero efforts) |
+
+### Fox block weekly themes (Nov 9 – Jan 3)
+
+Written a week at a time. Retest 1 (Dec 7 to 11) falls in Fox week 5.
+
+| Wk | Dates | Theme | Sub-targets | Challenge of the week |
+|---|---|---|---|---|
+| 1 | Nov 9-15 | **Away Week** | Jeff travelling. Short optional cards with Mom: cartwheel and forward rolls, wall tennis, 200 dribbles, 300 touches | Rope Streak: rope singles in a row |
+| 2 | Nov 16-22 | **New Den** | Forward roll to standing, cartwheel at his rung; pogo hops and rope streaks; tennis both wings equal at the wall; basketball moving dribble weak hand first and retreat dribble; soccer four new moves (kangaroo, Tazmanian devil, lizard, scissors) and keeper shuffle and chest catch; losing well in handicap games | Wall Pass Blitz: wall passes in 30 s, alternating feet (baseline 18) |
 
 ### Cub patches (need 7 of 9 to become a Fox)
 

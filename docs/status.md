@@ -63,9 +63,17 @@ If the program itself needs changing while the rewrite is in flight (a new month
   Merge, then from `main`: `cd backend && fly deploy -a teddy-pe-api`. See
   `docs/history/2026-11-02-week-8-cub-trials.md`.
 
-- **Fox week 1 (Nov 9 to 15) is next.** Run the export first: the week 6 to 8
-  diary, the 15 October gate result and the patches awarded have not been read
-  since 5 October.
+- **Fox week 1 is an optional Away Week (Nov 9 to 15) and New Den moved to
+  week 2 (Nov 16 to 22), because Jeff is travelling. Needs a deploy before
+  Monday 9 November.** `feature/fox-week-1-soccer-moves`. Adds kangaroo,
+  Tazmanian devil, lizard and scissors to the soccer strand. Merge, then from
+  `main`: `cd backend && fly deploy -a teddy-pe-api`. See
+  `docs/history/2026-11-07-fox-week-1-new-den.md`.
+
+- **CI is red from 7 November until Rails 8.1.** `spec/rails_version_spec.rb`
+  fails on that date by design: Rails 8.0 is out of security support.
+
+- **Fox week 3 (Nov 23 to 29, Thanksgiving) is next.** Retest 1 is Dec 7 to 11, Fox week 5.
 
 - **Swim and gymnastics switched days, and Monday and Tuesday of week 6 are easy
   play days. Needs a deploy before Monday 19 October.** `feature/swim-monday-gym-tuesday`.
