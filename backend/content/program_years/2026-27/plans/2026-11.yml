@@ -1,11 +1,12 @@
 ---
 month_plan:
   month: 2026-11
-  block: cub
-  label: Cub block · Week 8
-  range_display: Nov 2 – 8
+  block: fox
+  label: Cub Trials, then Fox block · Weeks 8 to 9
+  range_display: Nov 2 – 15
 weeks:
 - number: 8
+  block: cub
   position_in_block: 8
   theme: Cub Trials
   dates_display: Nov 2–8
@@ -325,4 +326,342 @@ weeks:
       name: Pack
       body: Teddy packs his own gear bag for the move. Racket, balls, basketball,
         soccer ball, keeper gloves, rope, cones.
+      tag:
+- number: 9
+  position_in_block: 1
+  theme: New Den
+  dates_display: Nov 9–15
+  trials: false
+  targets:
+  - Forward roll to standing on a soft surface, chin tucked; cartwheel at his current
+    rung
+  - Pogo hops and jump rope streaks for rhythm, no max jumps
+  - 'Tennis: both wings equal, the same count of forehands and backhands at the wall'
+  - 'Basketball: moving dribble weak hand first, and the retreat dribble'
+  - 'Soccer: four new moves (kangaroo, Tazmanian devil, lizard, scissors) with both
+    feet; keeper shuffle and chest catch'
+  - 'Losing well: handicap games he loses about one in three, and one question after:
+    what would you do differently?'
+  challenge: Wall Pass Blitz. Inside-foot wall passes from 3m for 30 seconds, alternating
+    feet, count the controlled returns. His baseline was 18. Tuesday number, Friday
+    number.
+  days:
+  - dow: mon
+    date: '2026-11-09'
+    name: Fox Den
+    role: Floor Day
+    minutes: 60–75
+    intensity: 1
+    summary_lines:
+    - Cartwheel at his rung, first forward rolls
+    - Hollow holds, wall handstand
+    - 'Basketball: moving dribble weak hand first, retreat dribble'
+    - HORSE with a handicap, the first losing-well game
+    dad_note: 'First day of Fox and first week in the new place, so set up wherever
+      there is floor and a soft landing. Losing well starts today: set the HORSE handicap
+      so he wins about two games in three, and ask the same question after every game,
+      won or lost: what would you do differently? Zero high-intent efforts after swim.'
+    hie: 0
+    blocks:
+    - minutes: '8'
+      name: Wake Up
+      body: Animal medley with crab walk and bear walk in it. Wrist circles both ways.
+      tag:
+    - minutes: '12'
+      name: New Thing
+      body: 'Cartwheel at his current rung, 10 each way. Then forward rolls on a mat
+        or the bed, 5 rolls: chin on the chest, roll over the back of the shoulders,
+        stand up without hands if he can. <q>Tuck like a hedgehog.</q>'
+      tag:
+    - minutes: '8'
+      name: Floor
+      body: Hollow hold, 3 × 15 seconds. Wall handstand, 3 holds, best time in the
+        diary.
+      tag:
+    - minutes: '20'
+      name: 'Basketball: Handles'
+      body: 'Pound dribble 50 each hand, crossover 50. Moving dribble at a walk, left
+        hand first: 4 lengths of the hallway or driveway with the left, 4 with the
+        right. Retreat dribble, 5 each hand. Touch roll ×30 and figure 8 roll ×5 to
+        finish. About 300 dribbles. <q>Back it up, ball low.</q>'
+      tag:
+    - minutes: '15'
+      name: Play
+      body: HORSE with Dad, Dad shooting from a line further back. After each game,
+        one question.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Calves on the wall, 3 slow breaths. Champion's Log line.
+      tag:
+  - dow: tue
+    date: '2026-11-10'
+    name: New Moves
+    role: Rings Day
+    minutes: 75–90
+    intensity: 2
+    summary_lines:
+    - 'Challenge: Wall Pass Blitz (Tue)'
+    - Cartwheel at his rung
+    - Rings passes, knee tucks, hollow holds, short after gymnastics
+    - 'Soccer: kangaroo, Tazmanian devil, lizard, scissors, both feet'
+    - 'Tennis: equal wings at the wall'
+    dad_note: 'The four new soccer moves arrive today, all at a walk. Lizard first,
+      since it starts with the sole roll he knows; scissors last, since it is the hardest.
+      Gymnastics is today too, so the rings are 3 tries and done. Zero high-intent
+      efforts.'
+    hie: 0
+    blocks:
+    - minutes: '8'
+      name: Wake Up
+      body: Animal medley, inchworms, arm circles.
+      tag:
+    - minutes: '10'
+      name: New Thing
+      body: Cartwheel at his current rung, 10 each way.
+      tag:
+    - minutes: '6'
+      name: Challenge
+      body: '<b>Wall Pass Blitz.</b> Inside-foot passes at the wall from 3m for 30
+        seconds, alternating feet. Count the controlled returns. Two tries, best one
+        on the chart. His baseline was 18. Again Friday.'
+      tag: challenge
+    - minutes: '10'
+      name: Strong
+      body: Traveling rings, passes to 5 and back with Dad spotting, 3 tries. Hanging
+        knee tucks, 2 × 5. Hollow hold, 2 × 15 seconds.
+      tag:
+    - minutes: '22'
+      name: 'Soccer: Touch'
+      body: 'Receive and return at his level, 10 each foot. Then the four new moves,
+        at a walk, each foot: lizard ×10, kangaroo ×10, Tazmanian devil ×10, then scissors,
+        3 sets of 10 swirls. Toe taps ×100 to finish. About 300 touches. <q>Bump,
+        bump, boom.</q>'
+      tag:
+    - minutes: '12'
+      name: 'Tennis: Wall'
+      body: 'Green ball at the wall: 25 forehands, then 25 backhands. Same count both
+        sides; the backhand does not get fewer.'
+      tag:
+    - minutes: '10'
+      name: Play
+      body: Choice time. Teddy picks.
+      tag:
+    - minutes: '4'
+      name: Shake Out
+      body: 'Champion''s Log: which new move he liked best.'
+      tag:
+  - dow: wed
+    date: '2026-11-11'
+    name: Quick Feet
+    role: Fast Day
+    minutes: 100–120
+    intensity: 3
+    summary_lines:
+    - Cartwheel at his rung, forward rolls
+    - Wall drill, reaction starts in the hallway or yard
+    - Pogo hops, jump rope streak
+    - 'Tennis: med ball rotation, serve to a target'
+    - 'Soccer: new moves on the move, game with Dad in goal'
+    dad_note: 'High-intent efforts: 6 reaction starts and about 8 bursts in the soccer
+      game, so 14, plus 3 broad jumps only if he still owes the Power & Landing patch
+      from Trials. The wall drill and pogo hops are posture and rhythm, not maximal.
+      He comes off gymnastics yesterday; if the build-up runs look heavy, cut the starts
+      to 3.'
+    hie: 17
+    blocks:
+    - minutes: '12'
+      name: Wake Up
+      body: A-skips, gallops each lead, high knees. Then 3 build-up runs over 20m
+        at 60, 70, 80%.
+      tag:
+    - minutes: '12'
+      name: New Thing
+      body: Cartwheel at his current rung, 10 each way. Then forward rolls ×5.
+      tag:
+    - minutes: '12'
+      name: Fast
+      body: 'Wall drill, 6 reps: lean, knee up, swap on Dad''s clap. Then reaction
+        starts, 6 × 10m: on Dad''s clap go, and stop in 3 quiet steps at the cone.
+        Full rest. <q>Plank on the wall, knee to the sky.</q>'
+      tag:
+    - minutes: '10'
+      name: Rhythm
+      body: Pogo hops, 3 × 20, low and quick. Jump rope streak, best of 3. If the
+        Power & Landing patch is still owed, 3 broad jumps here; one he sticks earns
+        it.
+      tag:
+    - minutes: '10'
+      name: Tennis
+      body: Med ball forehand and backhand rotation throws at a wall, smooth not maximal,
+        10 each side. Then serve to a target, 10 serves.
+      tag:
+    - minutes: '18'
+      name: 'Soccer: Touch at speed'
+      body: Dribble at a jog through the cone gates, and on Dad's call (lizard, kangaroo,
+        Tazmanian devil) he does that move and goes. 10 calls each foot. Scissors
+        standing still, 3 sets of 10 swirls, as fast as the feet stay clean. Then receive
+        and return with firm feeds, 10 each foot.
+      tag:
+    - minutes: '22'
+      name: Play
+      body: Soccer game with Dad in goal. Handicap so he loses about one in three,
+        then the question.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Walk a lap, calves on the wall. Champion's Log line.
+      tag:
+  - dow: thu
+    date: '2026-11-12'
+    name: Both Wings
+    role: Wall Day
+    minutes: 100–120
+    intensity: 2
+    summary_lines:
+    - Cartwheel at his rung, forward rolls, wall handstand
+    - 'Tennis: equal wings, recovery shuffle, drop feeds, rally to 20, mini-tennis
+      points'
+    - Step-and-throw, left arm volume
+    - 'Basketball: moving dribble at a jog, retreat dribble, defensive slides, form
+      shooting'
+    dad_note: 'The tennis block is the longest of the week and the Fox theme is both
+      wings equal, so count his backhands and make them match the forehands. The mini-tennis
+      points are the losing-well game today: give yourself a handicap that lets him
+      win about two in three. High-intent efforts are the play block, about 4.'
+    hie: 4
+    blocks:
+    - minutes: '10'
+      name: Wake Up
+      body: Animal medley, skips. Jump rope, 3 × 30 seconds easy.
+      tag:
+    - minutes: '12'
+      name: New Thing
+      body: Cartwheel at his current rung, 10 each way. Forward rolls ×5. Wall handstand,
+        3 holds.
+      tag:
+    - minutes: '40'
+      name: Tennis
+      body: 'Wall rally, 50 forehands and 50 backhands, counted. Recovery shuffle
+        with no ball, 10 each way: hit, shuffle back to the middle, split. Drop feeds,
+        20 forehands and 20 backhands. If the gate was cleared, controlled yellow:
+        20 hand feeds from the side, short court, then back in the bag. Rally with
+        Dad, green ball, 20 in a row, reset between points. Mini-tennis points to
+        7. <q>Turn first, then swing.</q>'
+      tag:
+    - minutes: '10'
+      name: Throw
+      body: Step-and-throw at the wall target, 20 with the left arm and 10 with the
+        right. Med ball hip throw, 8 each side, easy.
+      tag:
+    - minutes: '20'
+      name: 'Basketball: Skill'
+      body: 'Moving dribble at a jog, left hand first, 4 lengths each hand. Retreat
+        dribble, 5 each hand. Defensive slides, 4 lengths. Form shooting from 1m,
+        30 makes, hold the finish. About 250 dribbles.'
+      tag:
+    - minutes: '10'
+      name: Play
+      body: HORSE, or keep rallying. Teddy picks.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Champion's Log line.
+      tag:
+  - dow: fri
+    date: '2026-11-13'
+    name: Safe Hands
+    role: Skate Day
+    minutes: 90–120
+    intensity: 1
+    summary_lines:
+    - 'Challenge: Wall Pass Blitz (Fri)'
+    - 'Tennis: equal wings at the wall, wall volleys'
+    - 'Keeper: shuffle, set position, chest catch, W-catch'
+    - Skate park
+    dad_note: 'Low impact before Saturday. Keeper work is catching only; the collapse
+      dive from kneeling comes later in Fox, on the mat. Zero high-intent efforts.'
+    hie: 0
+    blocks:
+    - minutes: '8'
+      name: Wake Up
+      body: Animal medley, flamingo walk.
+      tag:
+    - minutes: '10'
+      name: New Thing
+      body: Cartwheel at his current rung, 10 each way.
+      tag:
+    - minutes: '6'
+      name: Challenge
+      body: '<b>Wall Pass Blitz, round 2.</b> Same as Tuesday. Two tries, best one
+        on the chart, next to Tuesday''s.'
+      tag: challenge
+    - minutes: '12'
+      name: 'Tennis: Wall'
+      body: Green ball, 25 forehands and 25 backhands, then wall volleys ×20.
+      tag:
+    - minutes: '18'
+      name: 'Soccer: Keeper'
+      body: 'Shuffle between two cones, and on Dad''s <q>set</q> he stops in the ready
+        position, 10 each way. Chest catch, 20 hand feeds. W-catch, 10. Scoop, 10.
+        About 40 catches. <q>Hug it like a teddy.</q>'
+      tag:
+    - minutes: '35'
+      name: Skate
+      body: Skateboard cruise at the park, his choice of lines.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Champion's Log line.
+      tag:
+  - dow: sat
+    date: '2026-11-14'
+    name: Game Day
+    role: Game Day
+    minutes: 'off'
+    intensity: 4
+    summary_lines:
+    - Home program off
+    - Evening shake-out
+    dad_note: Highest-load day of the week. Watch for heel or knee complaints Sunday
+      morning.
+    hie: 0
+    blocks:
+    - minutes: "—"
+      name: Home program
+      body: Off. Add nothing.
+      tag:
+    - minutes: '5'
+      name: Evening shake-out
+      body: 'Walk, calves against the wall, 3 slow breaths. Champion''s Log line:
+        one thing from each sport.'
+      tag:
+  - dow: sun
+    date: '2026-11-15'
+    name: Move Review
+    role: Court Day
+    minutes: 30–45
+    intensity: 1
+    summary_lines:
+    - Shadow swings with a split step
+    - 'Soccer: the four new moves, both feet'
+    - Week review
+    dad_note: 'Soccer Sunday, since last Sunday was basketball. Ask which of the four
+      new moves he likes best and which is hardest; the hardest one gets the extra
+      reps next week.'
+    hie: 0
+    blocks:
+    - minutes: '5'
+      name: Before tennis
+      body: Skips, 10 split steps into a shadow forehand, 10 into a shadow backhand.
+      tag:
+    - minutes: '15'
+      name: 'Soccer: New moves'
+      body: Lizard, kangaroo and Tazmanian devil, 10 each foot. Scissors, 3 sets of
+        10 swirls. Toe taps ×100. About 200 touches.
+      tag:
+    - minutes: '10'
+      name: Week review
+      body: 'Read both Wall Pass Blitz numbers next to 18. Teddy says the best thing
+        about his first Fox week. Champion''s Log line.'
       tag:

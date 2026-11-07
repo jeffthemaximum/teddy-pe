@@ -273,6 +273,20 @@ drills:
   watch: Turning it into homework. One line is the whole ask.
   cue: One line. Yours, not mine.
   video:
+- slug: chest-catch
+  name: Chest catch
+  area_name: Soccer
+  aliases:
+  - chest catches
+  short: A keeper catch for a ball at chest height, hugged into the body.
+  how:
+  - Ready position, hands up in front.
+  - Arms make a cradle as the ball arrives at the chest.
+  - Hug it in, chin over the ball.
+  - 10 hand feeds from Dad, then 10 more a little harder.
+  watch: The ball bouncing off his chest because the arms closed late.
+  cue: Hug it like a teddy.
+  video:
 - slug: chest-pass
   name: Chest pass
   area_name: Basketball
@@ -591,6 +605,20 @@ drills:
     high. Lower the hoop before lowering the standard.
   cue: Reach into the cookie jar and hold it.
   video:
+- slug: forward-roll
+  name: Forward roll
+  area_name: Coordination & Balance
+  aliases:
+  - forward rolls
+  short: A tucked roll forward over the back of the shoulders, onto the feet.
+  how:
+  - Squat at the edge of a mat or bed, hands flat in front, shoulder width.
+  - Chin on the chest, look at the belly button.
+  - Push with the feet and roll over the back of the shoulders, not the head.
+  - Stay tucked and come up onto the feet. Standing up without hands is the goal.
+  watch: The top of the head touching the mat. Chin stays on the chest, every time.
+  cue: Tuck like a hedgehog.
+  video:
 - slug: frog-kicks
   name: Frog kicks
   area_name: Coordination & Balance
@@ -817,6 +845,23 @@ drills:
     to an easier one.
   cue: Both feet, same moment, stick it.
   video:
+- slug: kangaroo
+  name: Kangaroo
+  area_name: Soccer
+  aliases:
+  - kangaroos
+  short: Two quick sole drags back toward himself, then a kick away. One of Jeff's
+    four ball mastery moves.
+  how:
+  - Put the sole on top of the ball.
+  - Bump it back toward himself with the sole, a short hop to follow it.
+  - Bump it back a second time.
+  - Then kick it away with the inside of the foot, toward a wall or a cone gate.
+  - Ten with the right foot, ten with the left.
+  watch: Big drags that leave the ball behind him. Each bump moves it a shoe length,
+    no more.
+  cue: Bump, bump, boom.
+  video:
 - slug: keeper-ready-position
   name: Keeper ready position
   area_name: Soccer
@@ -863,6 +908,22 @@ drills:
   - Two trials, full rest, record the best.
   watch: Rounding the turn instead of stopping and touching. The braking is the point.
   cue: Low on the turns, hand all the way down.
+  video:
+- slug: lizard
+  name: Lizard
+  area_name: Soccer
+  aliases:
+  - lizards
+  short: A sole roll across the body, then a kick away with the other foot. One of
+    Jeff's four ball mastery moves.
+  how:
+  - Put the sole of one foot on top of the ball.
+  - Roll it across the body, the same as a sole roll.
+  - As it comes across, kick it away with the inside of the other foot.
+  - Ten starting with the right sole, ten starting with the left.
+  watch: The ball stopping dead between the roll and the kick. The roll sets up the
+    kick, so it keeps moving.
+  cue: Roll it, then flick it.
   video:
 - slug: low-bounds
   name: Low bounds
@@ -988,6 +1049,22 @@ drills:
   watch: The pivot foot sliding or lifting, which is a travel.
   cue: That foot is glued down.
   video:
+- slug: pogo-hops
+  name: Pogo hops
+  area_name: Power & Landing
+  aliases:
+  - pogo hop
+  - pogos
+  short: Small, quick bounces on the balls of the feet with stiff ankles. Rhythm,
+    not height.
+  how:
+  - Stand tall, feet under the hips.
+  - Bounce off the balls of the feet, heels never touching.
+  - Ankles stiff like springs, knees nearly straight.
+  - Sets of 20, quick and quiet.
+  watch: Heels touching down, or the hops getting high. Low and fast is the point.
+  cue: Bouncy springs, quiet feet.
+  video:
 - slug: pound-dribble
   name: Pound dribble
   area_name: Basketball
@@ -1100,6 +1177,22 @@ drills:
   watch: Anticipating the call and slowing down early.
   cue: Full speed until you hear it.
   video:
+- slug: retreat-dribble
+  name: Retreat dribble
+  area_name: Basketball
+  aliases:
+  - retreat dribbles
+  short: Dribbling backward with two quick push steps to get away from a defender,
+    ball protected.
+  how:
+  - Dribble forward three times.
+  - Then two quick slide steps backward, still dribbling, body between Dad and the
+    ball.
+  - Eyes up the whole time.
+  - Five each hand.
+  watch: Turning his back to the court, or the ball coming up above the waist.
+  cue: Back it up, ball low.
+  video:
 - slug: rings-inversion
   name: Rings inversion
   area_name: Strength & Resilience
@@ -1149,6 +1242,23 @@ drills:
   - Five each side, then from a low squat.
   watch: Reaching out with a straight arm. That is exactly how wrists break.
   cue: Bend and roll, never catch.
+  video:
+- slug: scissors
+  name: Scissors
+  area_name: Soccer
+  aliases:
+  - scissor
+  short: Swirling around the ball with one foot, then the other, nonstop. One of
+    Jeff's four ball mastery moves.
+  how:
+  - Stand over the ball, knees soft.
+  - Swirl the right foot around the ball without touching it.
+  - Put it down and swirl the left foot around it.
+  - Keep alternating without a pause. Count each swirl.
+  - Start slow, then speed up when the feet stop clipping the ball.
+  watch: Standing tall and stiff, or kicking the ball with the swirl. The ball stays
+    still and the feet do the moving.
+  cue: Feet fly, ball stays.
   video:
 - slug: scoop
   name: Scoop
@@ -1480,6 +1590,24 @@ drills:
     If the knees cave, lower the step.
   cue: Land like a cat.
   video:
+- slug: tazmanian-devil
+  name: Tazmanian devil
+  area_name: Soccer
+  aliases:
+  - tazmanian devils
+  - tasmanian devil
+  - taz
+  short: Swirl one foot around the ball, then kick it away with the left foot. One
+    of Jeff's four ball mastery moves.
+  how:
+  - Stand over the ball.
+  - Swirl the right foot all the way around the ball without touching it.
+  - Plant the right foot.
+  - Kick the ball away with the left foot.
+  - Ten that way, then ten mirrored (left foot swirls, right foot kicks).
+  watch: Losing balance on the swirl. Arms out wide helps.
+  cue: Spin like a devil, then kick it away.
+  video:
 - slug: three-step-stop
   name: Three-step stop
   area_name: Speed & Acceleration
@@ -1632,6 +1760,22 @@ drills:
   - Count the streak or play first to ten against Dad.
   watch: Catching against the body instead of with the hands out in front.
   cue: Hands out, watch it all the way in.
+  video:
+- slug: wall-drill
+  name: Wall drill
+  area_name: Speed & Acceleration
+  aliases:
+  - wall drills
+  short: Hands on a wall, body leaning, driving one knee up at a time. Teaches the
+    sprint start angle without sprinting.
+  how:
+  - Hands on the wall at shoulder height, step back until the body leans in a straight
+    line.
+  - Drive one knee up, toe pulled up, and hold it.
+  - Swap legs on Dad's clap, quick.
+  - 6 to 8 reps. Never 20.
+  watch: Hips sagging or sticking out. Head to heel stays one straight line.
+  cue: Plank on the wall, knee to the sky.
   video:
 - slug: wall-handstand
   name: Wall handstand

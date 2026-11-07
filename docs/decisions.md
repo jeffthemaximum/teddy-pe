@@ -859,3 +859,32 @@ block runs only the parts that were not yet on 15 October.
 - **`hie`:** 14 of 20 (Wed 11, Thu 3).
 - **A seeder spec assumed exactly two plan files** and now reads the directory,
   the same fix week 4 made to its neighbours.
+
+## 2026-11-07: Fox week 1, New Den, and four new soccer moves
+
+**What Jeff asked.** Add four soccer moves (kangaroo, Tazmanian devil, lizard,
+scissors), generate next week, and say when the next assessment is.
+
+**What happened.** The export was skipped at Jeff's call: he has written few
+diary notes, Teddy is doing strong on all of it, and the sessions have been
+happening. Fox week 1 was written as if every Cub patch was earned, with the
+broad jump on Wednesday only if Power & Landing is still owed.
+
+**Rulings.**
+
+- **The four moves go in the glossary in Jeff's words**, in the soccer Touch
+  strand from Fox week 1, easiest first: lizard, kangaroo, Tazmanian devil,
+  scissors. Counted in reps, no high-intent efforts.
+- **A week may name its own block.** November holds Cub Trials and Fox week 1,
+  and the seeder used to give every week its month's block. The month is now
+  `fox` and week 8 says `block: cub`. One line in `ContentSeeder`, one spec.
+- **Challenge: Wall Pass Blitz** (battery test 10, baseline 18), Tuesday and
+  Friday. It costs no efforts and puts the new touch work on a chart.
+- **Losing well starts on Monday**: handicap HORSE, mini-tennis points and the
+  Wednesday soccer game, set so he loses about one in three, with one question
+  after every game.
+- **New glossary entries:** kangaroo, tazmanian-devil, lizard, scissors,
+  forward-roll, pogo-hops, wall-drill, retreat-dribble, chest-catch. 120 drills.
+- **`hie`:** 21 of 40 (Wed 17 with the optional broad jump, Thu 4). Low on
+  purpose for the first week in the new house.
+- **Next assessment:** Retest 1, Monday 7 to Friday 11 December, Fox week 5.

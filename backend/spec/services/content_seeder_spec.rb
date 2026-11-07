@@ -77,6 +77,13 @@ RSpec.describe ContentSeeder do
     expect(year.current_block(on: Date.new(2027, 1, 20))&.key).to eq("coyote")
   end
 
+  it "lets a week name its own block inside a month of another" do
+    seed
+    nov = MonthPlan.find_by!(month: "2026-11")
+    expect(nov.weeks.find_by!(number: 8).block.key).to eq("cub")
+    expect(nov.weeks.find_by!(number: 9).block.key).to eq("fox")
+  end
+
   it "refuses a day role whose name does not match its weekday" do
     seed
     role = DayRole.find_by!(dow: "wed")

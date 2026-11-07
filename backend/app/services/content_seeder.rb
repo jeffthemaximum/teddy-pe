@@ -241,9 +241,13 @@ class ContentSeeder
                   attrs.slice("label", "range_display").merge("block" => block))
 
     weeks = doc.fetch("weeks").map do |row|
+      # A month that straddles two blocks (November: Cub Trials, then Fox) names
+      # the odd week's block on the week itself.
+      week_block = row["block"] ? blocks[row["block"]] : block
+      week_block or raise MissingContent, "week #{row['number']} names unknown block #{row['block']}"
       week = upsert(plan.weeks, { number: row.fetch("number") },
                     row.slice("position_in_block", "theme", "dates_display", "targets", "challenge", "trials")
-                       .merge("block" => block))
+                       .merge("block" => week_block))
       seed_days(week, row.fetch("days"), roles, tokenizer)
       week
     end
