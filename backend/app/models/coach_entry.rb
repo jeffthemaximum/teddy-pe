@@ -9,7 +9,8 @@ class CoachEntry < ApplicationRecord
             uniqueness: { scope: %i[user_id program_year_id],
                           conditions: -> { where(deleted_at: nil) } }
   validates :overall, :energy, inclusion: { in: 1..5 }, allow_nil: true
-  validates :note, :pain_note, length: { maximum: 2000 }
+  # Long enough for a full session write-up; still capped since it is user input.
+  validates :note, :pain_note, length: { maximum: 20_000 }
 
   # THE ONE PLACE A DELETED ENTRY IS EXCLUDED, for this model. Same rule and
   # same reasoning as AthleteEntry#kept: a delete stamps deleted_at, the row

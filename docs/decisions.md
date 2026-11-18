@@ -899,3 +899,11 @@ week of 9 November; Teddy will do some things with Mom, likely not the plan.
   high-intent efforts, Rope Streak as the challenge since it needs only a rope.
 - **New Den is Fox week 2**, the same cards a week later, with three lines
   reworded for the new dates. Retest 1 (Dec 7 to 11) is still Fox week 5.
+
+## 2026-11-18: coach notes up to 20,000 characters
+
+Jeff's session note for 18 November was refused at the 2,000 character cap.
+The columns are `text`, so only the model validation held it. `CoachEntry`'s
+note and pain note now allow 20,000 (about 3,500 words), still capped because
+it is user input. Teddy's journal stays at 2,000. Spec in
+`spec/models/coach_entry_spec.rb`.
