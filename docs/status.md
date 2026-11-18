@@ -54,6 +54,9 @@ If the program itself needs changing while the rewrite is in flight (a new month
 
 ## Next
 
+- **Coach notes can be 20,000 characters, up from 2,000. Needs a deploy.**
+  `feature/longer-coach-notes`. See `docs/history/2026-11-18-longer-coach-notes.md`.
+
 - **Week 8, Cub Trials (Nov 2 to 8), is written and needs a deploy today,
   Monday 2 November.** `feature/week-8-cub-trials`, in a new `plans/2026-11.yml`.
   Half volume, 14 of 20 high-intent efforts, each patch attempted on the day its
