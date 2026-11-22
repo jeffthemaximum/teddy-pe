@@ -76,7 +76,12 @@ If the program itself needs changing while the rewrite is in flight (a new month
 - **CI is red from 7 November until Rails 8.1.** `spec/rails_version_spec.rb`
   fails on that date by design: Rails 8.0 is out of security support.
 
-- **Fox week 3 (Nov 23 to 29, Thanksgiving) is next.** Retest 1 is Dec 7 to 11, Fox week 5.
+- **Fox week 3, Focus Mode (Nov 23 to 29), is written from Jeff's diary and
+  needs a deploy before Monday 23 November.** `feature/fox-week-3-focus-mode`.
+  Hanging is off Tuesday from here. See
+  `docs/history/2026-11-22-fox-week-3-focus-mode.md`.
+
+- **Fox week 4 (Nov 30 to Dec 6) is next, then Retest 1 in week 5.** Retest 1 is Dec 7 to 11, Fox week 5.
 
 - **Swim and gymnastics switched days, and Monday and Tuesday of week 6 are easy
   play days. Needs a deploy before Monday 19 October.** `feature/swim-monday-gym-tuesday`.

@@ -2,8 +2,8 @@
 month_plan:
   month: 2026-11
   block: fox
-  label: Cub Trials, then Fox block · Weeks 8 to 10
-  range_display: Nov 2 – 22
+  label: Cub Trials, then Fox block · Weeks 8 to 11
+  range_display: Nov 2 – 29
 weeks:
 - number: 8
   block: cub
@@ -758,4 +758,316 @@ weeks:
       name: Week review
       body: 'Read both Wall Pass Blitz numbers next to 18. Teddy says the best thing
         about this week. Champion''s Log line.'
+      tag:
+- number: 11
+  position_in_block: 3
+  theme: Focus Mode
+  dates_display: Nov 23–29
+  trials: false
+  targets:
+  - 'Focus when it is new or hard: one deep breath after a miss, then the next try'
+  - Cartwheel restart at rung 1 (frog kicks, sideways bear walk); handstand kick-ups
+    with straight legs
+  - 'Tennis: the surprise game, and a slow wall rally with the unit turn first'
+  - 'Basketball: pound dribble at three heights, and layup ladder rung 1 on both sides'
+  - 'Soccer: the four moves at speed against a clock, with no one telling him to go
+    faster'
+  challenge: Rope Record. Five minutes of jump rope, counting every streak; the longest
+    goes on the chart. His record is 79. Tuesday number, Friday number.
+  days:
+  - dow: mon
+    date: '2026-11-23'
+    name: Hang Day
+    role: Floor Day
+    minutes: 60–75
+    intensity: 1
+    summary_lines:
+    - Cartwheel restart, rung 1
+    - Handstand kick-ups with straight legs, forward roll down a slope
+    - Traveling rings, hollow holds, knee tucks (moved off Tuesday)
+    - 'Basketball: pound dribble at three heights'
+    - HORSE, deep breath after a miss
+    dad_note: 'The hanging lives on Monday now, so Tuesday can stay off his hands
+      before gymnastics. The cartwheel starts again from the bottom rung this week:
+      frog kicks 10 of 10 with locked arms moves him up, and nothing else does. Zero
+      high-intent efforts after swim.'
+    hie: 0
+    blocks:
+    - minutes: '8'
+      name: Wake Up
+      body: Animal medley with crab walk and bear walk. Wrist circles both ways.
+      tag:
+    - minutes: '10'
+      name: New Thing
+      body: 'Cartwheel, rung 1: shoulder taps ×10, then frog kicks ×10 with locked
+        arms. Then sideways bear walk along a line, both directions. <q>Arms straight,
+        look at your hands.</q>'
+      tag:
+    - minutes: '10'
+      name: Upside Down
+      body: 'Wall handstand kick-ups ×5, legs straight on the way up, then 3 holds.
+        Forward roll down a slope of couch cushions or a wedge, ×5. <q>Tuck like a
+        hedgehog.</q>'
+      tag:
+    - minutes: '10'
+      name: Hang
+      body: Traveling rings back and forth ×3, or dead hang 2 × 20 seconds. Hollow
+        hold 3 × 15 seconds. Hanging knee tucks 2 × 5.
+      tag:
+    - minutes: '20'
+      name: 'Basketball: Handles'
+      body: 'Pound dribble at three heights, 30 each hand at each: shoulder, waist,
+        knee. Crossover ×50. Moving dribble, left hand first, 4 lengths each hand.
+        Retreat dribble, 5 each hand. About 350 dribbles.'
+      tag:
+    - minutes: '12'
+      name: Play
+      body: 'HORSE with Dad, Dad shooting from further back. After a miss, one deep
+        breath: that is his move. One question after each game: what would you do
+        differently?'
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Calves on the wall, 3 slow breaths. Champion's Log line.
+      tag:
+  - dow: tue
+    date: '2026-11-24'
+    name: Surprise
+    role: Rings Day
+    minutes: 75–90
+    intensity: 2
+    summary_lines:
+    - 'Challenge: Rope Record (Tue)'
+    - Cartwheel, rung 1
+    - 'Tennis: the surprise game, slow wall rally'
+    - 'Soccer: the four moves, 500 toe taps, wall passes'
+    - No hanging today, gymnastics is this afternoon
+    dad_note: 'No hanging, no rings: gymnastics has his hands this afternoon. This
+      is the big tennis day of the week, because Thursday is Thanksgiving. Teddy asked
+      for 500 toe taps last week, so they are on the card. Zero high-intent efforts.'
+    hie: 0
+    blocks:
+    - minutes: '8'
+      name: Wake Up
+      body: Animal medley, skips, arm circles.
+      tag:
+    - minutes: '8'
+      name: New Thing
+      body: Cartwheel rung 1, frog kicks ×10 with locked arms. Sideways bear walk,
+        both ways.
+      tag:
+    - minutes: '8'
+      name: Challenge
+      body: '<b>Rope Record.</b> Five minutes of jump rope. Count every streak; the
+        longest one goes on the chart. His record is 79. Again Friday.'
+      tag: challenge
+    - minutes: '28'
+      name: Tennis
+      body: 'The surprise game, 18 minutes: red, then orange, then green; Dad calls
+        <q>surprise</q> until he returns a few deep balls well, then stops calling
+        it. Then the wall, green ball, 30 forehands and 30 backhands, slow and above
+        the line, about 60 swings. <q>Get back, get behind, step through.</q>'
+      tag:
+    - minutes: '20'
+      name: 'Soccer: Touch'
+      body: 'Lizard, kangaroo, Tazmanian devil, 10 each foot at a walk, then 10 each
+        foot at a jog. Scissors, 3 sets of 10 swirls. Toe taps ×500, his idea. Inside-foot
+        wall passes, 20 each foot. About 800 touches.'
+      tag:
+    - minutes: '8'
+      name: Play
+      body: Choice time. Teddy picks.
+      tag:
+    - minutes: '4'
+      name: Shake Out
+      body: Champion's Log line.
+      tag:
+  - dow: wed
+    date: '2026-11-25'
+    name: Beat the Clock
+    role: Fast Day
+    minutes: 95–110
+    intensity: 3
+    summary_lines:
+    - Cartwheel rung 1, forward roll down a slope
+    - Push to start, reaction starts
+    - Step-and-throw with a hip turn
+    - 'Soccer: move cards against the clock'
+    - Soccer game with Dad in goal
+    dad_note: 'Speed without yelling: the clock asks for it, so you do not have to.
+      He draws a move card before each run, the phone times him, and a sloppy move
+      means the run does not count, so fast and clean is the only way to a new best.
+      High-intent efforts: 6 push to starts, 4 reaction starts, about 4 hard runs
+      on the soccer course and about 6 bursts in the game, so 20.'
+    hie: 20
+    blocks:
+    - minutes: '12'
+      name: Wake Up
+      body: A-skips, gallops each lead, high knees. Then 3 build-up runs over 20m
+        at 60, 70, 80%.
+      tag:
+    - minutes: '10'
+      name: New Thing
+      body: Cartwheel rung 1, frog kicks ×10. Forward roll down the slope ×5.
+      tag:
+    - minutes: '12'
+      name: Fast
+      body: 'Push to start ×6: lean into Dad''s hands, he counts down and lets go,
+        3 to 5 driving steps. Full rest. Then reaction starts, 4 × 10m on a clap,
+        stop in 3 quiet steps. <q>Lean, push, go.</q>'
+      tag:
+    - minutes: '10'
+      name: Throw
+      body: Step-and-throw at the wall target with a hip turn, 10 with each arm. Med
+        ball hip throw, 6 each side, smooth.
+      tag:
+    - minutes: '22'
+      name: 'Soccer: Beat the Clock'
+      body: 'A course of 5 cone gates. Four cards: lizard, kangaroo, Tazmanian devil,
+        scissors. Before each run he draws a card, dribbles the gates, does that move
+        at the last gate and passes into the goal. Phone timer. A clean move or the
+        run does not count. 8 runs, best time on the chart. About 300 touches.'
+      tag:
+    - minutes: '25'
+      name: Play
+      body: Soccer game with Dad in goal. Handicap so he loses about one in three;
+        a deep breath after a miss.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Walk a lap, calves on the wall. Champion's Log line.
+      tag:
+  - dow: thu
+    date: '2026-11-26'
+    name: Thanksgiving
+    role: Wall Day
+    minutes: 30–45
+    intensity: 1
+    summary_lines:
+    - Short and optional, a morning card before the day
+    - 'Tennis: slow wall rally, turn first'
+    - 'Basketball: layup ladder, rung 1'
+    - Frisbee with the family
+    dad_note: 'Thanksgiving, so light by design. If the morning is busy, skip the
+      card. The layup ladder is the new piece: rung 1 is the takeoff foot only, so
+      watch that the right hand goes up with the right knee off the left foot. Zero
+      high-intent efforts.'
+    hie: 0
+    blocks:
+    - minutes: '5'
+      name: Wake Up
+      body: Skips, animal medley.
+      tag:
+    - minutes: '15'
+      name: 'Tennis: Wall'
+      body: 'Green ball, 30 forehands and 30 backhands, slow and above the line. Unit
+        turn before every swing. <q>Turn first, then hit.</q>'
+      tag:
+    - minutes: '15'
+      name: 'Basketball: Layups'
+      body: 'Layup ladder, rung 1, from the block: 10 on the right side with the right
+        hand off the left foot, 10 on the left side with the left hand off the right
+        foot. Form shooting from 1m, 20 makes. <q>Knee and hand go up together.</q>'
+      tag:
+    - minutes: '10'
+      name: Play
+      body: Frisbee catch with whoever is around.
+      tag:
+  - dow: fri
+    date: '2026-11-27'
+    name: Rope Record
+    role: Skate Day
+    minutes: 90–110
+    intensity: 1
+    summary_lines:
+    - 'Challenge: Rope Record (Fri)'
+    - Cartwheel rung 1, handstand kick-ups
+    - 'Basketball: layup ladder'
+    - 'Keeper: shuffle, chest catch, W-catch'
+    - Skate park
+    dad_note: 'Low impact before Saturday. Layups go up to rung 2 on a side only if
+      rung 1 was 8 of 10 clean on Thursday. Zero high-intent efforts.'
+    hie: 0
+    blocks:
+    - minutes: '8'
+      name: Wake Up
+      body: Animal medley, flamingo walk.
+      tag:
+    - minutes: '10'
+      name: New Thing
+      body: Cartwheel rung 1, frog kicks ×10. Wall handstand kick-ups ×5, legs straight.
+      tag:
+    - minutes: '8'
+      name: Challenge
+      body: '<b>Rope Record, round 2.</b> Five minutes, longest streak on the chart,
+        next to Tuesday''s.'
+      tag: challenge
+    - minutes: '12'
+      name: 'Basketball: Layups'
+      body: Layup ladder at his rung, 10 each side. Then 20 form shots.
+      tag:
+    - minutes: '15'
+      name: 'Soccer: Keeper'
+      body: Shuffle between two cones and set on Dad's call, 10 each way. Chest catch
+        ×20, W-catch ×10, scoop ×10. About 40 catches.
+      tag:
+    - minutes: '35'
+      name: Skate
+      body: Skateboard cruise at the park.
+      tag:
+    - minutes: '5'
+      name: Shake Out
+      body: Champion's Log line.
+      tag:
+  - dow: sat
+    date: '2026-11-28'
+    name: Game Day
+    role: Game Day
+    minutes: 'off'
+    intensity: 4
+    summary_lines:
+    - Home program off
+    - Evening shake-out
+    dad_note: Highest-load day of the week. Watch for heel or knee complaints Sunday
+      morning.
+    hie: 0
+    blocks:
+    - minutes: "—"
+      name: Home program
+      body: Off. Add nothing.
+      tag:
+    - minutes: '5'
+      name: Evening shake-out
+      body: 'Walk, calves against the wall, 3 slow breaths. Champion''s Log line:
+        one thing from each sport.'
+      tag:
+  - dow: sun
+    date: '2026-11-29'
+    name: Level Up
+    role: Court Day
+    minutes: 30–45
+    intensity: 1
+    summary_lines:
+    - Shadow swings, unit turn first
+    - 'Basketball: three heights, layups'
+    - Week review
+    dad_note: 'Basketball Sunday. In the review, ask him for one time this week he
+      stayed in focus mode when something was hard, the way Link trains before he
+      takes on Ganon.'
+    hie: 0
+    blocks:
+    - minutes: '5'
+      name: Before tennis
+      body: Skips, 10 split steps into a shadow forehand, 10 into a shadow backhand,
+        turn first every time.
+      tag:
+    - minutes: '15'
+      name: 'Basketball: Handles and layups'
+      body: Pound dribble at three heights, 20 each hand at each. Layup ladder at
+        his rung, 10 each side. About 150 dribbles.
+      tag:
+    - minutes: '10'
+      name: Week review
+      body: Both Rope Record numbers next to 79. One time he stayed focused when it
+        was hard. Champion's Log line.
       tag:

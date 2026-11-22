@@ -51,7 +51,7 @@ Swim and gymnastics switched days from 19 October 2026: swim is Monday, gymnasti
 | Day | Organized | Home program role | Home minutes |
 |---|---|---|---|
 | Mon | Swim (recovery) | **Floor Day**: tumbling homework, landing, basketball handling block. Low impact. | 60-90 |
-| Tue | Gymnastics | **Rings Day**: hanging, climbing, strength, soccer touch and passing at the wall. Moderate, and short on hangs and inversions, because gymnastics loads the same hands and shoulders the same day. | 75-90 |
+| Tue | Gymnastics | **Rings Day** (name kept): soccer touch and passing at the wall, tennis, jump rope. No hanging from 23 November 2026, because gymnastics is the same afternoon; the hangs moved to Monday and Thursday. | 75-90 |
 | Wed | none | **Fast Day**: the one high-impact home day. Speed, power, soccer at speed, games. | 100-120 |
 | Thu | none | **Wall Day**: tennis wall and court, throwing, basketball skill block. Moderate. | 100-120 |
 | Fri | none | **Skate Day**: skate park, balance, keeper work on grass, weekly challenge. Low impact before Saturday. | 90-120 |
@@ -182,6 +182,12 @@ How it runs from week 3 onward:
 - Counted like the rest of Ball Skills, in touches, catches or metres, never in minutes: 30 to 40 touch rolls, 5 figure 8s, 10m glides, 10 catches.
 - Once all six are owned forward and backward, the diary proposals are more reps inside the same minutes and doing them with the eyes up on Dad's fingers, not new harder drills. Jeff approves those, the same as any other progression.
 
+*Added 22 Nov 2026 from Jeff's diary.*
+- Pound dribble at three heights (shoulder, waist, knee), Jeff's progression.
+- Layup ladder brought forward from Coyote into Fox, at Jeff's request: rung 1 one step from the block, rung 2 two steps, rung 3 one dribble then two steps, rung 4 from the elbow. 8 of 10 clean on a side moves that side up. Not maximal jumps, so no high-intent efforts.
+- Tennis: the surprise game, Jeff's own (control tennis inside the service line, a called then uncalled deep ball, red to orange to green). It sits in the Footwork and Form strands. Yellow in it only as far as the ball gate allows.
+- Speed: push to start replaces the wall drill for teaching the forward lean.
+
 **Soccer**
 - Cub: *Touch*: first touch off the wall both feet, toe taps, tick-tocks, sole rolls, 300 touches a session. *Pass*: inside foot at 3m, both feet. *Keeper*: ready position, W-catch and scoop from hand feeds, no diving.
 - Fox: *Touch*: dribbling patterns (inside, outside, sole), weak-foot volume, cone gates indoors. *Pass*: laces, receiving across the body. *Keeper*: shuffle footwork, set position, chest catch, collapse dive from kneeling on a mat.
@@ -284,6 +290,7 @@ Written a week at a time. Retest 1 (Dec 7 to 11) falls in Fox week 5.
 |---|---|---|---|---|
 | 1 | Nov 9-15 | **Away Week** | Jeff travelling. Short optional cards with Mom: cartwheel and forward rolls, wall tennis, 200 dribbles, 300 touches | Rope Streak: rope singles in a row |
 | 2 | Nov 16-22 | **New Den** | Forward roll to standing, cartwheel at his rung; pogo hops and rope streaks; tennis both wings equal at the wall; basketball moving dribble weak hand first and retreat dribble; soccer four new moves (kangaroo, Tazmanian devil, lizard, scissors) and keeper shuffle and chest catch; losing well in handicap games | Wall Pass Blitz: wall passes in 30 s, alternating feet (baseline 18) |
+| 3 | Nov 23-29 | **Focus Mode** | One deep breath after a miss; cartwheel restart at rung 1, handstand kick-ups with straight legs; tennis surprise game and slow wall rally, unit turn first; basketball pound dribble at three heights and layup ladder rung 1; soccer four moves against a clock. Thanksgiving Thursday light | Rope Record: longest streak in 5 minutes (record 79) |
 
 ### Cub patches (need 7 of 9 to become a Fox)
 

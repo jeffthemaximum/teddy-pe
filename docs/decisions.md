@@ -907,3 +907,40 @@ The columns are `text`, so only the model validation held it. `CoachEntry`'s
 note and pain note now allow 20,000 (about 3,500 words), still capped because
 it is user input. Teddy's journal stays at 2,000. Spec in
 `spec/models/coach_entry_spec.rb`.
+
+## 2026-11-22: Fox week 3, Focus Mode, written from Jeff's diary
+
+**What Jeff asked.** Plan next week using his coach notes from Nov 16 to 20.
+Jeff ran the export himself; the session's permission settings refuse
+`fly ssh console`. The November journal is now in `docs/journal/2026-27/2026-11.md`.
+
+**Rulings, each from a line in the diary.**
+
+- **No hanging on Tuesday.** Gymnastics is that afternoon. Rings, dead hangs,
+  hollow holds and knee tucks move to Monday (and Thursday in normal weeks).
+  The role keeps its name, Rings Day, since day roles are fixed; its note in
+  `program.yml` and the architecture's schedule now say what it holds.
+- **Cartwheel restarts at rung 1** (shoulder taps, frog kicks, sideways bear
+  walk). Jeff asked to go back; the cartwheel has been skipped or rated not yet.
+- **Forward roll drops to an easier entry**, down a slope of cushions. Rated not
+  yet on 18 and 19 November.
+- **Handstand: kick-ups with straight legs** before holds, Jeff's coaching point.
+- **Pound dribble at three heights**, Jeff's proposed progression, approved by
+  him in the note.
+- **Layup ladder starts now, not in Coyote.** Jeff asked for it. Rungs as he
+  sketched: one step from the block, two steps, a dribble in.
+- **The surprise game goes in the glossary and on Tuesday.** Jeff's invention.
+  The card runs red, orange, green; yellow only as far as the ball gate allows.
+- **Push to start replaces the wall drill**, as Jeff did on 18 November.
+- **Speed in the soccer moves comes from a clock, not from Dad.** Jeff asked
+  how. Move cards drawn before each run, phone timer, a sloppy move voids the
+  run. The clock asks for speed, so Dad does not have to.
+- **Losing well and focus: one deep breath after a miss** is the thing he does,
+  Jeff's cue from HORSE. Link training before Ganon is Jeff's frame and is used
+  in Sunday's review.
+- **Thanksgiving Thursday is a 30 to 45 minute optional card**, and Tuesday
+  carries the week's main tennis. Assumed Jeff is home all week; not confirmed.
+- **Toe taps 500 on Tuesday**, because Teddy asked. Volume as touches.
+- **Challenge: Rope Record**, longest streak in five minutes, against his new
+  record of 79 (baseline 14).
+- **`hie`:** 20 of 40, all on Wednesday.
