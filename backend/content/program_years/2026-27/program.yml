@@ -497,7 +497,7 @@ day_roles:
   - Swim
   minutes: 60–90
   intensity: 1
-  note: Tumbling homework, landing, basketball handling. Low impact, swim is recovery.
+  note: Tumbling homework, landing, hanging and rings, basketball handling. Low impact, swim is recovery.
 - dow: tue
   position: 2
   name: Rings Day
@@ -505,7 +505,7 @@ day_roles:
   - Gymnastics
   minutes: 75–90
   intensity: 2
-  note: Rings, hangs, strength, soccer touch and passing at the wall. Short on hangs, since gym loads the same hands and shoulders.
+  note: Soccer touch and passing at the wall, tennis, jump rope. No hanging, since gymnastics is the same afternoon; hangs live on Monday and Thursday.
 - dow: wed
   position: 3
   name: Fast Day

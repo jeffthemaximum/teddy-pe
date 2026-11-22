@@ -894,6 +894,27 @@ drills:
     of the shoe.
   cue: Toe down, ankle locked, laces through the middle.
   video:
+- slug: layup-ladder
+  name: Layup ladder
+  area_name: Basketball
+  aliases:
+  - layup
+  - layups
+  short: Layups learned one rung at a time, from one step at the block to a dribble
+    in. Both sides.
+  how:
+  - 'Rung 1: from the block, right side. Stand on the left foot, lift the right knee,
+    jump off the left and lay it off the square with the right hand. Then the left
+    side, mirrored.'
+  - 'Rung 2: two steps from a little further out: right foot, left foot, jump, right
+    hand up.'
+  - 'Rung 3: one dribble, then the two steps.'
+  - 'Rung 4: from the elbow, two or three dribbles in.'
+  - 8 of 10 clean on a side moves that side up a rung.
+  watch: Jumping off the wrong foot. Right hand layup takes off the left foot, and
+    the right knee goes up with the ball.
+  cue: Knee and hand go up together.
+  video:
 - slug: line-touch
   name: Line-touch
   area_name: Speed & Acceleration
@@ -1094,6 +1115,24 @@ drills:
   watch: Reaching for it with a straight leg instead of getting the body over the
     ball.
   cue: Step on it and drag it home.
+  video:
+- slug: push-to-start
+  name: Push to start
+  area_name: Speed & Acceleration
+  aliases:
+  - push to starts
+  - push-to-starts
+  short: Dad holds his shoulders while he leans into the push, then lets go and he
+    runs a few steps. Teaches the forward lean of a good start.
+  how:
+  - Teddy in a starting stance, up on his toes.
+  - Dad's hands on his shoulders, pushing back. Teddy leans forward into them.
+  - Dad counts down and lets go.
+  - Teddy drives out for 3 to 5 steps, staying low and leaning.
+  - 6 reps, full rest.
+  watch: Popping straight up on the first step. He stays leaned over for the first
+    three.
+  cue: Lean, push, go.
   video:
 - slug: rally-count
   name: Rally count
@@ -1589,6 +1628,27 @@ drills:
   watch: Knees caving inward, a loud landing, or a small hop after touching down.
     If the knees cave, lower the step.
   cue: Land like a cat.
+  video:
+- slug: surprise-game
+  name: Surprise game
+  area_name: Tennis
+  aliases:
+  - surprise games
+  - the surprise game
+  short: Jeff's game. Slow control tennis inside the service line, with the odd
+    higher, deeper ball he has to move back for and hit with his normal swing.
+  how:
+  - Control tennis over the net, both inside the service line, slow and steady.
+  - Now and then Dad says "surprise" and hits a higher, deeper ball.
+  - Teddy moves back to get behind it, hits with his regular swing and contact point,
+    and steps back in toward the net as he hits.
+  - After a few good returns, Dad stops calling "surprise" and Teddy has to
+    spot the deep ball himself.
+  - Start with red, then orange, then green. Yellow only as far as the ball gate
+    allows.
+  watch: Hitting over the shoulder, or backing away while he swings. He gets behind
+    it first, then hits through toward the net.
+  cue: Get back, get behind, step through.
   video:
 - slug: tazmanian-devil
   name: Tazmanian devil
